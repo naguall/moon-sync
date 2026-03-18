@@ -5518,11 +5518,50 @@ function renderCalendar() {
     
     // Mostrar título "Hoy" siempre (incluso si no se encuentra, mostrar info básica)
     if (currentDayInCycle) {
+        // Determinar qué información mostrar según el modo de calendario
+        let displayTitle = 'Luna Hoy';
+        let displayEmoji = '';
+        let displayDay = '';
+        let displayInfo = '';
+
+        if (calendarMode === 'lunar') {
+            // Modo Lunar: mostrar fase y signo lunar
+            const elongation = calculateLunarPhase(new Date());
+            const emoji = getMoonEmoji(elongation);
+            const moonLongitude = getMoonPosition(today);
+            const moonSignData = getZodiacSignWithDegree(moonLongitude);
+            const moonSign = moonSignData.formatted;
+            displayTitle = currentLang === 'es' ? 'Luna Hoy' : 'Moon Today';
+            displayEmoji = emoji;
+            displayDay = currentDayInCycle.lunarDay;
+            displayInfo = moonSign;
+        } else if (calendarMode === 'solar') {
+            // Modo Solar: mostrar signo solar
+            const sunLongitude = getPlanetPosition('sun', today);
+            const sunSignData = getZodiacSignWithDegree(sunLongitude);
+            const sunSign = sunSignData.formatted;
+            displayTitle = currentLang === 'es' ? 'Sol Hoy' : 'Sun Today';
+            displayEmoji = '☉';
+            displayDay = Math.floor((today - new Date(2026, currentSignIndex === 0 ? 0 : 0, 20)) / (1000 * 60 * 60 * 24)) + 1;
+            displayInfo = sunSign;
+        } else if (calendarMode === 'gregorian') {
+            // Modo Gregoriano: mostrar fecha gregoriana
+            const gregorianDay = today.getDate();
+            const gregorianMonth = today.getMonth() + 1;
+            displayTitle = currentLang === 'es' ? 'Hoy (Gregoriano)' : 'Today (Gregorian)';
+            displayEmoji = '📅';
+            displayDay = gregorianDay;
+            displayInfo = currentLang === 'es' ?
+                ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][gregorianMonth - 1] :
+                ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][gregorianMonth - 1];
+        }
+
+        // Variables para compatibilidad con código anterior
         const elongation = calculateLunarPhase(new Date());
-        const emoji = getMoonEmoji(elongation);
+        const emoji = displayEmoji || getMoonEmoji(elongation);
         const moonLongitude = getMoonPosition(today);
         const moonSignData = getZodiacSignWithDegree(moonLongitude);
-        const moonSign = moonSignData.formatted; // Ahora incluye grado
+        const moonSign = displayInfo || moonSignData.formatted;
         
         const weekDayNumber = (() => {
             console.log('=== CALCULANDO DÍA DE SEMANA ===');
@@ -5600,25 +5639,25 @@ function renderCalendar() {
                 </div>
                 <!-- HOY Centro -->
                 <div onclick="goToCurrentCycle()" style="text-align: center; cursor: pointer; transition: all 0.2s; padding: 6px 4px; border-radius: 10px; border: 1px solid rgba(201,168,64,0.32); background: linear-gradient(160deg, rgba(40,28,5,0.95) 0%, rgba(25,18,3,0.95) 100%); box-shadow: 0 0 20px rgba(201,168,64,0.15);"
-                     onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 28px rgba(201,168,64,0.25)';" 
+                     onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 28px rgba(201,168,64,0.25)';"
                      onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px rgba(201,168,64,0.15)';">
                     <div style="font-size: 0.50em; font-weight: 800; letter-spacing: 3px; color: #c9a840; text-transform: uppercase; margin-bottom: 1px;">— HOY —</div>
                     <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;">
-                        <span style="font-size:2.4em;font-weight:800;color:#e8c84a;text-shadow:0 0 18px rgba(201,168,64,0.65);">${currentDayInCycle.lunarDay}</span>
-                        <span style="font-size:0.9em;font-weight:600;color:rgba(201,168,64,0.5);">/${todayWeeks.reduce((s,w)=>s+w.days.length,0)}</span>
+                        <span style="font-size:2.4em;font-weight:800;color:#e8c84a;text-shadow:0 0 18px rgba(201,168,64,0.65);">${displayDay}</span>
+                        <span style="font-size:0.9em;font-weight:600;color:rgba(201,168,64,0.5);">${calendarMode === 'lunar' ? '/' + todayWeeks.reduce((s,w)=>s+w.days.length,0) : ''}</span>
                     </div>
-                    <div style="margin: 3px 0; display:flex; justify-content:center;">${getMoonSVG(calculateLunarPhase(today), 30)}</div>
-                    <div style="font-size: 0.57em; margin: 2px 0; color: rgba(255,255,255,0.78);">${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} · ${currentLang === 'es' ? 'Día' : 'Day'} ${weekDayNumber}</div>
-                    <div style="font-size: 0.52em; margin: 1px 0; color: rgba(201,168,64,0.85); font-weight: 600;">${todayWeeks[currentWeekIndex].name}</div>
-                    <div style="font-size: 0.47em; opacity: 0.60; color: #8899cc;">${moonSign}</div>
+                    <div style="margin: 3px 0; display:flex; justify-content:center; font-size: 2em;">${displayEmoji || (calendarMode === 'lunar' ? getMoonSVG(calculateLunarPhase(today), 30) : '☉')}</div>
+                    <div style="font-size: 0.57em; margin: 2px 0; color: rgba(255,255,255,0.78);">${calendarMode === 'lunar' ? `${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} · ${currentLang === 'es' ? 'Día' : 'Day'} ${weekDayNumber}` : ''}</div>
+                    <div style="font-size: 0.52em; margin: 1px 0; color: rgba(201,168,64,0.85); font-weight: 600;">${calendarMode === 'lunar' ? todayWeeks[currentWeekIndex].name : ''}</div>
+                    <div style="font-size: 0.47em; opacity: 0.60; color: #8899cc;">${displayInfo}</div>
                     <div style="font-size: 0.57em; font-weight: 700; margin-top: 3px; color: #e8c84a;">${formatLongDate(today)}</div>
                 </div>
                 
-                <!-- Luna Hoy -->
+                <!-- Luna/Sol/Info Hoy -->
                 <div style="background: rgba(20,10,40,0.85); padding: 6px 7px; border-radius: 8px; border: 1px solid rgba(201,168,64,0.28); border-top: 2px solid rgba(201,168,64,0.55); min-width: 0; overflow: hidden;">
                     <div style="display:flex; align-items:center; gap:4px; font-size: 0.62em; color: #c9a840; font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.5px;">
-                        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5,1 Q7.5,2.5 8,5 Q7.5,7.5 5,9 Q3.5,7 3.5,5 Q3.5,3 5,1Z" fill="#c9a840" opacity="0.9"/></svg>
-                        ${currentLang === 'es' ? 'Luna Hoy' : 'Moon Today'}${allPlanetaryEvents.length > 0 ? ` (${allPlanetaryEvents.length})` : ''}
+                        <span style="font-size: 1em;">${calendarMode === 'lunar' ? '☽' : calendarMode === 'solar' ? '☉' : '📅'}</span>
+                        ${displayTitle}${allPlanetaryEvents.length > 0 ? ` (${allPlanetaryEvents.length})` : ''}
                     </div>
                     ${allPlanetaryEvents.length > 0 ? `
                     <div style="display:flex;flex-direction:column;gap:2px;align-items:stretch;">
