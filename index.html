@@ -1333,13 +1333,13 @@ function renderTideSVG(curve, w, h) {
 
     // Si no hay suficientes datos válidos, generar curva de modelo armónico
     if (validPts.length < 2) {
-        for (let i = 0; i < 24; i++) {
-            const h_val = i;
+        for (let i = 0; i < 96; i++) {
+            const h_val = i / 4; // 15-minute resolution
             const M2 = 0.8 * Math.cos((28.984*h_val) * Math.PI/180);
             const S2 = 0.25 * Math.cos((30.0*h_val) * Math.PI/180);
             const K1 = 0.15 * Math.cos((15.041*h_val) * Math.PI/180);
             const O1 = 0.12 * Math.cos((13.943*h_val) * Math.PI/180);
-            validPts.push({ hour: i, level: M2+S2+K1+O1 });
+            validPts.push({ hour: h_val, level: M2+S2+K1+O1 });
         }
     }
 
@@ -4388,7 +4388,9 @@ function updateCurrentDayInfoForMode(mode) {
                     ${todayEvents.length > 0 ? `
                     <div style="display: flex; flex-direction: column; gap: 2px;">
                         ${todayEvents.slice(0, 2).map((evt, idx) => {
-                            return `<div style="font-size: 0.65em; padding: 2px 3px; background: rgba(78,205,196,0.12); border-radius: 3px; border-left: 2px solid #4ecdc4;">${evt.title}${evt.time ? ` <span style="font-weight: bold; color: #c9a840; float:right;">${evt.time}</span>` : ''}</div>`;
+                            const eventKey = getDateKey(today);
+                            const isCompleted = evt.completed || false;
+                            return `<div style="font-size: 0.65em; padding: 2px 3px; background: rgba(78,205,196,0.12); border-radius: 3px; display: flex; align-items: center; gap: 4px; border-left: 2px solid ${evt.type === 'reminder' ? '#f5576c' : evt.type === 'appointment' ? '#c9a840' : '#4ecdc4'};"><input type="checkbox" ${isCompleted ? 'checked' : ''} onclick="toggleEventComplete('${eventKey}', ${idx}); event.stopPropagation();" style="cursor: pointer; width: 12px; height: 12px; flex-shrink: 0;"><span style="cursor: pointer; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${isCompleted ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${evt.title}${evt.time ? ` <span style="font-weight: bold; color: #c9a840; float:right;">${evt.time}</span>` : ''}</span></div>`;
                         }).join('')}
                     </div>
                     ` : `<div style="font-size: 0.6em; color: rgba(78,205,196,0.45); font-style: italic; padding: 4px 0;">${currentLang==='es'?'Sin eventos':'No events'}</div>`}
@@ -4535,11 +4537,11 @@ function generateGregorianMonth() {
         ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'] :
         ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
-    let html = '<div class="lunar-week" style="margin-bottom: 10px;"><div class="week-header" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 8px; border-bottom: 2px solid rgba(255,255,255,0.2);">';
+    let html = '<div class="lunar-week" style="margin-bottom: 10px; overflow: hidden;"><div class="week-header" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 8px; border-bottom: 2px solid rgba(255,255,255,0.2); overflow: hidden;">';
     dayNames.forEach(day => {
         html += `<div style="text-align: center; font-weight: bold; font-size: 0.8em;">${day}</div>`;
     });
-    html += '</div><div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 4px;">';
+    html += '</div><div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 4px; overflow: hidden;">';
     
     // Empty cells before first day
     for (let i = 0; i < firstDay.getDay(); i++) {
@@ -4563,7 +4565,7 @@ function generateGregorianMonth() {
         };
         const dayDataStr = JSON.stringify(dayData).replace(/"/g, '&quot;');
         
-        html += `<div class="day-cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}" onclick="handleDayClick(this)" data-date="${date.getTime()}" data-day-data="${dayDataStr}">`;
+        html += `<div class="day-cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}" onclick="handleDayClick(this)" data-date="${date.getTime()}" data-day-data="${dayDataStr}" style="min-width: unset; overflow: hidden;">`;
         html += `<div class="day-header"><div class="day-number">${day}</div></div>`;
         html += '<div class="day-content" style="font-size: 0.7em;">';
         
@@ -5611,8 +5613,8 @@ function renderCalendar() {
     const cycleEnd = weeks[weeks.length - 1].endDate;
     const cycleTotalDays = weeks.reduce((s, w) => s + w.days.length, 0);
     document.getElementById('cycleNumber').textContent = currentLang==='es'?'Ciclo Lunar Completo':'Full Lunar Cycle';
-    document.getElementById('cycleDates').textContent = 
-        `${formatLongDate(weeks[0].startDate)} - ${formatLongDate(cycleEnd)} · ${cycleTotalDays} ${currentLang==='es'?'días':'days'}`;
+    document.getElementById('cycleDates').textContent =
+        `${formatDate(weeks[0].startDate)} - ${formatDate(cycleEnd)} · ${cycleTotalDays} ${currentLang==='es'?'días':'days'}`;
     
     // SIEMPRE mostrar información del día actual, independiente del ciclo mostrado
     const todayNewMoon = findNearestNewMoon(today);
@@ -6107,7 +6109,7 @@ if ('Notification' in window && Notification.permission === 'default') {
 
 // Check for events/aspects that need notifications
 function checkNotifications() {
-    console.log("🔔 checkNotifications running at", new Date().toLocaleTimeString(), "events:", Object.keys(events).length);
+    console.log("🔔 checkNotifications running at", new Date().toLocaleTimeString(), "events:", Object.keys(events).length, "events object:", events);
     // Check if notifications are enabled by user
     const notificationsEnabled = localStorage.getItem('notificationsEnabled') !== 'false';
     
@@ -6118,9 +6120,12 @@ function checkNotifications() {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayKey = getDateKey(today);
-    
+
+    console.log("📅 Today's date key:", todayKey, "Available keys:", Object.keys(events));
+
     // Check user events - uses saved reminders from each event
     const todayEvents = events[todayKey] || [];
+    console.log("📅 Today's events:", todayEvents.length, "events:", todayEvents);
     todayEvents.forEach(event => {
         if (event.time) {
             const [hours, minutes] = event.time.split(':');
