@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moon-flow-v2';
+const CACHE_NAME = 'moon-flow-v5';
 const ASSETS = [
   '/moon-flow/',
   '/moon-flow/index.html',
