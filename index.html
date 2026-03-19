@@ -2438,7 +2438,7 @@ async function toggleNotifications() {
             btn.title = currentLang === 'es' ? 'Desactivar notificaciones' : 'Disable notifications';
             
             // Test notification
-            sendNotification('✅ ' + (currentLang === 'es' ? 'Notificaciones activadas' : 'Notifications enabled'), {
+            sendNotif('✅ ' + (currentLang === 'es' ? 'Notificaciones activadas' : 'Notifications enabled'), {
                 body: currentLang === 'es' ? 
                     'Recibirás alertas de eventos y aspectos astrológicos' : 
                     'You will receive alerts for events and astrological aspects',
@@ -6119,23 +6119,17 @@ if ('Notification' in window && Notification.permission === 'default') {
 
 // Check for events/aspects that need notifications
 
-// Helper: Send notification via Service Worker (works on mobile) or fallback to new Notification
-function sendNotification(title, options) {
+// Store native Notification constructor to avoid recursion
+const _Notif = window.Notification;
+function sendNotif(title, opts) {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.ready.then(reg => {
-            reg.showNotification(title, options);
-            console.log('🔔 SW notification sent:', title);
-        }).catch(err => {
-            console.log('🔔 SW failed, fallback:', err);
-            try { sendNotification(title, options); } catch(e) {}
+        navigator.serviceWorker.ready.then(function(reg) {
+            reg.showNotification(title, opts);
+        }).catch(function() {
+            try { new _Notif(title, opts); } catch(e) {}
         });
     } else {
-        try { 
-            sendNotification(title, options); 
-            console.log('🔔 Direct notification sent:', title);
-        } catch(e) { 
-            console.log('❌ Notification failed:', e); 
-        }
+        try { new _Notif(title, opts); } catch(e) {}
     }
 }
 
@@ -6189,7 +6183,7 @@ function checkNotifications() {
                         ? (currentLang === 'es' ? 'Ahora' : 'Now')
                         : (currentLang === 'es' ? `En ${reminder.minutes} min` : `In ${reminder.minutes} min`);
                     
-                    sendNotification('📅 ' + (currentLang === 'es' ? 'Evento: ' : 'Event: ') + event.title, {
+                    sendNotif('📅 ' + (currentLang === 'es' ? 'Evento: ' : 'Event: ') + event.title, {
                         body: `${timeLabel} - ${event.time} ${event.title}`,
                         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">📅</text></svg>',
                         tag: `event-${todayKey}-${event.title}-${reminder.minutes}`,
@@ -6234,7 +6228,7 @@ function checkNotifications() {
             });
             
             if (messages.length > 0) {
-                sendNotification('⭐ ' + (currentLang === 'es' ? 'Eventos Astrológicos Hoy' : 'Astrological Events Today'), {
+                sendNotif('⭐ ' + (currentLang === 'es' ? 'Eventos Astrológicos Hoy' : 'Astrological Events Today'), {
                     body: messages.slice(0, 3).join('\n'),
                     icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">⭐</text></svg>',
                     tag: `astro-${todayKey}`,
@@ -6263,7 +6257,7 @@ setTimeout(checkNotifications, 2000);
 setTimeout(() => {
     if ('Notification' in window && Notification.permission === 'granted') {
         try {
-            sendNotification('🧪 Test Notification', {
+            sendNotif('🧪 Test Notification', {
                 body: 'Moon Tracker notifications are working! This is a test.',
                 icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700"/><circle cx="30" cy="30" r="15" fill="%23000"/></svg>'
             });
