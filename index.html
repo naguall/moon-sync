@@ -6122,14 +6122,21 @@ if ('Notification' in window && Notification.permission === 'default') {
 // Store native Notification constructor to avoid recursion
 const _Notif = window.Notification;
 function sendNotif(title, opts) {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    console.log('🔔 sendNotif called:', title);
+    // On mobile, MUST use ServiceWorker.showNotification - new Notification() silently fails
+    if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(function(reg) {
-            reg.showNotification(title, opts);
-        }).catch(function() {
-            try { new _Notif(title, opts); } catch(e) {}
+            console.log('🔔 Using SW showNotification');
+            return reg.showNotification(title, opts);
+        }).then(function() {
+            console.log('🔔 SW notification shown:', title);
+        }).catch(function(err) {
+            console.log('🔔 SW failed:', err, '- trying native');
+            try { new _Notif(title, opts); } catch(e) { console.log('❌ Native also failed:', e); }
         });
     } else {
-        try { new _Notif(title, opts); } catch(e) {}
+        console.log('🔔 No SW, using native Notification');
+        try { new _Notif(title, opts); } catch(e) { console.log('❌ Native failed:', e); }
     }
 }
 
