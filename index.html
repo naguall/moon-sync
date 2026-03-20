@@ -2479,10 +2479,13 @@ async function toggleNotifications() {
             btn.style.borderColor = 'rgba(78,205,196,0.6)';
             btn.style.boxShadow = '0 2px 8px rgba(78,205,196,0.3)';
             btn.title = currentLang === 'es' ? 'Desactivar notificaciones' : 'Disable notifications';
+            // Send confirmation notification
+            setTimeout(() => sendNotif('🔔 Moon Sync', {body: currentLang==='es'?'Notificaciones activadas':'Notifications enabled', tag:'test-notif'}), 1000);
         }
     } else {
         // Re-enable notifications
         localStorage.setItem('notificationsEnabled', 'true');
+        setTimeout(() => sendNotif('🔔 Moon Sync', {body: currentLang==='es'?'Notificaciones reactivadas':'Notifications re-enabled', tag:'test-notif'}), 1000);
         btn.innerHTML = '🔔';
         btn.style.opacity = '1';
         btn.style.borderColor = 'rgba(78,205,196,0.6)';
@@ -6166,7 +6169,7 @@ function renderCalendar() {
                         ${todayEvents.slice(0, 5).map((evt, idx) => {
                             const eventKey = getDateKey(today);
                             const isCompleted = evt.completed || false;
-                            return `<div style="font-size: 0.65em; padding: 2px 3px; background: rgba(78,205,196,0.12); border-radius: 3px; display: flex; align-items: center; gap: 4px; border-left: 2px solid ${evt.type === 'reminder' ? '#f5576c' : evt.type === 'appointment' ? '#c9a840' : '#4ecdc4'};"><input type="checkbox" ${isCompleted ? 'checked' : ''} onclick="toggleEventComplete('${eventKey}', ${idx}); event.stopPropagation();" style="cursor: pointer; width: 12px; height: 12px; flex-shrink: 0;"><span style="cursor: pointer; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${isCompleted ? 'text-decoration: line-through; opacity: 0.6;' : ''}" onclick="openEventsModal(new Date(${today.getTime()}), ${currentDayInCycle.lunarDay})">${evt.title}</span></div>`;
+                            return `<div style="font-size: 0.65em; padding: 2px 3px; background: rgba(78,205,196,0.12); border-radius: 3px; display: flex; align-items: center; gap: 4px; border-left: 2px solid ${evt.type === 'reminder' ? '#f5576c' : evt.type === 'appointment' ? '#c9a840' : '#4ecdc4'};"><input type="checkbox" ${isCompleted ? 'checked' : ''} onclick="toggleEventComplete('${eventKey}', ${idx}); event.stopPropagation();" style="cursor: pointer; width: 12px; height: 12px; flex-shrink: 0;"><span style="cursor: pointer; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${isCompleted ? 'text-decoration: line-through; opacity: 0.6;' : ''}" onclick="openEventsModal(new Date(${today.getTime()}), ${currentDayInCycle.lunarDay})">${evt.title}${evt.time ? ` <span style="font-weight:bold;color:#c9a840;float:right;">${evt.time}</span>` : ''}</span></div>`;
                         }).join('')}
                         ${todayEvents.length > 5 ? `<div style="font-size: 0.6em; text-align: center; color: #4ecdc4;">+${todayEvents.length - 5}</div>` : ''}
                     </div>
@@ -6573,7 +6576,7 @@ function checkNotifications() {
                 if (localStorage.getItem(reminderKey)) return; // Already notified for this reminder
                 
                 const notifyTime = new Date(eventTime.getTime() - reminder.minutes * 60 * 1000);
-                const windowEnd = new Date(notifyTime.getTime() + 2 * 60 * 1000); // 2 min window
+                const windowEnd = new Date(notifyTime.getTime() + 5 * 60 * 1000); // 2 min window
                 
                 if (now >= notifyTime && now <= windowEnd) {
                     const timeLabel = reminder.minutes === 0 
@@ -6706,7 +6709,7 @@ function checkLunarPhaseStart(date) {
 }
 
 // Check notifications every 5 minutes
-setInterval(checkNotifications, 60 * 1000);
+setInterval(checkNotifications, 30 * 1000);
 
 // Initial check 2 seconds after page load
 setTimeout(checkNotifications, 2000);
@@ -7382,6 +7385,33 @@ function getMajorConfiguration(date) {
     }
     return null;
 }
+
+// Android back button: close modals instead of closing app
+window.addEventListener('popstate', function(e) {
+    // Find any open modal
+    const openModal = document.querySelector('.modal.show');
+    if (openModal) {
+        openModal.classList.remove('show');
+        openModal.style.display = 'none';
+        // Push state again to keep the app open
+        history.pushState({modal: 'closed'}, '');
+        e.preventDefault();
+        return;
+    }
+});
+
+// Push initial state so back button has somewhere to go
+history.pushState({page: 'main'}, '');
+
+// When opening ANY modal, push a new state
+const _origAddClass = DOMTokenList.prototype.add;
+DOMTokenList.prototype.add = function() {
+    _origAddClass.apply(this, arguments);
+    if (Array.from(arguments).includes('show') && this.contains('modal')) {
+        history.pushState({modal: 'open'}, '');
+    }
+};
+
 </script>
 </body>
 </html>
