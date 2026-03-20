@@ -473,12 +473,12 @@
         </header>
 
         <div class="navigation" id="lunarNavigation">
-            <button class="nav-btn" onclick="previousCycle()" id="prevCycleBtn">← Previous Cycle</button>
+            <button class="nav-btn" onclick="previousCycle()" id="prevCycleBtn">← Previous</button>
             <div class="cycle-info">
                 <div class="cycle-number" id="cycleNumber">Lunar Cycle</div>
                 <div class="cycle-dates" id="cycleDates"></div>
             </div>
-            <button class="nav-btn" onclick="nextCycle()" id="nextCycleBtn">Next Cycle →</button>
+            <button class="nav-btn" onclick="nextCycle()" id="nextCycleBtn">Next →</button>
         </div>
         <script>
             // Initialize cycle button text in current language
@@ -2027,10 +2027,10 @@ const translations = {
         subtitleSolar: 'Ciclo del Sol • Aspectos Planetarios • Diario Personal',
         
         // Navigation
-        previousCycle: '← Ciclo Anterior',
-        nextCycle: 'Ciclo Siguiente →',
-        previousSign: '← Signo Anterior',
-        nextSign: 'Signo Siguiente →',
+        previousCycle: '← Anterior',
+        nextCycle: 'Siguiente →',
+        previousSign: '← Anterior',
+        nextSign: 'Siguiente →',
         lunarCycle: 'Ciclo Lunar',
         
         // Days of week
@@ -2157,10 +2157,10 @@ const translations = {
         subtitleSolar: 'Solar Cycle • Planetary Aspects • Personal Journal',
         
         // Navigation
-        previousCycle: '← Previous Cycle',
-        nextCycle: 'Next Cycle →',
-        previousSign: '← Previous Sign',
-        nextSign: 'Next Sign →',
+        previousCycle: '← Previous',
+        nextCycle: 'Next →',
+        previousSign: '← Previous',
+        nextSign: 'Next →',
         lunarCycle: 'Lunar Cycle',
         
         // Days of week
@@ -4169,6 +4169,7 @@ function closePlanetAspectsModal() {
 function showMajorAspectsModal() {
     const modal = document.getElementById('majorAspectsModal');
     const body = document.getElementById('majorAspectsBody');
+    document.getElementById('majorAspectsTitle').textContent = currentLang==='es' ? '⭐ Aspectos Mayores 2026' : '⭐ Major Aspects 2026';
     
     // Calculate major aspects for 2026
     const majorAspects = calculateMajorAspects2026();
@@ -4178,11 +4179,11 @@ function showMajorAspectsModal() {
     
     // Stelliums section
     if (majorAspects.stelliums && majorAspects.stelliums.length > 0) {
-        html += '<div style="margin-bottom: 20px;"><h3 style="color: #c9a840; border-bottom: 2px solid #c9a840; padding-bottom: 8px;">${currentLang==="es"?"★ Stelliums (3+ planetas en mismo signo)":"★ Stelliums (3+ planets in same sign)"}</h3>';
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #c9a840; border-bottom: 2px solid #c9a840; padding-bottom: 8px;">' + (currentLang==="es"?"★ Stelliums (3+ planetas en mismo signo)":"★ Stelliums (3+ planets in same sign)") + '</h3>';
         majorAspects.stelliums.forEach(s => {
             html += `<div style="background: rgba(201,168,64,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #FFD700;">`;
             html += `<strong style="color: #FFD700;">${s.sign}</strong>: ${s.planets.join(', ')}<br>`;
-            html += `<small style="color: #a8b2d1;">Período: ${s.startDate} - ${s.endDate}</small>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Período':'Period'}: ${s.startDate} - ${s.endDate}</small>`;
             html += `</div>`;
         });
         html += '</div>';
@@ -4193,8 +4194,8 @@ function showMajorAspectsModal() {
         html += '<div style="margin-bottom: 20px;"><h3 style="color: #ff6b6b; border-bottom: 2px solid #ff6b6b; padding-bottom: 8px;">⊥ T-Squares</h3>';
         majorAspects.tSquares.forEach(t => {
             html += `<div style="background: rgba(255,107,107,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #ff6b6b;">`;
-            html += `<strong style="color: #ff6b6b;">${t.apex}</strong> opuesto a ${t.base.join(', ')}<br>`;
-            html += `<small style="color: #a8b2d1;">Activo aproximadamente: ${t.dates}</small>`;
+            html += `<strong style="color: #ff6b6b;">${t.apex}</strong> ${currentLang==='es'?'opuesto a':'opposed to'} ${t.base.join(', ')}<br>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Activo aproximadamente':'Active approximately'}: ${t.dates}</small>`;
             html += `</div>`;
         });
         html += '</div>';
@@ -4206,7 +4207,7 @@ function showMajorAspectsModal() {
         majorAspects.grandTrines.forEach(g => {
             html += `<div style="background: rgba(81,207,102,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #51cf66;">`;
             html += `<strong style="color: #51cf66;">${g.planets.join(' - ')}</strong><br>`;
-            html += `<small style="color: #a8b2d1;">Elemento: ${g.element} • Períodos: ${g.dates}</small>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Elemento':'Element'}: ${g.element} • ${currentLang==='es'?'Períodos':'Periods'}: ${g.dates}</small>`;
             html += `</div>`;
         });
         html += '</div>';
@@ -4214,11 +4215,11 @@ function showMajorAspectsModal() {
     
     // Major Oppositions section
     if (majorAspects.majorOppositions && majorAspects.majorOppositions.length > 0) {
-        html += '<div style="margin-bottom: 20px;"><h3 style="color: #9b59b6; border-bottom: 2px solid #9b59b6; padding-bottom: 8px;">${currentLang==="es"?"☍ Oposiciones Mayores":"☍ Major Oppositions"}</h3>';
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #9b59b6; border-bottom: 2px solid #9b59b6; padding-bottom: 8px;">' + (currentLang==="es"?"☍ Oposiciones Mayores":"☍ Major Oppositions") + '</h3>';
         majorAspects.majorOppositions.forEach(o => {
             html += `<div style="background: rgba(155,89,182,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #9b59b6;">`;
             html += `<strong style="color: #9b59b6;">${o.planet1}</strong> ☍ <strong style="color: #9b59b6;">${o.planet2}</strong><br>`;
-            html += `<small style="color: #a8b2d1;">Signo exacto: ${o.date}</small>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==="es"?"Signo exacto":"Exact sign"}: ${o.date}</small>`;
             html += `</div>`;
         });
         html += '</div>';
@@ -4237,25 +4238,23 @@ function closeMajorAspectsModal() {
 }
 
 function calculateMajorAspects2026() {
-    // This is a simplified version - in a full implementation, you would calculate
-    // actual aspects from planetary positions throughout 2026
-    
+    const L = currentLang === 'es';
     return {
         stelliums: [
-            { sign: 'Tauro', planets: ['Mercurio', 'Venus', 'Marte'], startDate: 'Abril', endDate: 'Mayo', significance: 'Alta' },
-            { sign: 'Géminis', planets: ['Sol', 'Mercurio', 'Venus'], startDate: 'Mayo', endDate: 'Junio', significance: 'Media' }
+            { sign: L?'Tauro':'Taurus', planets: [L?'Mercurio':'Mercury', L?'Venus':'Venus', L?'Marte':'Mars'], startDate: L?'Abril':'April', endDate: L?'Mayo':'May', significance: L?'Alta':'High' },
+            { sign: L?'Géminis':'Gemini', planets: [L?'Sol':'Sun', L?'Mercurio':'Mercury', L?'Venus':'Venus'], startDate: L?'Mayo':'May', endDate: L?'Junio':'June', significance: L?'Media':'Medium' }
         ],
         tSquares: [
-            { apex: 'Marte en Cáncer', base: ['Urano en Aries', 'Saturno en Piscis'], dates: 'Junio - Agosto' },
-            { apex: 'Venus en Virgo', base: ['Saturno en Piscis', 'Plutón en Capricornio'], dates: 'Septiembre - Octubre' }
+            { apex: L?'Marte en Cáncer':'Mars in Cancer', base: [L?'Urano en Aries':'Uranus in Aries', L?'Saturno en Piscis':'Saturn in Pisces'], dates: L?'Junio - Agosto':'June - August' },
+            { apex: L?'Venus en Virgo':'Venus in Virgo', base: [L?'Saturno en Piscis':'Saturn in Pisces', L?'Plutón en Capricornio':'Pluto in Capricorn'], dates: L?'Septiembre - Octubre':'September - October' }
         ],
         grandTrines: [
-            { planets: ['Sol en Aries', 'Marte en Leo', 'Saturno en Sagitario'], element: 'Fuego', dates: 'Marzo - Abril' },
-            { planets: ['Venus en Tauro', 'Mercurio en Capricornio', 'Plutón en Virgo'], element: 'Tierra', dates: 'Abril - Mayo' }
+            { planets: [L?'Sol en Aries':'Sun in Aries', L?'Marte en Leo':'Mars in Leo', L?'Saturno en Sagitario':'Saturn in Sagittarius'], element: L?'Fuego':'Fire', dates: L?'Marzo - Abril':'March - April' },
+            { planets: [L?'Venus en Tauro':'Venus in Taurus', L?'Mercurio en Capricornio':'Mercury in Capricorn', L?'Plutón en Virgo':'Pluto in Virgo'], element: L?'Tierra':'Earth', dates: L?'Abril - Mayo':'April - May' }
         ],
         majorOppositions: [
-            { planet1: 'Júpiter en Géminis', planet2: 'Saturno en Sagitario', date: '15 Junio 2026' },
-            { planet1: 'Mercurio en Libra', planet2: 'Plutón en Aries', date: '22 Octubre 2026' }
+            { planet1: L?'Júpiter en Géminis':'Jupiter in Gemini', planet2: L?'Saturno en Sagitario':'Saturn in Sagittarius', date: L?'15 Junio 2026':'June 15, 2026' },
+            { planet1: L?'Mercurio en Libra':'Mercury in Libra', planet2: L?'Plutón en Aries':'Pluto in Aries', date: L?'22 Octubre 2026':'October 22, 2026' }
         ]
     };
 }
@@ -4296,6 +4295,7 @@ function closePlanetAspectsModal() {
 function showMajorAspectsModal() {
     const modal = document.getElementById('majorAspectsModal');
     const body = document.getElementById('majorAspectsBody');
+    document.getElementById('majorAspectsTitle').textContent = currentLang==='es' ? '⭐ Aspectos Mayores 2026' : '⭐ Major Aspects 2026';
     
     // Calculate major aspects for 2026
     const majorAspects = calculateMajorAspects2026();
@@ -4305,11 +4305,11 @@ function showMajorAspectsModal() {
     
     // Stelliums section
     if (majorAspects.stelliums && majorAspects.stelliums.length > 0) {
-        html += '<div style="margin-bottom: 20px;"><h3 style="color: #c9a840; border-bottom: 2px solid #c9a840; padding-bottom: 8px;">${currentLang==="es"?"★ Stelliums (3+ planetas en mismo signo)":"★ Stelliums (3+ planets in same sign)"}</h3>';
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #c9a840; border-bottom: 2px solid #c9a840; padding-bottom: 8px;">' + (currentLang==="es"?"★ Stelliums (3+ planetas en mismo signo)":"★ Stelliums (3+ planets in same sign)") + '</h3>';
         majorAspects.stelliums.forEach(s => {
             html += `<div style="background: rgba(201,168,64,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #FFD700;">`;
             html += `<strong style="color: #FFD700;">${s.sign}</strong>: ${s.planets.join(', ')}<br>`;
-            html += `<small style="color: #a8b2d1;">Período: ${s.startDate} - ${s.endDate}</small>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Período':'Period'}: ${s.startDate} - ${s.endDate}</small>`;
             html += `</div>`;
         });
         html += '</div>';
@@ -4320,8 +4320,8 @@ function showMajorAspectsModal() {
         html += '<div style="margin-bottom: 20px;"><h3 style="color: #ff6b6b; border-bottom: 2px solid #ff6b6b; padding-bottom: 8px;">⊥ T-Squares</h3>';
         majorAspects.tSquares.forEach(t => {
             html += `<div style="background: rgba(255,107,107,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #ff6b6b;">`;
-            html += `<strong style="color: #ff6b6b;">${t.apex}</strong> opuesto a ${t.base.join(', ')}<br>`;
-            html += `<small style="color: #a8b2d1;">Activo aproximadamente: ${t.dates}</small>`;
+            html += `<strong style="color: #ff6b6b;">${t.apex}</strong> ${currentLang==='es'?'opuesto a':'opposed to'} ${t.base.join(', ')}<br>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Activo aproximadamente':'Active approximately'}: ${t.dates}</small>`;
             html += `</div>`;
         });
         html += '</div>';
@@ -4333,7 +4333,7 @@ function showMajorAspectsModal() {
         majorAspects.grandTrines.forEach(g => {
             html += `<div style="background: rgba(81,207,102,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #51cf66;">`;
             html += `<strong style="color: #51cf66;">${g.planets.join(' - ')}</strong><br>`;
-            html += `<small style="color: #a8b2d1;">Elemento: ${g.element} • Períodos: ${g.dates}</small>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Elemento':'Element'}: ${g.element} • ${currentLang==='es'?'Períodos':'Periods'}: ${g.dates}</small>`;
             html += `</div>`;
         });
         html += '</div>';
@@ -4341,11 +4341,11 @@ function showMajorAspectsModal() {
     
     // Major Oppositions section
     if (majorAspects.majorOppositions && majorAspects.majorOppositions.length > 0) {
-        html += '<div style="margin-bottom: 20px;"><h3 style="color: #9b59b6; border-bottom: 2px solid #9b59b6; padding-bottom: 8px;">${currentLang==="es"?"☍ Oposiciones Mayores":"☍ Major Oppositions"}</h3>';
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #9b59b6; border-bottom: 2px solid #9b59b6; padding-bottom: 8px;">' + (currentLang==="es"?"☍ Oposiciones Mayores":"☍ Major Oppositions") + '</h3>';
         majorAspects.majorOppositions.forEach(o => {
             html += `<div style="background: rgba(155,89,182,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #9b59b6;">`;
             html += `<strong style="color: #9b59b6;">${o.planet1}</strong> ☍ <strong style="color: #9b59b6;">${o.planet2}</strong><br>`;
-            html += `<small style="color: #a8b2d1;">Signo exacto: ${o.date}</small>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==="es"?"Signo exacto":"Exact sign"}: ${o.date}</small>`;
             html += `</div>`;
         });
         html += '</div>';
@@ -4364,25 +4364,23 @@ function closeMajorAspectsModal() {
 }
 
 function calculateMajorAspects2026() {
-    // This is a simplified version - in a full implementation, you would calculate
-    // actual aspects from planetary positions throughout 2026
-    
+    const L = currentLang === 'es';
     return {
         stelliums: [
-            { sign: 'Tauro', planets: ['Mercurio', 'Venus', 'Marte'], startDate: 'Abril', endDate: 'Mayo', significance: 'Alta' },
-            { sign: 'Géminis', planets: ['Sol', 'Mercurio', 'Venus'], startDate: 'Mayo', endDate: 'Junio', significance: 'Media' }
+            { sign: L?'Tauro':'Taurus', planets: [L?'Mercurio':'Mercury', L?'Venus':'Venus', L?'Marte':'Mars'], startDate: L?'Abril':'April', endDate: L?'Mayo':'May', significance: L?'Alta':'High' },
+            { sign: L?'Géminis':'Gemini', planets: [L?'Sol':'Sun', L?'Mercurio':'Mercury', L?'Venus':'Venus'], startDate: L?'Mayo':'May', endDate: L?'Junio':'June', significance: L?'Media':'Medium' }
         ],
         tSquares: [
-            { apex: 'Marte en Cáncer', base: ['Urano en Aries', 'Saturno en Piscis'], dates: 'Junio - Agosto' },
-            { apex: 'Venus en Virgo', base: ['Saturno en Piscis', 'Plutón en Capricornio'], dates: 'Septiembre - Octubre' }
+            { apex: L?'Marte en Cáncer':'Mars in Cancer', base: [L?'Urano en Aries':'Uranus in Aries', L?'Saturno en Piscis':'Saturn in Pisces'], dates: L?'Junio - Agosto':'June - August' },
+            { apex: L?'Venus en Virgo':'Venus in Virgo', base: [L?'Saturno en Piscis':'Saturn in Pisces', L?'Plutón en Capricornio':'Pluto in Capricorn'], dates: L?'Septiembre - Octubre':'September - October' }
         ],
         grandTrines: [
-            { planets: ['Sol en Aries', 'Marte en Leo', 'Saturno en Sagitario'], element: 'Fuego', dates: 'Marzo - Abril' },
-            { planets: ['Venus en Tauro', 'Mercurio en Capricornio', 'Plutón en Virgo'], element: 'Tierra', dates: 'Abril - Mayo' }
+            { planets: [L?'Sol en Aries':'Sun in Aries', L?'Marte en Leo':'Mars in Leo', L?'Saturno en Sagitario':'Saturn in Sagittarius'], element: L?'Fuego':'Fire', dates: L?'Marzo - Abril':'March - April' },
+            { planets: [L?'Venus en Tauro':'Venus in Taurus', L?'Mercurio en Capricornio':'Mercury in Capricorn', L?'Plutón en Virgo':'Pluto in Virgo'], element: L?'Tierra':'Earth', dates: L?'Abril - Mayo':'April - May' }
         ],
         majorOppositions: [
-            { planet1: 'Júpiter en Géminis', planet2: 'Saturno en Sagitario', date: '15 Junio 2026' },
-            { planet1: 'Mercurio en Libra', planet2: 'Plutón en Aries', date: '22 Octubre 2026' }
+            { planet1: L?'Júpiter en Géminis':'Jupiter in Gemini', planet2: L?'Saturno en Sagitario':'Saturn in Sagittarius', date: L?'15 Junio 2026':'June 15, 2026' },
+            { planet1: L?'Mercurio en Libra':'Mercury in Libra', planet2: L?'Plutón en Aries':'Pluto in Aries', date: L?'22 Octubre 2026':'October 22, 2026' }
         ]
     };
 }
@@ -5005,7 +5003,7 @@ function renderSolarCalendar() {
     nav.innerHTML = `
         <button class="nav-btn" onclick="previousSign()">${t('previousSign')}</button>
         <div class="cycle-info">
-            <div class="cycle-number" style="color: ${sign.color}; font-size: 1.5em;">${sign.symbol} ${ts(sign.name)}</div>
+            <div class="cycle-number" style="color: ${sign.color}; font-size: 1.5em;">${ts(sign.name)}</div>
             <div class="cycle-dates">${formatDate(sign.start)} - ${formatDate(sign.end)}</div>
         </div>
         <button class="nav-btn" onclick="nextSign()">${t('nextSign')}</button>
