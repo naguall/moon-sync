@@ -5450,6 +5450,15 @@ function getSublunaryLon(date) {
     return deg.toFixed(1) + '° ' + (deg >= 0 ? 'E' : 'W');
 }
 
+// Haversine distance calculation in kilometers
+function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2-lat1)*Math.PI/180;
+    const dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
 // ── 2D World Map — embedded SVG continents ──────────────────
 function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
     const lat = parseFloat(latStr) || 0;
@@ -5497,6 +5506,21 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
     }
     const px = mx(lonDeg), py = my(lat);
     const ux = mx(uLon),   uy = my(uLat);
+
+    // Distance from sublunar point to user
+    const distToUser = haversineKm(uLat, uLon, lat, lonDeg);
+
+    // Find closest approach in next 12h
+    let closestDist = distToUser, closestTime = now;
+    for (let m = 0; m <= 720; m += 15) {
+        const t = new Date(now.getTime() + m * 60000);
+        const a = getAstroData(t);
+        const sLon = getSublunaryLonDeg(t);
+        const sLat = parseFloat(a.sublunarLat);
+        const d = haversineKm(uLat, uLon, sLat, sLon);
+        if (d < closestDist) { closestDist = d; closestTime = t; }
+    }
+    const closestTimeStr = closestTime.toLocaleTimeString(currentLang==='es'?'es':'en', {hour:'2-digit',minute:'2-digit'});
 
     // Natural Earth continent paths - high detail v2
     const landSVG = `<path d="M28.7,43.0 L35.8,45.4 L43.0,47.8 L52.6,45.4 L59.7,45.4 L71.7,47.8 L83.6,50.2 L93.2,47.8 L100.3,50.2 L105.1,52.6 L107.5,57.3 L112.3,71.7 L117.1,81.2 L119.4,83.6 L124.2,90.8 L129.0,95.6 L131.4,97.9 L133.8,105.1 L133.8,112.3 L138.6,119.4 L143.3,129.0 L148.1,133.8 L150.5,136.2 L150.5,138.6 L155.3,140.9 L160.1,145.7 L167.2,150.5 L172.0,155.3 L176.8,160.1 L179.2,164.8 L183.9,169.6 L191.1,172.0 L198.3,174.4 L200.7,176.8 L205.4,176.8 L210.2,179.2 L215.0,176.8 L219.8,174.4 L224.6,176.8 L229.3,181.6 L231.7,186.3 L234.1,191.1 L238.9,193.5 L241.3,193.5 L243.7,193.5 L238.9,186.3 L236.5,179.2 L234.1,172.0 L236.5,162.4 L236.5,155.3 L238.9,152.9 L238.9,148.1 L236.5,143.3 L234.1,140.9 L238.9,138.6 L243.7,133.8 L248.4,131.4 L250.8,126.6 L255.6,121.8 L258.0,117.1 L262.8,114.7 L265.2,112.3 L267.6,109.9 L269.9,107.5 L272.3,102.7 L274.7,100.3 L277.1,102.7 L281.9,105.1 L286.7,102.7 L289.1,100.3 L293.8,95.6 L298.6,102.7 L303.4,102.7 L298.6,95.6 L293.8,90.8 L289.1,88.4 L281.9,83.6 L277.1,78.8 L272.3,76.4 L267.6,71.7 L258.0,69.3 L250.8,66.9 L243.7,64.5 L234.1,62.1 L224.6,59.7 L215.0,54.9 L203.1,50.2 L191.1,45.4 L179.2,43.0 L167.2,40.6 L155.3,40.6 L143.3,40.6 L119.4,43.0 L95.6,43.0 L71.7,43.0 L47.8,43.0 L28.7,43.0 Z" fill="#1e3d5c" stroke="#2d5a82" stroke-width="0.6" stroke-linejoin="round"/>
@@ -5556,6 +5580,9 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
         + '<text x="32" y="'+(H-4)+'" fill="rgba(255,255,255,0.38)" font-size="8" font-family="monospace">pasado</text>'
         + '<line x1="80" y1="'+(H-8)+'" x2="100" y2="'+(H-8)+'" stroke="rgba(201,168,64,0.65)" stroke-width="2" stroke-dasharray="6,3"/>'
         + '<text x="104" y="'+(H-4)+'" fill="rgba(255,255,255,0.38)" font-size="8" font-family="monospace">futuro</text>'
+        // Distance info
+        + '<text x="' + (W-8) + '" y="' + (H-18) + '" fill="#4ecdc4" font-size="9" font-family="monospace" text-anchor="end">' + cityLabel + ' ↔ ' + (currentLang==='es'?'Sublunar':'Sublunar') + ': ' + Math.round(distToUser).toLocaleString() + ' km</text>'
+        + '<text x="' + (W-8) + '" y="' + (H-6) + '" fill="#c9a840" font-size="9" font-family="monospace" text-anchor="end">' + (currentLang==='es'?'Más cerca':'Closest') + ': ' + Math.round(closestDist).toLocaleString() + ' km @ ' + closestTimeStr + '</text>'
         + '</svg>';
 }
 
@@ -6267,7 +6294,10 @@ function renderCalendar() {
     weeks.forEach((week, index) => {
         const weekDiv = document.createElement('div');
         weekDiv.className = 'lunar-week' + (index === currentWeekIndex ? ' active' : '');
-        
+
+        // For weeks 0 (Luna Nueva) and 2 (Luna Llena), prepare onclick handler
+        const isClickableWeek = (index === 0 || index === 2) ? true : false;
+
         const daysHTML = week.days.map(day => {
             const isToday = day.date.getTime() === today.getTime();
             const dayEvents = getEventsForDate(day.date);
@@ -6348,7 +6378,7 @@ function renderCalendar() {
         }).join('');
         
         weekDiv.innerHTML = `
-            <div class="week-header">
+            <div class="week-header" ${isClickableWeek ? `onclick="navigateToLunar2026Moon(${week.startDate.getTime()}, '${index === 0 ? 'new' : 'full'}')" style="cursor:pointer;"` : ''}>
                 <div class="moon-icon">${week.emoji}</div>
                 <div class="week-info">
                     <div style="display: flex; align-items: center; gap: 3px; flex-wrap: nowrap; font-size: 0.65em; width: 100%; overflow: hidden;">
@@ -7138,8 +7168,10 @@ function updateNotifBadge() {
     if (unseen > 0) {
         badge.textContent = unseen > 99 ? '99+' : unseen;
         badge.style.display = 'block';
+        if ('setAppBadge' in navigator) { navigator.setAppBadge(unseen).catch(()=>{}); }
     } else {
         badge.style.display = 'none';
+        if ('clearAppBadge' in navigator) { navigator.clearAppBadge().catch(()=>{}); }
     }
 }
 
@@ -7151,6 +7183,25 @@ function markAllNotifSeen() {
     updateNotifBadge();
 }
 
+// Clear notifications older than today
+function clearOldNotifications() {
+    const history = JSON.parse(localStorage.getItem('notifHistory') || '[]');
+    const todayStr = new Date().toISOString().slice(0,10);
+    const filtered = history.filter(h => h.timestamp && h.timestamp.slice(0,10) === todayStr);
+    localStorage.setItem('notifHistory', JSON.stringify(filtered));
+    updateNotifBadge();
+}
+
+// Schedule clear at 23:59
+(function scheduleMidnightClear() {
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(23, 59, 0, 0);
+    let ms = midnight.getTime() - now.getTime();
+    if (ms < 0) ms += 86400000;
+    setTimeout(() => { clearOldNotifications(); scheduleMidnightClear(); }, ms);
+})();
+
 function openNotifHistoryModal() {
     const modal = document.getElementById('notifHistoryModal');
     const body = document.getElementById('notifHistoryBody');
@@ -7159,6 +7210,9 @@ function openNotifHistoryModal() {
 
     // Mark all as seen when user opens the history
     markAllNotifSeen();
+
+    // Clear PWA app icon badge
+    if ('clearAppBadge' in navigator) { navigator.clearAppBadge().catch(()=>{}); }
 
     titleEl.textContent = currentLang==='es'?'🔔 Historial de Notificaciones':'🔔 Notification History';
 
