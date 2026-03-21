@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v120';
+        var REQUIRED_VER = 'v123';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -508,6 +508,29 @@
                 gap: 6px !important;
             }
             .vermas-cols > div { min-width: 0; overflow: hidden; }
+
+            /* ── Astro info grid: 2x2 on mobile ── */
+            .astro-info-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+            }
+            .astro-card {
+                max-width: 100% !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+                min-height: auto !important;
+            }
+            .tide-curve-container {
+                max-width: 100% !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+            }
+            .tide-curve-container svg {
+                max-width: 100% !important;
+                height: auto !important;
+            }
         }
     </style>
 </head>
@@ -1594,7 +1617,7 @@ function renderTideSVG(curve, w, h) {
     }
 
     if (validPts.length < 2) {
-        return `<svg viewBox="0 0 ${w} ${h}" style="display:block;width:100%;height:${h}px;"><rect width="${w}" height="${h}" fill="#060f2a"/></svg>`;
+        return `<svg viewBox="0 0 ${w} ${h}" style="display:block;width:100%;max-width:100%;height:auto;" preserveAspectRatio="xMidYMid meet"><rect width="${w}" height="${h}" fill="#060f2a"/></svg>`;
     }
 
     try {
@@ -1603,9 +1626,9 @@ function renderTideSVG(curve, w, h) {
         const min = Math.min(...levels);
         const range = Math.abs(max - min) || 1;
         const pts = validPts.map((c,i) => `${(i/(validPts.length-1))*w},${h-((c.level-min)/range)*(h-4)-2}`).join(' ');
-        return `<svg viewBox="0 0 ${w} ${h}" style="display:block;width:100%;height:${h}px;" preserveAspectRatio="none"><defs><linearGradient id="tfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4FC3F7" stop-opacity="0.35"/><stop offset="100%" stop-color="#01579B" stop-opacity="0.05"/></linearGradient></defs><rect width="${w}" height="${h}" fill="#060f2a"/><polygon points="0,${h} ${pts} ${w},${h}" fill="url(#tfg)"/><polyline points="${pts}" fill="none" stroke="#4FC3F7" stroke-width="1.5" opacity="0.8"/></svg>`;
+        return `<svg viewBox="0 0 ${w} ${h}" style="display:block;width:100%;max-width:100%;height:auto;" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="tfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4FC3F7" stop-opacity="0.35"/><stop offset="100%" stop-color="#01579B" stop-opacity="0.05"/></linearGradient></defs><rect width="${w}" height="${h}" fill="#060f2a"/><polygon points="0,${h} ${pts} ${w},${h}" fill="url(#tfg)"/><polyline points="${pts}" fill="none" stroke="#4FC3F7" stroke-width="1.5" opacity="0.8"/></svg>`;
     } catch(e) {
-        return `<svg viewBox="0 0 ${w} ${h}" style="display:block;width:100%;height:${h}px;"><rect width="${w}" height="${h}" fill="#060f2a"/></svg>`;
+        return `<svg viewBox="0 0 ${w} ${h}" style="display:block;width:100%;max-width:100%;height:auto;" preserveAspectRatio="xMidYMid meet"><rect width="${w}" height="${h}" fill="#060f2a"/></svg>`;
     }
 }
 
@@ -6746,8 +6769,9 @@ function generateGregorianMonth() {
         }
         html += '</div>';
         
-        // Right: Planetary aspects
-        html += '<div style="display: flex; flex-direction: column; gap: 1px; text-align: right; flex-shrink: 0;">';
+        // Right: Planetary aspects (top-aligned, offset by event count)
+        const _evtPad = events ? Math.min(events.length, 2) * 13 : 0;
+        html += '<div style="display: flex; flex-direction: column; gap: 1px; text-align: right; flex-shrink: 0; padding-top: ' + _evtPad + 'px;">';
         
         // Planetary events
         if (astronomicalEvent) html += `<div style="color: #e8c84a; font-weight: bold; font-size: 0.8em; text-align: right;">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>`;
@@ -7089,15 +7113,21 @@ function renderSolarInfoPanel() {
         + '<span style="font-size:0.78em;color:#a08040;font-weight:400;margin-left:8px;">' + (currentLang==='es'?'Lat':'Lat') + ': ' + sunDecl.toFixed(1) + '°' + (sunDecl>=0?'N':'S') + ' · ' + (currentLang==='es'?'Lon':'Lon') + ': ' + Math.abs(subsolarLon).toFixed(1) + '°' + (subsolarLon>=0?'E':'W') + '</span>'
         + '</div>';
     const gridHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;">'
-        + '<div>' + mapSVG + '</div>'
+        + '<div id="subsolarMapContainer">' + mapSVG + '</div>'
         + '<div><canvas id="subsolarGlobe" width="260" height="180" style="border-radius:8px;border:1px solid rgba(255,149,0,0.25);display:block;width:100%;"></canvas></div>'
         + '</div>';
 
     panel.innerHTML = '<div style="background:linear-gradient(160deg,rgba(25,15,0,0.98) 0%,rgba(15,8,0,0.98) 100%); border-radius:12px; border:1px solid rgba(255,149,0,0.28); border-top:2px solid rgba(255,149,0,0.55); box-shadow:0 0 22px rgba(255,149,0,0.09); padding:8px 10px; font-size:0.78em;">'
         + headerHTML + titleHTML + gridHTML + infoHTML + '</div>';
 
-    // Render 3D globe after DOM update
+    // Render 3D globe after DOM update — match height to 2D map
     setTimeout(() => {
+        const mapC = document.getElementById('subsolarMapContainer');
+        const canvas = document.getElementById('subsolarGlobe');
+        if (mapC && canvas) {
+            const mapH = mapC.offsetHeight;
+            if (mapH > 0) { canvas.style.height = mapH + 'px'; }
+        }
         renderSubsolarGlobe(sunDecl, subsolarLon);
     }, 50);
 }
@@ -7287,16 +7317,16 @@ function generateSolarWeeks(sign) {
                             ${moreEvents}
                         </div>
                         
-                        <!-- Derecha: Símbolos astronómicos -->
+                        <!-- Derecha: Símbolos astronómicos (bajan según eventos de agenda) -->
                         ${(eclipse || retrogrades.length > 0 || signChanges.length > 0 || interAspects.length > 0 || stellium || majorAspect || astronomicalEvent || moonEvent) ? `
-                        <div style="display: flex; flex-direction: column; gap: 2px; font-size: 1.2em; flex-shrink: 0; margin-left: auto;">
+                        <div style="display: flex; flex-direction: column; gap: 2px; font-size: 1.2em; flex-shrink: 0; margin-left: auto; padding-top: ${Math.min(dayEvents.length, 3) * 13 + (dayEvents.length > 3 ? 10 : 0)}px;">
                             ${astronomicalEvent ? `<div style="color: #e8c84a; font-weight: bold; line-height: 1; font-size: 0.9em; text-align: right; cursor: default;" title="${astronomicalEvent[currentLang]}">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>` : ''}
                             ${moonEvent ? `<div onclick="event.stopPropagation(); navigateToLunar2026Moon(${dayDate.getTime()}, '${moonEvent.type}')" style="color:${moonEvent.type==='full'?'#FFD700':'#ccc'};font-weight:bold;font-size:0.65em;text-align:right;line-height:1.2;overflow:visible;cursor:pointer;"><span style="font-size:0.9em;">${moonEvent.type==='full'?'🌕':moonEvent.icon}</span></div>` : ''}
                             ${eclipse ? `<div onclick="event.stopPropagation(); showEclipseModal('${eclipse.type}', '${eclipse.name}', '${dayDate.getTime()}')" style="cursor: pointer; line-height: 1.2; font-size:0.7em; font-weight:bold; color:#FFD700;" title="${eclipse.name}">${eclipse.type === 'solar' ? '☀️' : '🌒'} ${currentLang==='es'?'Eclipse':'Eclipse'}</div>` : ''}
                             ${interAspects.map(asp => {
                                 const p1 = getPlanetInitial(asp.planet1);
                                 const p2 = getPlanetInitial(asp.planet2);
-                                return `<div onclick="window.handleInterAspectClick(${dayDate.getTime()}, ${realLunarDay})" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.75em;white-space:nowrap;" title="${asp.planet1} ${asp.symbol} ${asp.planet2}">${p1} ${asp.symbol} ${p2}</div>`;
+                                return `<div onclick="window.handleInterAspectClick(${dayDate.getTime()}, ${realLunarDay})" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.75em;white-space:nowrap;text-align:right;" title="${asp.planet1} ${asp.symbol} ${asp.planet2}">${p1} ${asp.symbol} ${p2}</div>`;
                             }).join('')}
                             ${retrogrades.map(r => {
                                 const planetInit = getPlanetInitial(r.planet);
@@ -7314,7 +7344,7 @@ function generateSolarWeeks(sign) {
                     </div>
                 </div>
             `;
-            
+
             currentDate.setDate(currentDate.getDate() + 1);
             dayCounter++;
             renderedDays++;
@@ -8704,9 +8734,9 @@ function renderCalendar() {
                             ${moreEvents}
                         </div>
                         
-                        <!-- Derecha: Símbolos astronómicos -->
+                        <!-- Derecha: Símbolos astronómicos (bajan según eventos de agenda) -->
                         ${(eclipse || retrogrades.length > 0 || signChanges.length > 0 || interAspects.length > 0 || stellium || majorAspect || astronomicalEvent || moonEvent) ? `
-                        <div style="display: flex; flex-direction: column; gap: 2px; font-size: 1.2em; flex-shrink: 0; margin-left: auto;">
+                        <div style="display: flex; flex-direction: column; gap: 2px; font-size: 1.2em; flex-shrink: 0; margin-left: auto; padding-top: ${Math.min(dayEvents.length, 3) * 13 + (dayEvents.length > 3 ? 10 : 0)}px;">
                             ${astronomicalEvent ? `<div style="color: #e8c84a; font-weight: bold; line-height: 1; font-size: 0.9em; text-align: right; cursor: default;" title="${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>` : ''}
                             ${eclipse ? `<div onclick="event.stopPropagation(); showEclipseModal('${eclipse.type}', '${eclipse.name}', '${day.date.getTime()}')" style="cursor: pointer; line-height: 1.2; font-size:0.7em; font-weight:bold; color:#FFD700; text-align:right;" title="${eclipse.name}">${eclipse.type === 'solar' ? '☀️' : '🌒'} Eclipse</div>` : ''}
                             ${interAspects.map(asp => {
@@ -10317,7 +10347,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with force-update mechanism
-const APP_VERSION = 'v111';
+const APP_VERSION = 'v123';
 if ('serviceWorker' in navigator) {
     // Force update: check for new SW on every page load
     navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
