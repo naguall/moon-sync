@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v113';
+        var REQUIRED_VER = 'v114';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -1794,16 +1794,16 @@ const signChanges2026 = [
     { planet: 'Marte', symbol: '♂', date: crDate('2026-09-04'), toSign: 'Sagitario', meaning: 'Expansión de la energía marcial. El impulso busca horizonte y significado. Disponibilidad para acción exploratoria. Posible dispersión de energía direccional.', color: '#ff6b6b' },
     
     // JÚPITER (MUY IMPORTANTE)
-    { planet: 'Júpiter', symbol: '♃', date: crDate('2026-06-29'), toSign: 'Leo', meaning: 'CICLO ANUAL. Expansión a través de expresión y creatividad. El crecimiento busca visibilidad y generosidad. Disponibilidad para confianza en lo personal. El significado se encuentra con el ego. (2026-2027)', color: '#9b59b6', isImportant: true },
+    { planet: 'Júpiter', symbol: '♃', date: crDate('2026-06-29'), toSign: 'Leo', meaning: 'CICLO ANUAL. Expansión a través de expresión y creatividad. El crecimiento busca visibilidad y generosidad. Disponibilidad para confianza en lo personal. El significado se encuentra con el ego. (2026-2027)', color: '#9b59b6', isImportant: true, badgeInfo: 'Júpiter cambia de signo cada ~12 meses. Define el tono de expansión y oportunidades del año.' },
     
     // SATURNO (CRÍTICO)
     { planet: 'Saturno', symbol: '♄', date: crDate('2026-02-13'), toSign: 'Aries', meaning: 'CICLO MAYOR. Encuentro tenso entre estructura y autonomía. El límite se aplica a la identidad y el impulso. Disponibilidad para aprender sobre autoridad personal. Fricción natural entre disciplina y espontaneidad. (hasta 2028-2029)', color: '#3498db', isCritical: true },
     
     // URANO (GENERACIONAL)
-    { planet: 'Urano', symbol: '♅', date: crDate('2026-07-07'), toSign: 'Géminis', meaning: 'CAMBIO GENERACIONAL (7 años). Revolución en comunicación e información. Disponibilidad para conexiones inesperadas. El cambio opera en el nivel mental y social. Aceleración en intercambios y tecnología.', color: '#1abc9c', isGenerational: true },
+    { planet: 'Urano', symbol: '♅', date: crDate('2026-07-07'), toSign: 'Géminis', meaning: 'CAMBIO GENERACIONAL (7 años). Revolución en comunicación e información. Disponibilidad para conexiones inesperadas. El cambio opera en el nivel mental y social. Aceleración en intercambios y tecnología.', color: '#1abc9c', isGenerational: true, badgeInfo: 'Urano cambia de signo cada ~7 años. Última vez en Géminis: 1941-1949.' },
     
     // NEPTUNO (MEGA IMPORTANTE)
-    { planet: 'Neptuno', symbol: '♆', date: crDate('2026-01-26'), toSign: 'Aries', meaning: 'CAMBIO GENERACIONAL. Lo místico se encuentra con la acción. Idealismo aplicado a la identidad y el impulso. Disponibilidad para confusión sobre quién soy. El guerrero espiritual como arquetipo disponible. (hasta 2039)', color: '#5dade2', isGenerational: true },
+    { planet: 'Neptuno', symbol: '♆', date: crDate('2026-01-26'), toSign: 'Aries', meaning: 'CAMBIO GENERACIONAL. Lo místico se encuentra con la acción. Idealismo aplicado a la identidad y el impulso. Disponibilidad para confusión sobre quién soy. El guerrero espiritual como arquetipo disponible. (hasta 2039)', color: '#5dade2', isGenerational: true, badgeInfo: 'Neptuno cambia de signo cada ~14 años. Última vez en Aries: 1861-1875.' },
 ];
 
 // Stelliums detectados 2026 (SOLO VERIFICADOS REALES)
@@ -1817,17 +1817,17 @@ const interPlanetaryAspects2026 = [
     // ENERO
     { date: crDate('2026-01-09'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'oposición', symbol: '☍', degrees: '20°11', signs: 'Capricornio/Cáncer', color: '#e74c3c', time: '09:36', meaning: 'Tensión entre el principio relacional y el expansivo. Búsqueda de equilibrio entre estructura afectiva y crecimiento emocional.' },
     { date: crDate('2026-01-19'), planet1: 'Saturno', planet2: 'Urano', aspect: 'sextil', symbol: '⚹', degrees: '27°33', signs: 'Piscis/Tauro', color: '#3498db', time: '21:53', meaning: 'Oportunidad de integración entre estructura y cambio. Lo establecido puede abrirse a lo nuevo sin ruptura.' },
-    { date: crDate('2026-01-27'), planet1: 'Marte', planet2: 'Plutón', aspect: 'conjunción', symbol: '☌', degrees: '3°34', signs: 'Acuario', color: '#e74c3c', time: '15:00', isImportant: true, meaning: 'Encuentro intenso entre voluntad marcial y transformación plutoniana. Poder concentrado. Posibilidad de acción profunda o confrontación con lo que debe morir.' },
+    { date: crDate('2026-01-27'), planet1: 'Marte', planet2: 'Plutón', aspect: 'conjunción', symbol: '☌', degrees: '3°34', signs: 'Acuario', color: '#e74c3c', time: '15:00', isImportant: true, badgeInfo: 'Ocurre cada ~2 años. Marte activa la energía transformadora de Plutón.', meaning: 'Encuentro intenso entre voluntad marcial y transformación plutoniana. Poder concentrado. Posibilidad de acción profunda o confrontación con lo que debe morir.' },
     
     // FEBRERO
-    { date: crDate('2026-02-20'), planet1: 'Saturno', planet2: 'Neptuno', aspect: 'conjunción', symbol: '☌', degrees: '0°44', signs: 'Aries', color: '#9b59b6', time: '07:24', isMajor: true, meaning: 'Encuentro entre estructura saturnina y disolución neptuniana. El límite se encuentra con lo ilimitado. Disponibilidad para dar forma a lo intangible. Tensión entre disciplina y rendición.' },
+    { date: crDate('2026-02-20'), planet1: 'Saturno', planet2: 'Neptuno', aspect: 'conjunción', symbol: '☌', degrees: '0°44', signs: 'Aries', color: '#9b59b6', time: '07:24', isMajor: true, badgeInfo: 'Ocurre cada ~36 años. Última vez: 1989. Define ciclos históricos y culturales enteros.', meaning: 'Encuentro entre estructura saturnina y disolución neptuniana. El límite se encuentra con lo ilimitado. Disponibilidad para dar forma a lo intangible. Tensión entre disciplina y rendición.' },
     { date: crDate('2026-02-22'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'trígono', symbol: '△', degrees: '15°31', signs: 'Piscis/Cáncer', color: '#2ecc71', time: '12:02', meaning: 'Flujo entre principio relacional y expansivo. Energía disponible para amplificación de vínculos. Encuentro entre amor y crecimiento en elementos agua.' },
     { date: crDate('2026-02-27'), planet1: 'Marte', planet2: 'Urano', aspect: 'cuadratura', symbol: '□', degrees: '27°42', signs: 'Acuario/Tauro', color: '#e74c3c', time: '08:20', meaning: 'Fricción entre impulso marcial y cambio uraniano. La acción encuentra lo inesperado. Energía disponible para innovación impulsiva. Tensión entre fuerza direccional y disrupción.' },
     
     // MARZO
     { date: crDate('2026-03-18'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'cuadratura', symbol: '□', degrees: '15°10', signs: 'Aries/Cáncer', color: '#f39c12', time: '09:08', meaning: 'Tensión creativa entre deseo relacional y expansión emocional. El impulso venusino encuentra resistencia en la necesidad jupiteriana de protección.' },
     { date: crDate('2026-03-21'), planet1: 'Marte', planet2: 'Júpiter', aspect: 'trígono', symbol: '△', degrees: '15°16', signs: 'Piscis/Cáncer', color: '#2ecc71', time: '16:59', meaning: 'Flujo entre acción y expansión. La voluntad marcial encuentra apoyo en la abundancia jupiteriana. Energía para emprender con confianza.' },
-    { date: crDate('2026-03-28'), planet1: 'Saturno', planet2: 'Plutón', aspect: 'sextil', symbol: '⚹', degrees: '5°09', signs: 'Aries/Acuario', color: '#3498db', time: '14:40', isImportant: true, meaning: 'Oportunidad de estructurar la transformación. Lo saturnino puede dar forma a los procesos plutonianos. Disciplina aplicada al cambio profundo.' },
+    { date: crDate('2026-03-28'), planet1: 'Saturno', planet2: 'Plutón', aspect: 'sextil', symbol: '⚹', degrees: '5°09', signs: 'Aries/Acuario', color: '#3498db', time: '14:40', isImportant: true, badgeInfo: 'Saturno-Plutón: ciclo de ~33 años. Momentos clave de reestructuración social profunda.', meaning: 'Oportunidad de estructurar la transformación. Lo saturnino puede dar forma a los procesos plutonianos. Disciplina aplicada al cambio profundo.' },
     
     // ABRIL
     { date: crDate('2026-04-12'), planet1: 'Marte', planet2: 'Neptuno', aspect: 'conjunción', symbol: '☌', degrees: '2°39', signs: 'Aries', color: '#5dade2', time: '22:28', meaning: 'Impulso marcial encuentra disolución neptuniana. La acción se encuentra con lo místico. Disponibilidad para acción inspirada o confusión sobre dirección.' },
@@ -1840,21 +1840,21 @@ const interPlanetaryAspects2026 = [
     { date: crDate('2026-05-25'), planet1: 'Marte', planet2: 'Plutón', aspect: 'cuadratura', symbol: '□', degrees: '5°25', signs: 'Tauro/Acuario', color: '#e74c3c', time: '21:02', meaning: 'Fricción entre voluntad de acción y fuerza transformadora. Impulso marcial encuentra resistencia plutoniana. Tensión que puede catalizar cambio profundo.' },
     
     // JUNIO
-    { date: crDate('2026-06-09'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'conjunción', symbol: '☌', degrees: '25°46', signs: 'Cáncer', color: '#e91e63', time: '12:55', isImportant: true, meaning: 'Encuentro entre amor y abundancia. El principio relacional se encuentra con la expansión jupiteriana. Generosidad afectiva. Disponibilidad para placer y belleza amplificados.' },
+    { date: crDate('2026-06-09'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'conjunción', symbol: '☌', degrees: '25°46', signs: 'Cáncer', color: '#e91e63', time: '12:55', isImportant: true, badgeInfo: 'Ocurre ~1 vez al año. Considerado el aspecto más afortunado y benéfico del zodíaco.', meaning: 'Encuentro entre amor y abundancia. El principio relacional se encuentra con la expansión jupiteriana. Generosidad afectiva. Disponibilidad para placer y belleza amplificados.' },
     
     // JULIO
     { date: crDate('2026-07-03'), planet1: 'Marte', planet2: 'Urano', aspect: 'conjunción', symbol: '☌', degrees: '3°52', signs: 'Géminis', color: '#1abc9c', time: '23:05', meaning: 'Encuentro explosivo entre acción y cambio súbito. Impulso marcial se une con innovación uraniana. Disponibilidad para ruptura con lo establecido.' },
     { date: crDate('2026-07-15'), planet1: 'Urano', planet2: 'Neptuno', aspect: 'sextil', symbol: '⚹', degrees: '4°23', signs: 'Géminis/Aries', color: '#3498db', time: '13:59', meaning: 'Oportunidad de integración entre revolución y disolución. El cambio uraniano puede encontrar inspiración neptuniana.' },
-    { date: crDate('2026-07-17'), planet1: 'Urano', planet2: 'Plutón', aspect: 'trígono', symbol: '△', degrees: '4°29', signs: 'Géminis/Acuario', color: '#2ecc71', time: '23:04', isMajor: true, meaning: 'Flujo poderoso entre cambio revolucionario y transformación profunda. El rompimiento uraniano encuentra apoyo en la regeneración plutoniana. Energía disponible para cambio generacional.' },
+    { date: crDate('2026-07-17'), planet1: 'Urano', planet2: 'Plutón', aspect: 'trígono', symbol: '△', degrees: '4°29', signs: 'Géminis/Acuario', color: '#2ecc71', time: '23:04', isMajor: true, badgeInfo: 'Ciclo Urano-Plutón: ~127 años. Último trígono: 1943. Marca revoluciones tecnológicas y sociales.', meaning: 'Flujo poderoso entre cambio revolucionario y transformación profunda. El rompimiento uraniano encuentra apoyo en la regeneración plutoniana. Energía disponible para cambio generacional.' },
     { date: crDate('2026-07-20'), planet1: 'Júpiter', planet2: 'Neptuno', aspect: 'trígono', symbol: '△', degrees: '4°22', signs: 'Leo/Aries', color: '#2ecc71', time: '00:26', meaning: 'Flujo entre expansión y disolución de límites. La fe jupiteriana encuentra inspiración neptuniana. Disponibilidad para visión ampliada.' },
-    { date: crDate('2026-07-20'), planet1: 'Júpiter', planet2: 'Plutón', aspect: 'oposición', symbol: '☍', degrees: '4°26', signs: 'Leo/Acuario', color: '#e74c3c', time: '07:54', isImportant: true, meaning: 'Tensión entre expansión y transformación profunda. La abundancia jupiteriana encuentra resistencia en el poder plutoniano. Polaridad que demanda integración.' },
+    { date: crDate('2026-07-20'), planet1: 'Júpiter', planet2: 'Plutón', aspect: 'oposición', symbol: '☍', degrees: '4°26', signs: 'Leo/Acuario', color: '#e74c3c', time: '07:54', isImportant: true, badgeInfo: 'Ciclo Júpiter-Plutón: ~12 años. Oposición = punto de máxima tensión del ciclo.', meaning: 'Tensión entre expansión y transformación profunda. La abundancia jupiteriana encuentra resistencia en el poder plutoniano. Polaridad que demanda integración.' },
     { date: crDate('2026-07-21'), planet1: 'Júpiter', planet2: 'Urano', aspect: 'sextil', symbol: '⚹', degrees: '4°37', signs: 'Leo/Géminis', color: '#2ecc71', time: '03:47', meaning: 'Oportunidad entre expansión y cambio súbito. El optimismo jupiteriano puede abrir espacio al rompimiento uraniano.' },
     { date: crDate('2026-07-22'), planet1: 'Neptuno', planet2: 'Plutón', aspect: 'sextil', symbol: '⚹', degrees: '4°20', signs: 'Aries/Acuario', color: '#3498db', time: '22:02', meaning: 'Oportunidad de integración entre lo místico y lo transformador. La disolución neptuniana puede colaborar con la regeneración plutoniana.' },
     
     // AGOSTO
     { date: crDate('2026-08-17'), planet1: 'Marte', planet2: 'Neptuno', aspect: 'cuadratura', symbol: '□', degrees: '3°59', signs: 'Cáncer/Aries', color: '#f39c12', time: '02:53', meaning: 'Fricción entre acción directa y disolución de límites. El impulso marcial encuentra confusión o inspiración neptuniana. Tensión entre hacer y rendirse.' },
     { date: crDate('2026-08-17'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'sextil', symbol: '⚹', degrees: '10°37', signs: 'Libra/Leo', color: '#2ecc71', time: '09:10', meaning: 'Oportunidad de flujo entre placer y abundancia. El principio relacional encuentra apoyo en la generosidad jupiteriana.' },
-    { date: crDate('2026-08-31'), planet1: 'Júpiter', planet2: 'Saturno', aspect: 'trígono', symbol: '△', degrees: '13°41', signs: 'Leo/Aries', color: '#2ecc71', time: '15:40', isImportant: true, meaning: 'Flujo poderoso entre expansión y estructura. El optimismo jupiteriano encuentra disciplina saturnina. Crecimiento con forma. Disponibilidad para construir lo grande.' },
+    { date: crDate('2026-08-31'), planet1: 'Júpiter', planet2: 'Saturno', aspect: 'trígono', symbol: '△', degrees: '13°41', signs: 'Leo/Aries', color: '#2ecc71', time: '15:40', isImportant: true, badgeInfo: 'Ciclo Júpiter-Saturno: ~20 años. Define épocas económicas y políticas. Última conjunción: 2020.', meaning: 'Flujo poderoso entre expansión y estructura. El optimismo jupiteriano encuentra disciplina saturnina. Crecimiento con forma. Disponibilidad para construir lo grande.' },
     
     // SEPTIEMBRE
     { date: crDate('2026-09-01'), planet1: 'Marte', planet2: 'Saturno', aspect: 'cuadratura', symbol: '□', degrees: '13°39', signs: 'Cáncer/Aries', color: '#e74c3c', time: '03:01', meaning: 'Fricción entre impulso y límite. La acción marcial encuentra resistencia saturnina. Tensión que puede enseñar sobre paciencia o explotar en frustración.' },
@@ -3253,9 +3253,8 @@ function openAspectsModal(date, lunarDay, dayData) {
                          asp.isMajor ? '<span style="background:rgba(231,76,60,0.2);color:#ff8a80;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(231,76,60,0.35);" title="Aspecto mayor: alineación poco frecuente entre planetas exteriores con impacto colectivo profundo">MAYOR</span>' :
                          asp.isImportant ? '<span style="background:rgba(78,205,196,0.2);color:#80cbc4;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(78,205,196,0.35);" title="Aspecto notable: involucra planetas sociales o exteriores en ángulo significativo">NOTABLE</span>' : '';
 
-            const badgeExplain = asp.isGenerational ? `<div style="font-size:0.72em;color:#d4a5f5;margin-bottom:4px;line-height:1.3;font-style:italic;">${currentLang==='es'?'Planetas lentos (Urano/Neptuno/Plutón) — efecto que marca toda una generación':'Slow planets (Uranus/Neptune/Pluto) — effect that marks an entire generation'}</div>` :
-                               asp.isMajor ? `<div style="font-size:0.72em;color:#ff8a80;margin-bottom:4px;line-height:1.3;font-style:italic;">${currentLang==='es'?'Alineación poco frecuente entre planetas exteriores — impacto colectivo profundo':'Rare alignment between outer planets — deep collective impact'}</div>` :
-                               asp.isImportant ? `<div style="font-size:0.72em;color:#80cbc4;margin-bottom:4px;line-height:1.3;font-style:italic;">${currentLang==='es'?'Involucra planetas sociales o exteriores en ángulo significativo':'Involves social or outer planets at a significant angle'}</div>` : '';
+            const badgeColor = asp.isGenerational ? '#d4a5f5' : asp.isMajor ? '#ff8a80' : asp.isImportant ? '#80cbc4' : '';
+            const badgeExplain = asp.badgeInfo ? `<div style="font-size:0.72em;color:${badgeColor};margin-bottom:4px;line-height:1.3;font-style:italic;">${asp.badgeInfo}</div>` : '';
 
             return `
             <div class="aspect-detail" style="border-left-color: ${asp.color}; background: rgba(0,0,0,0.2);">
@@ -3439,9 +3438,8 @@ function openInterAspectsOnlyModal(date, lunarDay, interAspects) {
                      asp.isImportant ? '<span style="background:rgba(78,205,196,0.2);color:#80cbc4;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(78,205,196,0.35);" title="Aspecto notable: involucra planetas sociales o exteriores en ángulo significativo">NOTABLE</span>' : '';
         const defaultMeaning = currentLang === 'es' ? 'Aspecto interplanetario significativo.' : 'Significant interplanetary aspect.';
 
-        const badgeExplain = asp.isGenerational ? `<div style="font-size:0.72em;color:#d4a5f5;margin-bottom:4px;line-height:1.3;font-style:italic;">${currentLang==='es'?'Planetas lentos (Urano/Neptuno/Plutón) — efecto que marca toda una generación':'Slow planets (Uranus/Neptune/Pluto) — effect that marks an entire generation'}</div>` :
-                             asp.isMajor ? `<div style="font-size:0.72em;color:#ff8a80;margin-bottom:4px;line-height:1.3;font-style:italic;">${currentLang==='es'?'Alineación poco frecuente entre planetas exteriores — impacto colectivo profundo':'Rare alignment between outer planets — deep collective impact'}</div>` :
-                             asp.isImportant ? `<div style="font-size:0.72em;color:#80cbc4;margin-bottom:4px;line-height:1.3;font-style:italic;">${currentLang==='es'?'Involucra planetas sociales o exteriores en ángulo significativo':'Involves social or outer planets at a significant angle'}</div>` : '';
+        const badgeColor = asp.isGenerational ? '#d4a5f5' : asp.isMajor ? '#ff8a80' : asp.isImportant ? '#80cbc4' : '';
+        const badgeExplain = asp.badgeInfo ? `<div style="font-size:0.72em;color:${badgeColor};margin-bottom:4px;line-height:1.3;font-style:italic;">${asp.badgeInfo}</div>` : '';
 
         return `
         <div class="aspect-detail" style="border-left-color: ${asp.color}; background: rgba(0,0,0,0.2);">
