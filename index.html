@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v140';
+        var REQUIRED_VER = 'v141';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -10462,7 +10462,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with force-update mechanism
-const APP_VERSION = 'v140';
+const APP_VERSION = 'v141';
 if ('serviceWorker' in navigator) {
     // Force update: check for new SW on every page load
     navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
@@ -10658,8 +10658,9 @@ DOMTokenList.prototype.add = function() {
 let aiChatHistory = [];
 let aiIsTyping = false;
 
-// AI PROXY URL — set this to your Cloudflare Worker URL after deploying
-// If empty, falls back to user's personal API key
+// Built-in Gemini API key (free tier) — users don't need to configure anything
+const AI_BUILTIN_KEY = 'AIzaSyAanA-im-m6osQVxXVkVG2h6JidTF2qOwE';
+// Optional proxy URL or personal key override
 const AI_PROXY_URL = localStorage.getItem('aiProxyUrl') || '';
 
 function getGeminiKey() {
@@ -10667,7 +10668,7 @@ function getGeminiKey() {
 }
 
 function aiIsConfigured() {
-    return !!(AI_PROXY_URL || getGeminiKey());
+    return !!(AI_BUILTIN_KEY || AI_PROXY_URL || getGeminiKey());
 }
 
 function openAIChat() {
@@ -10874,12 +10875,13 @@ async function sendAIMessage() {
             }
         };
 
-        // Use proxy if available, otherwise direct Gemini API with personal key
+        // Priority: proxy > personal key > built-in key
         let apiUrl;
         if (AI_PROXY_URL) {
             apiUrl = AI_PROXY_URL;
         } else {
-            apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + getGeminiKey();
+            const key = getGeminiKey() || AI_BUILTIN_KEY;
+            apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key;
         }
 
         const response = await fetch(apiUrl, {
