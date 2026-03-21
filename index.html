@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v125';
+        var REQUIRED_VER = 'v126';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -9646,27 +9646,34 @@ function clearOldNotifications() {
 // IMPORTANT: Clear old notifications immediately on page load
 clearOldNotifications();
 
-// Clear iOS app badge when opening the app or returning from background
+// Clear app badge + close Android notifications when opening the app
 (function() {
-    // On page load: mark all seen and clear iOS badge
-    markAllNotifSeen();
-    if ('clearAppBadge' in navigator) { navigator.clearAppBadge().catch(()=>{}); }
+    function clearAllBadges() {
+        markAllNotifSeen();
+        if ('clearAppBadge' in navigator) { navigator.clearAppBadge().catch(()=>{}); }
+        // Android: close all SW notifications (this removes the badge from the icon)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(function(reg) {
+                if (reg.getNotifications) {
+                    reg.getNotifications().then(function(notifications) {
+                        notifications.forEach(function(n) { n.close(); });
+                    });
+                }
+            }).catch(function(){});
+        }
+        updateNotifBadge();
+    }
+
+    // On page load
+    clearAllBadges();
 
     // When returning from background (tab/app switch)
     document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible') {
-            markAllNotifSeen();
-            if ('clearAppBadge' in navigator) { navigator.clearAppBadge().catch(()=>{}); }
-            updateNotifBadge();
-        }
+        if (document.visibilityState === 'visible') { clearAllBadges(); }
     });
 
-    // Also on focus (some iOS versions use this instead)
-    window.addEventListener('focus', function() {
-        markAllNotifSeen();
-        if ('clearAppBadge' in navigator) { navigator.clearAppBadge().catch(()=>{}); }
-        updateNotifBadge();
-    });
+    // Also on focus
+    window.addEventListener('focus', function() { clearAllBadges(); });
 })();
 
 // Schedule clear at 23:59
@@ -10373,7 +10380,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with force-update mechanism
-const APP_VERSION = 'v125';
+const APP_VERSION = 'v126';
 if ('serviceWorker' in navigator) {
     // Force update: check for new SW on every page load
     navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
