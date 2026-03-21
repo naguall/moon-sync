@@ -4792,8 +4792,14 @@ function updateCurrentDayInfoForMode(mode) {
         const todaySignChanges = getSignChanges(today);
         const todayRetrogrades = getRetrogrades(today);
         const todayInterAspects = getInterPlanetaryAspects(today);
+        const todayEclipse = getEclipseInfo(today);
+        const todayAstroEvent = isAstronomicalEvent(today);
+        const todayStellium = getStellium(today);
 
         const allPlanetaryEvents = [
+            ...(todayEclipse ? [{ type: 'eclipse', data: todayEclipse }] : []),
+            ...(todayAstroEvent ? [{ type: 'astroEvent', data: todayAstroEvent }] : []),
+            ...(todayStellium ? [{ type: 'stellium', data: todayStellium }] : []),
             ...todayInterAspects.map(asp => ({ type: 'interPlanetaryAspect', data: asp })),
             ...todayAspects.map(asp => ({ type: 'aspect', data: asp })),
             ...todaySignChanges.map(ch => ({ type: 'signChange', data: ch })),
@@ -4838,12 +4844,22 @@ function updateCurrentDayInfoForMode(mode) {
                     ${allPlanetaryEvents.length > 0 ? `
                     <div style="display:flex;flex-direction:column;gap:2px;align-items:stretch;">
                         ${allPlanetaryEvents.slice(0, 6).map(event => {
-                            if (event.type === 'interPlanetaryAspect') {
+                            if (event.type === 'eclipse') {
+                                const ecl = event.data;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.2);border-radius:4px;border-left:2px solid #f5576c;font-weight:bold;">🌑 ${ecl.type || (currentLang==='es'?'Eclipse':'Eclipse')}</div>`;
+                            } else if (event.type === 'astroEvent') {
+                                const ae = event.data;
+                                const lbl = ae.type==='equinox'?(currentLang==='es'?'Equinoccio':'Equinox'):(currentLang==='es'?'Solsticio':'Solstice');
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(255,215,0,0.15);border-radius:4px;border-left:2px solid #FFD700;font-weight:bold;">${ae[currentLang]} ${lbl}</div>`;
+                            } else if (event.type === 'stellium') {
+                                const st = event.data;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(201,168,64,0.15);border-radius:4px;border-left:2px solid #c9a840;">✨ ${currentLang==='es'?'Stellium':'Stellium'} ${st.sign||''}</div>`;
+                            } else if (event.type === 'interPlanetaryAspect') {
                                 const asp = event.data;
                                 return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;border-left:2px solid ${asp.color};">${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)}</div>`;
                             } else if (event.type === 'signChange') {
                                 const ch = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(78,205,196,0.12);border-radius:4px;border-left:2px solid #4ecdc4;">${tp(ch.planet)}→${tsSign(ch.sign)}</div>`;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(78,205,196,0.12);border-radius:4px;border-left:2px solid #4ecdc4;">${tp(ch.planet)}→${ts(ch.toSign) || ch.toSign}</div>`;
                             } else if (event.type === 'retrograde') {
                                 const ret = event.data;
                                 return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.12);border-radius:4px;border-left:2px solid #e85d7a;">${tp(ret.planet)} ${ret.type==='start'?(currentLang==='es'?'℞ Retro':'℞ Retro'):(currentLang==='es'?'℞ Directo':'℞ Direct')}</div>`;
@@ -5018,7 +5034,7 @@ function generateGregorianMonth() {
         
         // Planetary events
         if (astronomicalEvent) html += `<div style="color: #e8c84a; font-weight: bold; font-size: 0.8em; text-align: right;">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>`;
-        if (moonEvent) html += `<div onclick="event.stopPropagation(); navigateToLunar2026Moon(${date.getTime()}, '${moonEvent.type}')" style="color:${moonEvent.type==='full'?'#FFD700':'#ccc'}; font-weight: bold; font-size: 0.6em; text-align: center; line-height: 1.2; overflow: visible; cursor:pointer; text-decoration:underline; text-underline-offset:2px;"><span style="font-size:0.9em;">${moonEvent.type==='full'?'🌕':moonEvent.icon}</span> ${moonEvent.label}</div>`;
+        if (moonEvent) html += `<div onclick="event.stopPropagation(); navigateToLunar2026Moon(${date.getTime()}, '${moonEvent.type}')" style="color:${moonEvent.type==='full'?'#FFD700':'#ccc'}; font-weight: bold; font-size: 0.6em; text-align: center; line-height: 1.2; overflow: visible; cursor:pointer; text-decoration:underline; text-underline-offset:2px;"><span style="font-size:0.9em;">${moonEvent.type==='full'?'🌕':moonEvent.icon}</span></div>`;
         if (planetaryEvents.eclipse) html += `<div style="color:#FFD700; font-size: 0.6em; font-weight:bold;">${planetaryEvents.eclipse.type==='solar'?'☀️ Ecl.Sol':'🌒 Ecl.Lun'}</div>`;
         
         // Inter-planetary aspects (limit 1)
@@ -5286,7 +5302,7 @@ function generateSolarWeeks(sign) {
                         ${(eclipse || retrogrades.length > 0 || signChanges.length > 0 || interAspects.length > 0 || stellium || majorAspect || astronomicalEvent || moonEvent) ? `
                         <div style="display: flex; flex-direction: column; gap: 2px; font-size: 1.2em; flex-shrink: 0; margin-left: auto;">
                             ${astronomicalEvent ? `<div style="color: #e8c84a; font-weight: bold; line-height: 1; font-size: 0.9em; text-align: right; cursor: default;" title="${astronomicalEvent[currentLang]}">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>` : ''}
-                            ${moonEvent ? `<div onclick="event.stopPropagation(); navigateToLunar2026Moon(${dayDate.getTime()}, '${moonEvent.type}')" style="color:${moonEvent.type==='full'?'#FFD700':'#ccc'};font-weight:bold;font-size:0.65em;text-align:right;line-height:1.2;overflow:visible;cursor:pointer;text-decoration:underline;text-underline-offset:2px;"><span style="font-size:0.9em;">${moonEvent.type==='full'?'🌕':moonEvent.icon}</span> ${moonEvent.label}</div>` : ''}
+                            ${moonEvent ? `<div onclick="event.stopPropagation(); navigateToLunar2026Moon(${dayDate.getTime()}, '${moonEvent.type}')" style="color:${moonEvent.type==='full'?'#FFD700':'#ccc'};font-weight:bold;font-size:0.65em;text-align:right;line-height:1.2;overflow:visible;cursor:pointer;text-decoration:underline;text-underline-offset:2px;"><span style="font-size:0.9em;">${moonEvent.type==='full'?'🌕':moonEvent.icon}</span></div>` : ''}
                             ${eclipse ? `<div onclick="event.stopPropagation(); showEclipseModal('${eclipse.type}', '${eclipse.name}', '${dayDate.getTime()}')" style="cursor: pointer; line-height: 1.2; font-size:0.7em; font-weight:bold; color:#FFD700;" title="${eclipse.name}">${eclipse.type === 'solar' ? '☀️' : '🌒'} ${currentLang==='es'?'Eclipse':'Eclipse'}</div>` : ''}
                             ${interAspects.map(asp => {
                                 const p1 = getPlanetInitial(asp.planet1);
@@ -6243,15 +6259,21 @@ function renderCalendar() {
         const todaySignChanges = getSignChanges(today);
         const todayRetrogrades = getRetrogrades(today);
         const todayInterAspects = getInterPlanetaryAspects(today);
-        
+        const todayEclipse2 = getEclipseInfo(today);
+        const todayAstroEvent2 = isAstronomicalEvent(today);
+        const todayStellium2 = getStellium(today);
+
         // Combinar TODOS los eventos planetarios del día
         const allPlanetaryEvents = [
+            ...(todayEclipse2 ? [{ type: 'eclipse', data: todayEclipse2 }] : []),
+            ...(todayAstroEvent2 ? [{ type: 'astroEvent', data: todayAstroEvent2 }] : []),
+            ...(todayStellium2 ? [{ type: 'stellium', data: todayStellium2 }] : []),
             ...todayInterAspects.map(asp => ({ type: 'interPlanetaryAspect', data: asp })),
             ...todayAspects.map(asp => ({ type: 'aspect', data: asp })),
             ...todaySignChanges.map(ch => ({ type: 'signChange', data: ch })),
             ...todayRetrogrades.map(ret => ({ type: 'retrograde', data: ret }))
         ];
-        
+
         document.getElementById('currentDayInfo').style.display = 'block';
         
         // Get astro data for today
@@ -6306,7 +6328,17 @@ function renderCalendar() {
                     ${allPlanetaryEvents.length > 0 ? `
                     <div style="display:flex;flex-direction:column;gap:2px;align-items:stretch;">
                         ${allPlanetaryEvents.slice(0, 6).map(event => {
-                            if (event.type === 'aspect') {
+                            if (event.type === 'eclipse') {
+                                const ecl = event.data;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.2);border-radius:4px;border-left:2px solid #f5576c;font-weight:bold;">🌑 ${ecl.type || 'Eclipse'}</div>`;
+                            } else if (event.type === 'astroEvent') {
+                                const ae = event.data;
+                                const lbl = ae.type==='equinox'?(currentLang==='es'?'Equinoccio':'Equinox'):(currentLang==='es'?'Solsticio':'Solstice');
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(255,215,0,0.15);border-radius:4px;border-left:2px solid #FFD700;font-weight:bold;">${ae[currentLang]} ${lbl}</div>`;
+                            } else if (event.type === 'stellium') {
+                                const st = event.data;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(201,168,64,0.15);border-radius:4px;border-left:2px solid #c9a840;">✨ Stellium ${st.sign||''}</div>`;
+                            } else if (event.type === 'aspect') {
                                 const asp = event.data;
                                 const color = asp.class==='conjunction'?'#ff6b6b':asp.class==='sextile'?'#4ecdc4':asp.class==='square'?'#ff9f43':asp.class==='trine'?'#7c4dff':'#ee5a6f';
                                 const ds = JSON.stringify(currentDayInCycle).replace(/'/g,"\\'").replace(/"/g,'&quot;');
