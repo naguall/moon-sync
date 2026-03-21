@@ -5493,8 +5493,6 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
         segs.push(seg);
         return segs.filter(s => s.length > 1);
     }
-    const trailSVG = buildSegs(allPts.filter(p => p.past)).map(s =>
-        '<polyline points="' + s.join(' ') + '" fill="none" stroke="rgba(126,200,255,0.45)" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>').join('');
     const leadSVG = buildSegs(allPts.filter(p => !p.past)).map(s =>
         '<polyline points="' + s.join(' ') + '" fill="none" stroke="rgba(201,168,64,0.6)" stroke-width="2" stroke-dasharray="8,4" stroke-linecap="round"/>').join('');
     const lp = allPts.filter(p => !p.past);
@@ -5563,8 +5561,8 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
         + '<text x="5" y="'+(my(0)-4)+'" fill="rgba(74,158,255,0.5)" font-size="9" font-family="monospace">0°</text>'
         + '<text x="5" y="'+(my(23.5)-4)+'" fill="rgba(201,168,64,0.45)" font-size="8" font-family="monospace">23.5°N</text>'
         + '<text x="5" y="'+(my(-23.5)-4)+'" fill="rgba(201,168,64,0.45)" font-size="8" font-family="monospace">23.5°S</text>'
-        // Trajectories
-        + trailSVG + leadSVG + arrow
+        // Trajectory (future only)
+        + leadSVG + arrow
         // User
         + '<circle cx="'+ux.toFixed(1)+'" cy="'+uy.toFixed(1)+'" r="7" fill="none" stroke="#4ecdc4" stroke-width="2" filter="url(#gf4)"/>'
         + '<circle cx="'+ux.toFixed(1)+'" cy="'+uy.toFixed(1)+'" r="3.5" fill="#4ecdc4"/>'
@@ -5575,15 +5573,11 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
         + '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="9" fill="#c9a840" filter="url(#gf4)" opacity="0.95"/>'
         + '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="4" fill="white"/>'
         + '<text x="'+(px+12).toFixed(0)+'" y="'+(py-10).toFixed(0)+'" fill="#e8c84a" font-size="10" font-family="monospace" font-weight="bold">'+lat.toFixed(1)+'°'+(lat>=0?'N':'S')+' '+Math.abs(lonDeg).toFixed(1)+'°'+(lonDeg>=0?'E':'W')+'</text>'
-        // Legend
-        + '<line x1="8" y1="'+(H-8)+'" x2="28" y2="'+(H-8)+'" stroke="rgba(126,200,255,0.5)" stroke-width="2" stroke-dasharray="6,4"/>'
-        + '<text x="32" y="'+(H-4)+'" fill="rgba(255,255,255,0.38)" font-size="8" font-family="monospace">'+(currentLang==='es'?'pasado':'past')+'</text>'
-        + '<line x1="80" y1="'+(H-8)+'" x2="100" y2="'+(H-8)+'" stroke="rgba(201,168,64,0.65)" stroke-width="2" stroke-dasharray="8,4"/>'
-        + '<text x="104" y="'+(H-4)+'" fill="rgba(255,255,255,0.38)" font-size="8" font-family="monospace">'+(currentLang==='es'?'futuro':'future')+'</text>'
-        // Distance info
-        + '<text x="' + (W-8) + '" y="' + (H-36) + '" fill="#4ecdc4" font-size="18" font-family="monospace" font-weight="bold" text-anchor="end">' + cityLabel + ' ↔ ' + (currentLang==='es'?'Sublunar':'Sublunar') + ': ' + Math.round(distToUser).toLocaleString() + ' km</text>'
-        + '<text x="' + (W-8) + '" y="' + (H-12) + '" fill="#c9a840" font-size="18" font-family="monospace" font-weight="bold" text-anchor="end">' + (currentLang==='es'?'Más cerca':'Closest') + ': ' + Math.round(closestDist).toLocaleString() + ' km @ ' + closestTimeStr + '</text>'
-        + '</svg>';
+        + '</svg>'
+        + '<div style="margin-top:10px;padding:8px 12px;background:rgba(10,14,30,0.85);border:1px solid rgba(74,158,255,0.15);border-radius:8px;text-align:center;font-family:monospace;">'
+        + '<div style="font-size:1.3em;font-weight:bold;color:#4ecdc4;margin-bottom:4px;">' + cityLabel + ' ↔ ' + (currentLang==='es'?'Sublunar':'Sublunar') + ': ' + Math.round(distToUser).toLocaleString() + ' km</div>'
+        + '<div style="font-size:1.3em;font-weight:bold;color:#c9a840;">' + (currentLang==='es'?'Más cerca':'Closest') + ': ' + Math.round(closestDist).toLocaleString() + ' km @ ' + closestTimeStr + '</div>'
+        + '</div>';
 }
 
 // ── 3D Globe ─────────────────────────────────────────────────
