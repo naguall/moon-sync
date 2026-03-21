@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v146';
+        var REQUIRED_VER = 'v147';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -337,6 +337,11 @@
         .aspect-detail.opposition  { border-left-color: #ee5a6f; }
         .aspect-planets { font-size: 1.05em; font-weight: bold; margin-bottom: 4px; }
         .aspect-description { font-size: 0.88em; color: var(--text-dim); }
+        .aspect-detail details summary { list-style: none; }
+        .aspect-detail details summary::-webkit-details-marker { display: none; }
+        .aspect-detail details[open] summary { color: rgba(255,255,255,0.7); }
+        .aspect-detail details[open] summary::before { content: ''; }
+        .aspect-detail details summary::before { content: ''; }
 
         .journal-textarea { width: 100%; min-height: 150px; background: rgba(4,5,22,0.65); border: 1px solid var(--blue-border); border-radius: 8px; color: var(--text-main); font-family: inherit; font-size: 0.95em; padding: 12px; resize: vertical; }
         .journal-textarea:focus { outline: none; border-color: rgba(201,168,64,0.55); box-shadow: 0 0 12px var(--gold-glow); }
@@ -842,7 +847,7 @@
     <div id="diarioModal" class="modal" style="z-index:1200;">
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header">
-                <h2 id="diarioModalTitle">📓 Diario Personal</h2>
+                <h2 id="diarioModalTitle">📓</h2>
                 <span class="close" onclick="closeDiarioModal()">&times;</span>
             </div>
             <div style="padding: 20px;">
@@ -851,20 +856,13 @@
                     <textarea 
                         class="journal-textarea" 
                         id="diarioText"
-                        placeholder="Escribe tus reflexiones del día, cómo te sientes, qué observas...
-
-Ejemplos:
-• Hoy me sentí más optimista
-• Noté mucha energía física  
-• Conversación importante
-• Reflexiones sobre...
-• Sueños y observaciones..."
+                        placeholder=""
                         style="width: 100%; min-height: 300px; padding: 15px 60px 15px 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 1em; resize: vertical;"></textarea>
                     <button 
                         id="voiceInputBtn" 
                         onclick="toggleVoiceInput()" 
                         style="position: absolute; top: 10px; right: 10px; width: 45px; height: 45px; border-radius: 50%; background: rgba(78,205,196,0.2); border: 2px solid rgba(78,205,196,0.5); cursor: pointer; font-size: 1.5em; display: flex; align-items: center; justify-content: center; transition: all 0.3s;"
-                        title="Dictar con voz">
+                        title="" id="voiceBtnTitle">
                         🎤
                     </button>
                 </div>
@@ -2525,7 +2523,81 @@ const translations = {
                     'Luna de Cosecha', 'Luna de Cazador', 'Luna de Castor', 'Luna Fría'],
 
         // Button labels
-        gregorianButton: 'Gregoriano'
+        gregorianButton: 'Gregoriano',
+
+        // Astro Modal
+        astronomy: 'Astronomía',
+        moonEarthDistance: 'Distancia Luna-Tierra',
+        perigee: 'Perigeo',
+        apogee: 'Apogeo',
+        perigeeDesc: 'Máxima cercanía',
+        apogeeDesc: 'Máxima lejanía',
+        ofOrbitalRange: 'del rango orbital',
+        lightToEarth: 'Luz a la Tierra',
+        declinationSublunar: 'Declinación / Punto Sublunar',
+        fromYourZenith: 'de tu cenit',
+        tidalForce: 'Fuerza de Marea',
+        tideCurve: 'Curva de Marea — Modelo Armónico General',
+        noExtremesDetected: 'Sin extremos detectados',
+        nodalCycle: 'Ciclo Nodal 18.6 Años — Posición Actual',
+        major: 'Mayor',
+        minor: 'Menor',
+        current: 'Actual',
+        majorStandstill: 'Standstill Mayor',
+        minorStandstill: 'Standstill Menor',
+        standstillDesc: 'Standstill Mayor 2024-2025: La Luna alcanza ±28.7° de declinación. Mareas y movimientos norte-sur más extremos.',
+
+        // Eclipse Modal
+        solarEclipseMeaning: '☀️ Los eclipses solares marcan <strong>nuevos comienzos</strong>, cierres de ciclos y oportunidades para resetear intenciones. Momento de plantar semillas.',
+        lunarEclipseMeaning: '🌕 Los eclipses lunares revelan <strong>verdades ocultas</strong>, traen culminaciones y liberación emocional. Momento de soltar y cerrar ciclos.',
+        visibility: 'Visibilidad',
+        planetaryAspectsLabel: 'Aspectos Planetarios',
+
+        // Sign Change Modal
+        changesSign: 'Cambia de Signo',
+        enters: 'entra en',
+        alreadyIn: 'Ya en',
+        entered: 'Entró',
+        meaning: 'Significado',
+        nearbyAspects: 'Aspectos Cercanos',
+
+        // Retro tooltips
+        startsRetrograde: 'inicia retrogradación',
+        turnsDirect: 'vuelve directo',
+
+        // Aspects modal
+        interplanetaryAspects: 'Aspectos Interplanetarios',
+        noAspectsToShow: 'No hay aspectos para mostrar',
+        noInterplanetaryAspects: 'No hay aspectos interplanetarios en este día',
+
+        // Events modal errors
+        errorNoDate: 'Error: No se seleccionó fecha',
+        errorEventNotFound: 'Error: Evento no encontrado',
+        errorNoEvents: 'Error: No se encontraron eventos para esta fecha',
+        scheduledEvents: 'Eventos Agendados',
+        addEventBtn: 'Agregar Evento',
+        saveEvent: 'Guardar Evento',
+        saveChanges: 'Guardar Cambios',
+        description: 'Descripción',
+        reminders: 'Recordatorios',
+
+        // Diary modal
+        personalDiary: 'Diario Personal',
+        diaryFullPlaceholder: 'Escribe tus reflexiones del día, cómo te sientes, qué observas...\n\nEjemplos:\n• Hoy me sentí más optimista\n• Noté mucha energía física\n• Conversación importante\n• Reflexiones sobre...\n• Sueños y observaciones...',
+        dictateVoice: 'Dictar con voz',
+
+        // Aspect badges
+        badgeMajor: 'MAYOR',
+        badgeNotable: 'NOTABLE',
+        badgeGenerational: 'GENERACIONAL',
+
+        // General
+        today: 'hoy',
+        loading: 'Cargando...',
+        stelliumIn: 'Stellium en',
+        planetaryConfig: 'Configuración Planetaria',
+        astronomicalData: 'Datos Astronómicos',
+        earth: 'Tierra'
     },
     en: {
         // Calendar
@@ -2655,7 +2727,81 @@ const translations = {
                     'Harvest Moon', 'Hunter\'s Moon', 'Beaver Moon', 'Cold Moon'],
 
         // Button labels
-        gregorianButton: 'Gregorian'
+        gregorianButton: 'Gregorian',
+
+        // Astro Modal
+        astronomy: 'Astronomy',
+        moonEarthDistance: 'Moon-Earth Distance',
+        perigee: 'Perigee',
+        apogee: 'Apogee',
+        perigeeDesc: 'Closest approach',
+        apogeeDesc: 'Farthest distance',
+        ofOrbitalRange: 'of orbital range',
+        lightToEarth: 'Light to Earth',
+        declinationSublunar: 'Declination / Sublunar Point',
+        fromYourZenith: 'from your zenith',
+        tidalForce: 'Tidal Force',
+        tideCurve: 'Tide Curve — General Harmonic Model',
+        noExtremesDetected: 'No extremes detected',
+        nodalCycle: 'Nodal Cycle 18.6 Years — Current Position',
+        major: 'Major',
+        minor: 'Minor',
+        current: 'Current',
+        majorStandstill: 'Major Standstill',
+        minorStandstill: 'Minor Standstill',
+        standstillDesc: 'Major Standstill 2024-2025: The Moon reaches ±28.7° declination. Tides and north-south movements at their most extreme.',
+
+        // Eclipse Modal
+        solarEclipseMeaning: '☀️ Solar eclipses mark <strong>new beginnings</strong>, cycle closures and opportunities to reset intentions. A time to plant seeds.',
+        lunarEclipseMeaning: '🌕 Lunar eclipses reveal <strong>hidden truths</strong>, bring culminations and emotional release. A time to let go and close cycles.',
+        visibility: 'Visibility',
+        planetaryAspectsLabel: 'Planetary Aspects',
+
+        // Sign Change Modal
+        changesSign: 'Changes Sign',
+        enters: 'enters',
+        alreadyIn: 'Already in',
+        entered: 'Entered',
+        meaning: 'Meaning',
+        nearbyAspects: 'Nearby Aspects',
+
+        // Retro tooltips
+        startsRetrograde: 'starts retrograde',
+        turnsDirect: 'turns direct',
+
+        // Aspects modal
+        interplanetaryAspects: 'Interplanetary Aspects',
+        noAspectsToShow: 'No aspects to show',
+        noInterplanetaryAspects: 'No interplanetary aspects on this day',
+
+        // Events modal errors
+        errorNoDate: 'Error: No date selected',
+        errorEventNotFound: 'Error: Event not found',
+        errorNoEvents: 'Error: No events found for this date',
+        scheduledEvents: 'Scheduled Events',
+        addEventBtn: 'Add Event',
+        saveEvent: 'Save Event',
+        saveChanges: 'Save Changes',
+        description: 'Description',
+        reminders: 'Reminders',
+
+        // Diary modal
+        personalDiary: 'Personal Journal',
+        diaryFullPlaceholder: 'Write your daily reflections, how you feel, what you observe...\n\nExamples:\n• Today I felt more optimistic\n• Noticed a lot of physical energy\n• Important conversation\n• Reflections on...\n• Dreams and observations...',
+        dictateVoice: 'Dictate with voice',
+
+        // Aspect badges
+        badgeMajor: 'MAJOR',
+        badgeNotable: 'NOTABLE',
+        badgeGenerational: 'GENERATIONAL',
+
+        // General
+        today: 'today',
+        loading: 'Loading...',
+        stelliumIn: 'Stellium in',
+        planetaryConfig: 'Planetary Configuration',
+        astronomicalData: 'Astronomical Data',
+        earth: 'Earth'
     }
 };
 
@@ -3601,7 +3747,7 @@ function handleInterAspectClick(timestamp, lunarDay) {
     const interAspects = getInterPlanetaryAspects(date);
     
     if (interAspects.length === 0) {
-        alert('No hay aspectos interplanetarios en este día');
+        alert(t('noInterplanetaryAspects'));
         return;
     }
     
@@ -3622,7 +3768,7 @@ function openInterAspectsOnlyModal(date, lunarDay, interAspects) {
     
     // Update section title
     const sectionTitle = modal.querySelector('.aspects-section h3');
-    if (sectionTitle) sectionTitle.textContent = `⭐ ${currentLang === 'es' ? 'Aspectos Interplanetarios' : 'Interplanetary Aspects'}`;
+    if (sectionTitle) sectionTitle.textContent = `⭐ ${t('interplanetaryAspects')}`;
     
     // Update close button
     const closeBtn = modal.querySelector('.btn-secondary');
@@ -3634,29 +3780,35 @@ function openInterAspectsOnlyModal(date, lunarDay, interAspects) {
         const timeStr = asp.time ? `<span style="color: #f0e68c; font-weight: bold;">${asp.time}</span> - ` : '';
         const degreeStr = asp.degrees ? `<span style="color: #a8b2d1; font-size: 0.85em;">(${asp.degrees})</span>` : '';
         const signsStr = asp.signs ? `<span style="color: rgba(255,255,255,0.4); font-size: 0.82em;"> — ${asp.signs}</span>` : '';
-        const badge = asp.isGenerational ? '<span style="background:rgba(155,89,182,0.25);color:#d4a5f5;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(155,89,182,0.4);" title="Aspecto entre planetas lentos que marca toda una generación">GENERACIONAL</span>' :
-                     asp.isMajor ? '<span style="background:rgba(231,76,60,0.2);color:#ff8a80;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(231,76,60,0.35);" title="Aspecto mayor: alineación poco frecuente entre planetas exteriores con impacto colectivo profundo">MAYOR</span>' :
-                     asp.isImportant ? '<span style="background:rgba(78,205,196,0.2);color:#80cbc4;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(78,205,196,0.35);" title="Aspecto notable: involucra planetas sociales o exteriores en ángulo significativo">NOTABLE</span>' : '';
-        const defaultMeaning = currentLang === 'es' ? 'Aspecto interplanetario significativo.' : 'Significant interplanetary aspect.';
+        const badge = asp.isGenerational ? `<span style="background:rgba(155,89,182,0.25);color:#d4a5f5;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(155,89,182,0.4);">${t('badgeGenerational')}</span>` :
+                     asp.isMajor ? `<span style="background:rgba(231,76,60,0.2);color:#ff8a80;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(231,76,60,0.35);">${t('badgeMajor')}</span>` :
+                     asp.isImportant ? `<span style="background:rgba(78,205,196,0.2);color:#80cbc4;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(78,205,196,0.35);">${t('badgeNotable')}</span>` : '';
 
         const badgeColor = asp.isGenerational ? '#d4a5f5' : asp.isMajor ? '#ff8a80' : asp.isImportant ? '#80cbc4' : '';
-        const badgeExplain = asp.badgeInfo ? `<div style="font-size:0.72em;color:${badgeColor};margin-bottom:4px;line-height:1.3;font-style:italic;">${asp.badgeInfo}</div>` : '';
+        const badgeExplain = asp.badgeInfo ? `<div style="font-size:0.72em;color:${badgeColor};margin-bottom:4px;line-height:1.3;font-style:italic;">${translateMeaning(asp.badgeInfo)}</div>` : '';
+        const meaningText = asp.meaning ? translateMeaning(asp.meaning) : '';
 
         return `
         <div class="aspect-detail" style="border-left-color: ${asp.color}; background: rgba(0,0,0,0.2);">
             <div class="aspect-planets">
                 ${timeStr}${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)} ${degreeStr}${signsStr}${badge}
             </div>
-            <div class="aspect-description" style="font-size: 0.95em; line-height: 1.4;">
-                ${badgeExplain}${asp.meaning ? translateMeaning(asp.meaning) : defaultMeaning}
-            </div>
+            ${(badgeExplain || meaningText) ? `
+            <details style="margin-top:6px;">
+                <summary style="cursor:pointer;font-size:0.8em;color:rgba(255,255,255,0.5);outline:none;user-select:none;">
+                    ▸ ${t('meaning')}
+                </summary>
+                <div style="font-size:0.9em;line-height:1.5;color:rgba(255,255,255,0.8);margin-top:6px;padding:8px;background:rgba(0,0,0,0.15);border-radius:6px;">
+                    ${badgeExplain}${meaningText}
+                </div>
+            </details>` : ''}
         </div>
     `}).join('');
     
     if (htmlContent) {
         aspectsDetails.innerHTML = htmlContent;
     } else {
-        aspectsDetails.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No hay aspectos para mostrar</p>';
+        aspectsDetails.innerHTML = `<p style="color: #888; text-align: center; padding: 20px;">${t('noAspectsToShow')}</p>`;
     }
     
     modal.classList.add('show');
@@ -3688,11 +3840,11 @@ function openAstroModal(date, lunarDay) {
     const tideCurve = getTideCurveForLocation(date, ASTRO_USER_LAT, ASTRO_USER_LON);
     const tideExtremes = getTideExtremes(tideCurve);
     
-    document.getElementById('astroModalTitle').textContent = `🌊 Astronomía — Día ${lunarDay}`;
-    
+    document.getElementById('astroModalTitle').textContent = `🌊 ${t('astronomy')} — ${t('day')} ${lunarDay}`;
+
     // Distance color
     const distColor = astro.isPerigee ? '#FF6B6B' : astro.isApogee ? '#7E57C2' : '#fff';
-    const distLabel = astro.isPerigee ? '◈ Perigeo — Máxima cercanía' : astro.isApogee ? '◈ Apogeo — Máxima lejanía' : `${Math.round(astro.distancePct)}% del rango orbital`;
+    const distLabel = astro.isPerigee ? `◈ ${t('perigee')} — ${t('perigeeDesc')}` : astro.isApogee ? `◈ ${t('apogee')} — ${t('apogeeDesc')}` : `${Math.round(astro.distancePct)}% ${t('ofOrbitalRange')}`;
     
     // Tide extremes HTML
     const extremesHTML = tideExtremes.slice(0, 4).map(e => 
@@ -3711,29 +3863,29 @@ function openAstroModal(date, lunarDay) {
             
             <!-- Distancia -->
             <div class="astro-card">
-                <h4>📏 Distancia Luna-Tierra</h4>
+                <h4>📏 ${t('moonEarthDistance')}</h4>
                 <div class="astro-value" style="color:${distColor}">${astro.distance.toLocaleString()} km</div>
                 <div class="astro-label">${distLabel}</div>
-                <div style="font-size:0.78em;color:#7ec8ff;margin-top:4px;">${currentLang==='es'?'Luz a la Tierra':'Light to Earth'}: ${(astro.distance / 299792.458).toFixed(2)}s</div>
+                <div style="font-size:0.78em;color:#7ec8ff;margin-top:4px;">${t('lightToEarth')}: ${(astro.distance / 299792.458).toFixed(2)}s</div>
                 <div class="astro-bar-bg">
                     <div class="astro-bar-fill" style="width:${100-astro.distancePct}%;background:linear-gradient(90deg,#FF6B6B,#7E57C2);"></div>
                 </div>
                 <div style="display:flex;justify-content:space-between;font-size:0.7em;color:rgba(255,255,255,0.3);margin-top:3px;">
-                    <span>Perigeo (356,500)</span><span>Apogeo (406,700)</span>
+                    <span>${t('perigee')} (356,500)</span><span>${t('apogee')} (406,700)</span>
                 </div>
             </div>
 
             <!-- Declinación -->
             <div class="astro-card">
-                <h4>📐 Declinación / Punto Sublunar</h4>
+                <h4>📐 ${t('declinationSublunar')}</h4>
                 <div class="astro-value" style="color:${decColor}">${astro.decStr}</div>
-                <div class="astro-label">Sublunar: ${astro.sublunarLat}° ${astro.sublunarDir}</div>
-                <div class="astro-label" style="margin-top:4px;">${astro.distFromUser}° de tu cenit (${Math.round(parseFloat(astro.distFromUser)*111)} km)</div>
+                <div class="astro-label">${isEs ? 'Sublunar' : 'Sublunar'}: ${astro.sublunarLat}° ${astro.sublunarDir}</div>
+                <div class="astro-label" style="margin-top:4px;">${astro.distFromUser}° ${t('fromYourZenith')} (${Math.round(parseFloat(astro.distFromUser)*111)} km)</div>
             </div>
             
             <!-- Mareas -->
             <div class="astro-card">
-                <h4>🌊 Fuerza de Marea</h4>
+                <h4>🌊 ${t('tidalForce')}</h4>
                 <div class="astro-value" style="color:#4FC3F7">${astro.tidePct}%</div>
                 <div class="astro-label">${astro.tideLabel}</div>
                 <div class="astro-bar-bg">
@@ -3744,12 +3896,12 @@ function openAstroModal(date, lunarDay) {
         
         <!-- Curva de Marea -->
         <div class="astro-card" style="margin-top:12px;">
-            <h4>🌊 Curva de Marea — Modelo Armónico General (M2+S2+K1+O1+N2)</h4>
+            <h4>🌊 ${t('tideCurve')} (M2+S2+K1+O1+N2)</h4>
             <div class="tide-curve-container">
                 ${renderTideSVG(tideCurve, 600, 80)}
             </div>
             <div style="font-size:0.75em;color:rgba(255,255,255,0.5);margin-top:6px;">
-                ${extremesHTML || 'Sin extremos detectados'}
+                ${extremesHTML || t('noExtremesDetected')}
             </div>
             <div style="display:flex;justify-content:space-between;font-size:0.65em;color:rgba(255,255,255,0.25);margin-top:4px;">
                 <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span>
@@ -3761,25 +3913,25 @@ function openAstroModal(date, lunarDay) {
         
         <!-- Ciclo 18.6 años mini -->
         <div class="astro-card" style="margin-top:12px;">
-            <h4>🔄 Ciclo Nodal 18.6 Años — Posición Actual</h4>
+            <h4>🔄 ${t('nodalCycle')}</h4>
             <div style="display:flex;align-items:flex-end;gap:2px;height:50px;margin-bottom:6px;">
                 ${getCycle186().map(d => {
                     const h = Math.max(4, ((parseFloat(d.maxDec)-17)/13)*45);
                     const isCurrent = d.year === new Date().getFullYear();
                     const color = d.isMajor ? '#FFD54F' : d.isMinor ? '#4FC3F7' : isCurrent ? '#E8D9A0' : 'rgba(255,255,255,0.15)';
-                    return `<div class="cycle-186-bar" style="width:${100/39}%;height:${h}px;background:${color};opacity:${isCurrent?1:0.6};" title="${d.year}: ±${d.maxDec}°${d.isMajor?' (Standstill Mayor)':d.isMinor?' (Standstill Menor)':''}"></div>`;
+                    return `<div class="cycle-186-bar" style="width:${100/39}%;height:${h}px;background:${color};opacity:${isCurrent?1:0.6};" title="${d.year}: ±${d.maxDec}°${d.isMajor?' ('+t('majorStandstill')+')':d.isMinor?' ('+t('minorStandstill')+')':''}"></div>`;
                 }).join('')}
             </div>
             <div style="display:flex;justify-content:space-between;font-size:0.65em;color:rgba(255,255,255,0.3);">
-                <span>2006 (Mayor)</span><span>${new Date().getFullYear()} (Actual)</span><span>2034 (Menor)</span><span>2044 (Mayor)</span>
+                <span>2006 (${t('major')})</span><span>${new Date().getFullYear()} (${t('current')})</span><span>2034 (${t('minor')})</span><span>2044 (${t('major')})</span>
             </div>
             <div style="font-size:0.75em;color:rgba(255,255,255,0.5);margin-top:6px;">
-                Standstill Mayor 2024-2025: La Luna alcanza ±28.7° de declinación. Mareas y movimientos norte-sur más extremos.
+                ${t('standstillDesc')}
             </div>
         </div>
         
         <div style="text-align:center;margin-top:16px;">
-            <button class="btn btn-secondary" onclick="closeAstroModal()" style="padding:10px 30px;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;cursor:pointer;">Cerrar</button>
+            <button class="btn btn-secondary" onclick="closeAstroModal()" style="padding:10px 30px;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;cursor:pointer;">${t('close')}</button>
         </div>
     `;
     
@@ -3796,13 +3948,15 @@ function openDiarioModal(date, lunarDay) {
     
     document.getElementById('diarioDate').textContent = `🌙 ${formatLongDate(date)} - ${t('day')} ${currentLang === 'es' ? 'Lunar' : ''} ${lunarDay}`;
     document.getElementById('diarioModalTitle').textContent = `📓 ${t('diaryTitle')}`;
-    
+    const voiceBtn = document.getElementById('voiceBtnTitle');
+    if (voiceBtn) voiceBtn.title = t('dictateVoice');
+
     // Cargar diario guardado
     const savedDiary = localStorage.getItem(`diary_${dateKey}`) || '';
     
     const textarea = document.getElementById('diarioText');
     textarea.value = savedDiary;
-    textarea.placeholder = t('diaryPlaceholder');
+    textarea.placeholder = t('diaryFullPlaceholder');
     
     // Auto-save on typing
     let saveTimeout;
@@ -4004,13 +4158,13 @@ function editEvent(index) {
     console.log('✏️ editEvent called with index:', index);
 
     if (!selectedDate) {
-        alert('Error: No date selected');
+        alert(t('errorNoDate'));
         return;
     }
 
     const key = getDateKey(selectedDate);
     if (!events[key] || !events[key][index]) {
-        alert('Error: Event not found');
+        alert(t('errorEventNotFound'));
         return;
     }
 
@@ -4049,7 +4203,7 @@ function deleteEvent(index) {
     console.log('📅 selectedDate:', selectedDate);
     
     if (!selectedDate) {
-        alert('Error: No date selected');
+        alert(t('errorNoDate'));
         console.error('selectedDate is null');
         return;
     }
@@ -4062,7 +4216,7 @@ function deleteEvent(index) {
         console.log('📦 Events for this key:', events[key]);
         
         if (!events[key]) {
-            alert('Error: No events found for this date');
+            alert(t('errorNoEvents'));
             console.error('No events found for key:', key);
             return;
         }
@@ -4142,23 +4296,21 @@ function showEclipseModal(type, name, dateTime) {
         <!-- Significado -->
         <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
             <p style="color: rgba(255,255,255,0.9); line-height: 1.6;">
-                ${type === 'solar' ? 
-                    '☀️ Los eclipses solares marcan <strong>nuevos comienzos</strong>, cierres de ciclos y oportunidades para resetear intenciones. Momento de plantar semillas.' : 
-                    '🌕 Los eclipses lunares revelan <strong>verdades ocultas</strong>, traen culminaciones y liberación emocional. Momento de soltar y cerrar ciclos.'}
+                ${type === 'solar' ? t('solarEclipseMeaning') : t('lunarEclipseMeaning')}
             </p>
         </div>
         
         <!-- Visibilidad -->
         <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
             <p style="font-size: 0.9em; color: rgba(255,255,255,0.7);">
-                <strong>📍 Visibilidad:</strong> ${eclipseData.visibility}
+                <strong>📍 ${t('visibility')}:</strong> ${eclipseData.visibility}
             </p>
         </div>
         
         <!-- Aspectos planetarios -->
         ${eclipseData.aspects && eclipseData.aspects.length > 0 ? `
         <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;">
-            <h4 style="margin-top: 0; color: #f0e68c; font-size: 1em;">⭐ Aspectos Planetarios</h4>
+            <h4 style="margin-top: 0; color: #f0e68c; font-size: 1em;">⭐ ${t('planetaryAspectsLabel')}</h4>
             ${eclipseData.aspects.map(asp => `
                 <div style="padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px; margin-bottom: 8px; border-left: 2px solid rgba(240,230,140,0.5);">
                     <div style="font-weight: bold; margin-bottom: 4px;">${asp.planet} - ${asp.aspect}</div>
@@ -4370,9 +4522,9 @@ function translateMeaning(spanishText) {
 function showSignChangeModal(planet, symbol, toSign, meaning, dateTime) {
     const date = new Date(parseInt(dateTime));
 
-    const title = currentLang === 'es' ? `${planet} Cambia de Signo` : `${planet} Changes Sign`;
-    const enters = currentLang === 'es' ? 'entra en' : 'enters';
-    const meaningLabel = currentLang === 'es' ? '💫 Significado' : '💫 Meaning';
+    const title = `${planet} ${t('changesSign')}`;
+    const enters = t('enters');
+    const meaningLabel = `💫 ${t('meaning')}`;
     const translatedMeaning = translateMeaning(meaning);
 
     // Get companion planets and nearby aspects
@@ -4382,17 +4534,14 @@ function showSignChangeModal(planet, symbol, toSign, meaning, dateTime) {
     // Build companions HTML with entry dates, aspects, and meanings
     let companionHtml = '';
     if (companions.length > 0) {
-        const isEs = currentLang === 'es';
-        const monthNames = isEs
-            ? ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
-            : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const monthNames = t('months');
 
         const compItems = companions.map(c => {
             // Entry date
             let entryStr = '';
             if (c.entryDate) {
                 const d = c.entryDate;
-                entryStr = `${d.getDate()} ${monthNames[d.getMonth()]}`;
+                entryStr = `${d.getDate()} ${Array.isArray(monthNames) ? monthNames[d.getMonth()] : ''}`;
             }
 
             // Aspect between entering planet and companion
@@ -4409,7 +4558,7 @@ function showSignChangeModal(planet, symbol, toSign, meaning, dateTime) {
                     <span style="color:rgba(255,255,255,0.5);font-size:0.85em;">${c.degree}</span>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px;">
-                    ${entryStr ? `<span style="font-size:0.75em;color:rgba(255,255,255,0.4);">📅 ${isEs ? 'Entró' : 'Entered'}: ${entryStr}</span>` : ''}
+                    ${entryStr ? `<span style="font-size:0.75em;color:rgba(255,255,255,0.4);">📅 ${t('entered')}: ${entryStr}</span>` : ''}
                     ${aspectStr ? `<span style="font-size:0.75em;color:#c9a840;">${aspectStr}</span>` : ''}
                 </div>
                 ${aspectMeaning ? `<div style="font-size:0.75em;color:rgba(255,255,255,0.55);margin-top:4px;line-height:1.4;font-style:italic;">${aspectMeaning}</div>` : ''}
@@ -4417,7 +4566,7 @@ function showSignChangeModal(planet, symbol, toSign, meaning, dateTime) {
         }).join('');
         companionHtml = `
         <div style="background:rgba(201,168,64,0.08);border:1px solid rgba(201,168,64,0.2);padding:12px;border-radius:8px;margin-bottom:15px;">
-            <h4 style="margin:0 0 8px;color:#c9a840;font-size:0.9em;">🤝 ${isEs ? 'Ya en' : 'Already in'} ${toSign}</h4>
+            <h4 style="margin:0 0 8px;color:#c9a840;font-size:0.9em;">🤝 ${t('alreadyIn')} ${toSign}</h4>
             ${compItems}
         </div>`;
     }
@@ -4425,19 +4574,16 @@ function showSignChangeModal(planet, symbol, toSign, meaning, dateTime) {
     // Build nearby aspects HTML with dates and meanings
     let aspectsHtml = '';
     if (nearbyAspects.length > 0) {
-        const isEs = currentLang === 'es';
-        const monthNames = isEs
-            ? ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
-            : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const monthNames = t('months');
 
         const aspItems = nearbyAspects.map(a => {
             const aspDate = new Date(a.date);
             const dayDiff = Math.round((aspDate.setHours(0,0,0,0) - new Date(date).setHours(0,0,0,0)) / 86400000);
-            const when = dayDiff === 0 ? (isEs?'hoy':'today') : dayDiff > 0 ? `+${dayDiff}d` : `${dayDiff}d`;
-            const dateStr = `${aspDate.getDate()} ${monthNames[aspDate.getMonth()]}`;
-            const badge = a.isMajor ? '<span style="background:rgba(231,76,60,0.2);color:#ff8a80;padding:1px 5px;border-radius:3px;font-size:0.7em;margin-left:4px;">MAYOR</span>' :
-                         a.isImportant ? '<span style="background:rgba(78,205,196,0.15);color:#80cbc4;padding:1px 5px;border-radius:3px;font-size:0.7em;margin-left:4px;">NOTABLE</span>' : '';
-            const meaningText = a.meaning || '';
+            const when = dayDiff === 0 ? t('today') : dayDiff > 0 ? `+${dayDiff}d` : `${dayDiff}d`;
+            const dateStr = `${aspDate.getDate()} ${Array.isArray(monthNames) ? monthNames[aspDate.getMonth()] : ''}`;
+            const badge = a.isMajor ? `<span style="background:rgba(231,76,60,0.2);color:#ff8a80;padding:1px 5px;border-radius:3px;font-size:0.7em;margin-left:4px;">${t('badgeMajor')}</span>` :
+                         a.isImportant ? `<span style="background:rgba(78,205,196,0.15);color:#80cbc4;padding:1px 5px;border-radius:3px;font-size:0.7em;margin-left:4px;">${t('badgeNotable')}</span>` : '';
+            const meaningText = a.meaning ? translateMeaning(a.meaning) : '';
             return `<div style="padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:6px;border-left:3px solid ${a.color || '#666'};">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <div>
@@ -4454,7 +4600,7 @@ function showSignChangeModal(planet, symbol, toSign, meaning, dateTime) {
         }).join('');
         aspectsHtml = `
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);padding:12px;border-radius:8px;margin-bottom:15px;">
-            <h4 style="margin:0 0 8px;color:#7ec8ff;font-size:0.9em;">⚡ ${isEs ? 'Aspectos Cercanos (±3 días)' : 'Nearby Aspects (±3 days)'}</h4>
+            <h4 style="margin:0 0 8px;color:#7ec8ff;font-size:0.9em;">⚡ ${t('nearbyAspects')} (±3 ${t('day').toLowerCase()}s)</h4>
             ${aspItems}
         </div>`;
     }
@@ -7047,7 +7193,7 @@ function generateGregorianMonth() {
         // Retrogrades (limit 2)
         planetaryEvents.retrogrades.slice(0,2).forEach(r => {
             const planetInit = getPlanetInitial(r.planet);
-            html += `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${date.toDateString()}')" style="color:#7ec8ff;font-size:0.65em;cursor:pointer;font-weight:bold;text-align:right;" title="${r.planet} ${r.isStart ? 'inicia retrogradación' : 'vuelve directo'}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
+            html += `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${date.toDateString()}')" style="color:#7ec8ff;font-size:0.65em;cursor:pointer;font-weight:bold;text-align:right;" title="${r.planet} ${r.isStart ? t('startsRetrograde') : t('turnsDirect')}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
         });
         
         html += '</div></div></div>';
@@ -7582,7 +7728,7 @@ function generateSolarWeeks(sign) {
                             }).join('')}
                             ${retrogrades.map(r => {
                                 const planetInit = getPlanetInitial(r.planet);
-                                return `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${dayDate.toDateString()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.7em;text-align:right;" title="${r.planet} ${r.isStart ? 'inicia retrogradación' : 'vuelve directo'}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
+                                return `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${dayDate.toDateString()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.7em;text-align:right;" title="${r.planet} ${r.isStart ? t('startsRetrograde') : t('turnsDirect')}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
                             }).join('')}
                             ${signChanges.map(sc => {
                                 const planetInit = getPlanetInitial(sc.planet);
@@ -8614,12 +8760,12 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
                 <h4 style="font-size:0.75em;">📏 ${currentLang==='es'?'Distancia':'Distance'}</h4>
                 <div class="astro-value" style="color:${distColor}">${astro.distance.toLocaleString()} km</div>
                 <div class="astro-label">${distLabel}</div>
-                <div style="font-size:0.78em;color:#7ec8ff;margin-top:4px;">${currentLang==='es'?'Luz a la Tierra':'Light to Earth'}: ${(astro.distance / 299792.458).toFixed(2)}s</div>
+                <div style="font-size:0.78em;color:#7ec8ff;margin-top:4px;">${t('lightToEarth')}: ${(astro.distance / 299792.458).toFixed(2)}s</div>
                 <div class="astro-bar-bg">
                     <div class="astro-bar-fill" style="width:${100-astro.distancePct}%;background:linear-gradient(90deg,#FF6B6B,#7E57C2);"></div>
                 </div>
                 <div style="display:flex;justify-content:space-between;font-size:0.65em;color:rgba(255,255,255,0.28);margin-top:3px;">
-                    <span>Perigeo (356,500)</span><span>Apogeo (406,700)</span>
+                    <span>${t('perigee')} (356,500)</span><span>${t('apogee')} (406,700)</span>
                 </div>
             </div>
 
@@ -8998,7 +9144,7 @@ function renderCalendar() {
                             }).join('')}
                             ${retrogrades.map(r => {
                                 const planetInit = getPlanetInitial(r.planet);
-                                return `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${day.date.toDateString()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.85em;white-space:nowrap;text-align:right;" title="${r.planet} ${r.isStart ? 'inicia retrogradación' : 'vuelve directo'}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
+                                return `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${day.date.toDateString()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.85em;white-space:nowrap;text-align:right;" title="${r.planet} ${r.isStart ? t('startsRetrograde') : t('turnsDirect')}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
                             }).join('')}
                             ${signChanges.map(sc => {
                                 const planetInit = getPlanetInitial(sc.planet);
@@ -10680,7 +10826,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with force-update mechanism
-const APP_VERSION = 'v146';
+const APP_VERSION = 'v147';
 if ('serviceWorker' in navigator) {
     // Force update: check for new SW on every page load
     navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
