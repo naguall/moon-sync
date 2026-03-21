@@ -5476,10 +5476,10 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
     const uLon = userLon || ASTRO_USER_LON || -84;
     const cityLabel = (ASTRO_USER_NAME || 'Tu ubicación').split(',')[0];
 
-    // Trajectory ±6h every 20min for smooth lines
+    // Trajectory ±13h every 15min — full map coverage (~25h = full lunar orbit in longitude)
     const now = new Date();
     const allPts = [];
-    for (let m = -360; m <= 360; m += 20) {
+    for (let m = -780; m <= 780; m += 15) {
         const t = new Date(now.getTime() + m * 60000);
         const a = getAstroData(t);
         allPts.push({ lon: getSublunaryLonDeg(t), lat: parseFloat(a.sublunarLat), past: m < 0 });
