@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v105';
+        var REQUIRED_VER = 'v106';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -25,12 +25,31 @@
                     regs.forEach(function(r){ r.unregister(); });
                 });
             }
+            // Clear stale notification history (old entries from other days)
+            localStorage.removeItem('notifHistory');
+            localStorage.removeItem('lastNotifLogDay');
             localStorage.setItem('app_version', REQUIRED_VER);
             // If we had an old version, reload to get fresh files
             if (lastVer) {
                 window.location.reload(true);
             }
         }
+
+        // ALWAYS clean notifHistory on every page load: keep only today's entries
+        try {
+            var hist = JSON.parse(localStorage.getItem('notifHistory') || '[]');
+            if (hist.length > 0) {
+                var now = new Date();
+                var todayLocal = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+                var filtered = hist.filter(function(h) {
+                    var d = h.localDate || (h.timestamp ? h.timestamp.slice(0,10) : '');
+                    return d === todayLocal;
+                });
+                if (filtered.length !== hist.length) {
+                    localStorage.setItem('notifHistory', JSON.stringify(filtered));
+                }
+            }
+        } catch(e) {}
     })();
     </script>
 
@@ -9900,7 +9919,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with force-update mechanism
-const APP_VERSION = 'v105';
+const APP_VERSION = 'v106';
 if ('serviceWorker' in navigator) {
     // Force update: check for new SW on every page load
     navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
