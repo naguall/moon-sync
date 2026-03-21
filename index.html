@@ -7,7 +7,33 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>🌙 Moon Sync - Calendario Lunar</title>
-    
+
+    <!-- EMERGENCY: Force SW update on first load of new version -->
+    <script>
+    (function(){
+        var REQUIRED_VER = 'v103';
+        var lastVer = localStorage.getItem('app_version');
+        if (lastVer !== REQUIRED_VER) {
+            // New version detected — nuke everything
+            if (window.caches) {
+                caches.keys().then(function(keys){
+                    keys.forEach(function(k){ caches.delete(k); });
+                });
+            }
+            if (navigator.serviceWorker) {
+                navigator.serviceWorker.getRegistrations().then(function(regs){
+                    regs.forEach(function(r){ r.unregister(); });
+                });
+            }
+            localStorage.setItem('app_version', REQUIRED_VER);
+            // If we had an old version, reload to get fresh files
+            if (lastVer) {
+                window.location.reload(true);
+            }
+        }
+    })();
+    </script>
+
     <!-- PWA Meta Tags -->
     <meta name="description" content="Moon Sync - Complete lunar calendar with exact phases, planetary aspects, personal journal and automatic notifications.">
     <meta name="theme-color" content="#667eea">
@@ -473,7 +499,8 @@
                 <button id="solarModeBtn" onclick="switchToSolarMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;">Solar</button>
                 <button id="earthModeBtn" onclick="switchToEarthMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="earthButtonLabel">Tierra</span></button>
                 <button id="solarSystemModeBtn" onclick="switchToSolarSystemMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="ssButtonLabel">S.S</span></button>
-                <button id="gregorianModeBtn" onclick="switchToGregorianMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="gregorianButtonLabel">Gregoriano</span></button>
+                <!-- HIDDEN: Gregorian button (kept for future use) -->
+                <button id="gregorianModeBtn" onclick="switchToGregorianMode()" style="display:none;padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="gregorianButtonLabel">Gregoriano</span></button>
                 <button id="notificationBtn" onclick="toggleNotifications()" style="background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:5px;padding:3px 5px;cursor:pointer;font-size:0.75em;opacity:0.5;flex-shrink:0;margin-left:4px;display:none;">🔔</button>
                 <button id="langES" style="background:transparent;border:1px solid rgba(255,255,255,0.3);border-radius:5px;padding:3px 5px;cursor:pointer;font-size:0.75em;flex-shrink:0;display:none;">🇪🇸</button>
                 <button id="langEN" style="background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:5px;padding:3px 5px;cursor:pointer;font-size:0.75em;opacity:0.5;flex-shrink:0;display:none;">🇺🇸</button>
@@ -9857,7 +9884,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with force-update mechanism
-const APP_VERSION = 'v102';
+const APP_VERSION = 'v103';
 if ('serviceWorker' in navigator) {
     // Force update: check for new SW on every page load
     navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
