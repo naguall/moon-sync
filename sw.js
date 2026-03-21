@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moon-sync-v58';
+const CACHE_NAME = 'moon-sync-v101';
 const ASSETS = [
   '/moon-sync/',
   '/moon-sync/index.html',
@@ -21,9 +21,13 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // External APIs: network only, no cache
-  if (e.request.url.includes('open-meteo.com') || e.request.url.includes('fonts.googleapis.com')) {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+  const url = e.request.url;
+  // External APIs: network only, create clean request to avoid clone issues
+  if (url.includes('open-meteo.com') || url.includes('fonts.googleapis.com') || url.includes('earthquake.usgs.gov') || url.includes('upload.wikimedia.org')) {
+    e.respondWith(
+      fetch(new Request(url, {method: 'GET', headers: e.request.headers}))
+        .catch(() => new Response('{"error":"offline"}', {status: 503, headers: {'Content-Type':'application/json'}}))
+    );
     return;
   }
   // All app files: NETWORK FIRST, fallback to cache (ensures updates arrive)

@@ -309,7 +309,8 @@
         .tide-bar { display: inline-block; height: 8px; border-radius: 2px; min-width: 3px; vertical-align: middle; }
         .astro-btn { width: 100%; padding: 14px; margin-bottom: 10px; background: linear-gradient(135deg, rgba(74,158,255,0.20) 0%, rgba(74,158,255,0.08) 100%); border: 1px solid var(--blue-border); border-radius: 9px; color: var(--blue-bright); font-size: 1em; cursor: pointer; transition: all 0.2s; font-family: inherit; }
         .astro-btn:hover { transform: scale(1.02); filter: brightness(1.15); }
-        .astro-card { background: rgba(5,7,30,0.95); border: 1px solid var(--blue-border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+        .astro-card { background: rgba(5,7,30,0.95); border: 1px solid var(--blue-border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; min-height: 120px; display: flex; flex-direction: column; }
+        .astro-info-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; align-items:stretch; }
         .astro-card h4 { font-family: 'Cinzel', serif; color: var(--blue-bright); font-size: 0.68em; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
         .astro-value { font-size: 1.15em; font-weight: bold; margin-bottom: 3px; color: #e8f4ff; }
         .astro-label { font-size: 0.70em; color: rgba(136,153,204,0.55); line-height:1.3; }
@@ -470,6 +471,8 @@
             <div class="mode-btns" style="display:flex;flex-direction:row;gap:3px;justify-content:center;align-items:center;flex-wrap:nowrap;margin-bottom:3px;width:100%;">
                 <button id="lunarModeBtn" onclick="switchToLunarMode()" style="padding:5px 12px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;border-radius:20px;color:white;font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;">Lunar</button>
                 <button id="solarModeBtn" onclick="switchToSolarMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;">Solar</button>
+                <button id="earthModeBtn" onclick="switchToEarthMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="earthButtonLabel">Tierra</span></button>
+                <button id="solarSystemModeBtn" onclick="switchToSolarSystemMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="ssButtonLabel">S.S</span></button>
                 <button id="gregorianModeBtn" onclick="switchToGregorianMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="gregorianButtonLabel">Gregoriano</span></button>
                 <button id="notificationBtn" onclick="toggleNotifications()" style="background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:5px;padding:3px 5px;cursor:pointer;font-size:0.75em;opacity:0.5;flex-shrink:0;margin-left:4px;display:none;">🔔</button>
                 <button id="langES" style="background:transparent;border:1px solid rgba(255,255,255,0.3);border-radius:5px;padding:3px 5px;cursor:pointer;font-size:0.75em;flex-shrink:0;display:none;">🇪🇸</button>
@@ -1261,7 +1264,7 @@ let ASTRO_USER_LON = parseFloat(localStorage.getItem('userLon') || '-84.07');
 let ASTRO_USER_NAME = localStorage.getItem('userName') || 'San José, Costa Rica';
 
 function astroJD(date) {
-    const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate(), h = date.getHours() + date.getMinutes()/60;
+    const y = date.getUTCFullYear(), m = date.getUTCMonth() + 1, d = date.getUTCDate(), h = date.getUTCHours() + date.getUTCMinutes()/60 + date.getUTCSeconds()/3600;
     let yr = y, mo = m;
     if (mo <= 2) { yr--; mo += 12; }
     const A = Math.floor(yr / 100);
@@ -1339,6 +1342,98 @@ function getMoonRiseSet(date, obsLat, obsLon) {
     return { rise: riseTime, set: setTime };
 }
 
+// ── Solar calculations ──────────────────────────────────────
+function getSunDeclination(date) {
+    const jd = astroJD(date);
+    const T = (jd - 2451545.0) / 36525;
+    const DR = Math.PI / 180;
+    const M = ((357.5291092 + 35999.0502909 * T) % 360 + 360) % 360;
+    const L0 = ((280.46646 + 36000.76983 * T) % 360 + 360) % 360;
+    const C = (1.9146 - 0.004817 * T) * Math.sin(M * DR) + 0.019993 * Math.sin(2 * M * DR) + 0.00029 * Math.sin(3 * M * DR);
+    const sunLon = (L0 + C) % 360;
+    const obliq = 23.4393 - 0.01300 * T;
+    return Math.asin(Math.sin(obliq * DR) * Math.sin(sunLon * DR)) / DR;
+}
+
+function getSunRightAscension(date) {
+    const jd = astroJD(date);
+    const T = (jd - 2451545.0) / 36525;
+    const DR = Math.PI / 180;
+    const M = ((357.5291092 + 35999.0502909 * T) % 360 + 360) % 360;
+    const L0 = ((280.46646 + 36000.76983 * T) % 360 + 360) % 360;
+    const C = (1.9146 - 0.004817 * T) * Math.sin(M * DR) + 0.019993 * Math.sin(2 * M * DR);
+    const sunLon = (L0 + C) % 360;
+    const obliq = 23.4393 - 0.01300 * T;
+    return Math.atan2(Math.cos(obliq * DR) * Math.sin(sunLon * DR), Math.cos(sunLon * DR)) / DR;
+}
+
+// Sun altitude at a given time for observer
+function getSunAltitude(date, obsLat, obsLon) {
+    const DR = Math.PI / 180;
+    const dec = getSunDeclination(date) * DR;
+    const ra = getSunRightAscension(date) * DR;
+    const jd = astroJD(date);
+    const gmst = ((280.46061837 + 360.98564736629 * (jd - 2451545.0)) % 360 + 360) % 360;
+    const lst = (gmst + obsLon) * DR;
+    const ha = lst - ra;
+    return Math.asin(Math.sin(obsLat * DR) * Math.sin(dec) + Math.cos(obsLat * DR) * Math.cos(dec) * Math.cos(ha)) / DR;
+}
+
+// Sunrise and sunset for a date at observer location
+function getSunRiseSet(date, obsLat, obsLon) {
+    const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    let riseTime = null, setTime = null;
+    let prevAlt = getSunAltitude(day, obsLat, obsLon);
+    for (let m = 1; m <= 1440; m += 2) {
+        const t = new Date(day.getTime() + m * 60000);
+        const alt = getSunAltitude(t, obsLat, obsLon);
+        if (prevAlt <= -0.833 && alt > -0.833 && !riseTime) {
+            const frac = (0 - (prevAlt + 0.833)) / (alt - prevAlt);
+            riseTime = new Date(day.getTime() + (m - 2 + frac * 2) * 60000);
+        }
+        if (prevAlt > -0.833 && alt <= -0.833 && !setTime && riseTime) {
+            const frac = (0 - (prevAlt + 0.833)) / (alt - prevAlt);
+            setTime = new Date(day.getTime() + (m - 2 + frac * 2) * 60000);
+        }
+        if (riseTime && setTime) break;
+        prevAlt = alt;
+    }
+    return { rise: riseTime, set: setTime };
+}
+
+// Max solar altitude for the day (solar noon)
+function getSunMaxAltitude(date, obsLat, obsLon) {
+    let maxAlt = -90;
+    const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    for (let m = 360; m <= 1080; m += 5) { // scan 6:00 - 18:00
+        const t = new Date(day.getTime() + m * 60000);
+        const alt = getSunAltitude(t, obsLat, obsLon);
+        if (alt > maxAlt) maxAlt = alt;
+    }
+    return maxAlt;
+}
+
+// Earth-Sun distance in million km (varies ~147.1 to ~152.1)
+function getEarthSunDistance(date) {
+    const jd = astroJD(date);
+    const T = (jd - 2451545.0) / 36525;
+    const DR = Math.PI / 180;
+    const M = ((357.5291092 + 35999.0502909 * T) % 360 + 360) % 360;
+    const e = 0.016708634 - 0.000042037 * T;
+    // Distance in AU
+    const au = (1.000001018 * (1 - e * e)) / (1 + e * Math.cos(M * DR));
+    return au * 149.5978707; // Convert AU to million km
+}
+
+// Subsolar point longitude (where sun is directly overhead)
+function getSubsolarLonDeg(date) {
+    const jd = astroJD(date);
+    const gmst = ((280.46061837 + 360.98564736629 * (jd - 2451545.0)) % 360 + 360) % 360;
+    const ra = getSunRightAscension(date);
+    let lon = ((ra - gmst) % 360 + 540) % 360 - 180;
+    return Math.round(lon * 10) / 10;
+}
+
 function getTideStrength(date) {
     const phaseAngle = calculateLunarPhase(date);
     const dist = getMoonDistance(date);
@@ -1403,7 +1498,7 @@ function getAstroData(date) {
         isZenith: isZenith,
         tideStrength: tideStr,
         tidePct: Math.round(tideStr * 100),
-        tideLabel: tideStr > 0.75 ? 'Mareas Vivas' : tideStr > 0.5 ? 'Moderada-Fuerte' : tideStr > 0.3 ? 'Moderada' : 'Mareas Muertas',
+        tideLabel: tideStr > 0.75 ? (currentLang==='es'?'Mareas Vivas':'Spring Tides') : tideStr > 0.5 ? (currentLang==='es'?'Moderada-Fuerte':'Moderate-Strong') : tideStr > 0.3 ? (currentLang==='es'?'Moderada':'Moderate') : (currentLang==='es'?'Mareas Muertas':'Neap Tides'),
         isPerigee: isPerigee,
         isApogee: isApogee
     };
@@ -2655,6 +2750,14 @@ function updateUILanguage() {
         subtitleEl.textContent = subtitle;
     }
 
+    // Update Earth button label
+    const earthLabel = document.getElementById('earthButtonLabel');
+    if (earthLabel) earthLabel.textContent = currentLang === 'es' ? 'Tierra' : 'Earth';
+
+    // Update S.S button label
+    const ssLabel = document.getElementById('ssButtonLabel');
+    if (ssLabel) ssLabel.textContent = 'S.S';
+
     // Update Gregorian button label
     const gregorianLabel = document.getElementById('gregorianButtonLabel');
     if (gregorianLabel) gregorianLabel.textContent = t('gregorianButton');
@@ -3348,6 +3451,7 @@ function openAstroModal(date, lunarDay) {
                 <h4>📏 Distancia Luna-Tierra</h4>
                 <div class="astro-value" style="color:${distColor}">${astro.distance.toLocaleString()} km</div>
                 <div class="astro-label">${distLabel}</div>
+                <div style="font-size:0.78em;color:#7ec8ff;margin-top:4px;">${currentLang==='es'?'Luz a la Tierra':'Light to Earth'}: ${(astro.distance / 299792.458).toFixed(2)}s</div>
                 <div class="astro-bar-bg">
                     <div class="astro-bar-fill" style="width:${100-astro.distancePct}%;background:linear-gradient(90deg,#FF6B6B,#7E57C2);"></div>
                 </div>
@@ -3355,16 +3459,13 @@ function openAstroModal(date, lunarDay) {
                     <span>Perigeo (356,500)</span><span>Apogeo (406,700)</span>
                 </div>
             </div>
-            
+
             <!-- Declinación -->
             <div class="astro-card">
                 <h4>📐 Declinación / Punto Sublunar</h4>
                 <div class="astro-value" style="color:${decColor}">${astro.decStr}</div>
                 <div class="astro-label">Sublunar: ${astro.sublunarLat}° ${astro.sublunarDir}</div>
-                ${astro.isZenith ? 
-                    `<div class="zenith-badge" style="margin-top:8px;">✦ La Luna pasa por tu cenit hoy</div>` : 
-                    `<div class="astro-label" style="margin-top:4px;">${astro.distFromUser}° de tu cenit (${Math.round(parseFloat(astro.distFromUser)*111)} km)</div>`
-                }
+                <div class="astro-label" style="margin-top:4px;">${astro.distFromUser}° de tu cenit (${Math.round(parseFloat(astro.distFromUser)*111)} km)</div>
             </div>
             
             <!-- Mareas -->
@@ -4628,10 +4729,21 @@ const solarSigns2026 = [
 // EQUINOX AND SOLSTICE DATA 2026
 // ==========================================
 const astronomicalEvents2026 = [
-    { date: new Date('2026-03-20T00:00:00'), es: '☀️Eq', en: '☀️Eq', type: 'equinox' },
-    { date: new Date('2026-06-21T00:00:00'), es: '☉Sol', en: '☉Sol', type: 'solstice' },
-    { date: new Date('2026-09-22T00:00:00'), es: '🍂Eq', en: '🍂Eq', type: 'equinox' },
-    { date: new Date('2026-12-21T00:00:00'), es: '❄️Sol', en: '❄️Sol', type: 'solstice' }
+    // 2026
+    { date: new Date('2026-03-20T14:46:00Z'), es: '☀️Eq', en: '☀️Eq', type: 'equinox', esName: 'Equinoccio de Primavera', enName: 'Spring Equinox' },
+    { date: new Date('2026-06-21T02:24:00Z'), es: '☉Sol', en: '☉Sol', type: 'solstice', esName: 'Solsticio de Verano', enName: 'Summer Solstice' },
+    { date: new Date('2026-09-22T20:05:00Z'), es: '🍂Eq', en: '🍂Eq', type: 'equinox', esName: 'Equinoccio de Otoño', enName: 'Autumn Equinox' },
+    { date: new Date('2026-12-21T14:50:00Z'), es: '❄️Sol', en: '❄️Sol', type: 'solstice', esName: 'Solsticio de Invierno', enName: 'Winter Solstice' },
+    // 2027
+    { date: new Date('2027-03-20T20:25:00Z'), es: '☀️Eq', en: '☀️Eq', type: 'equinox', esName: 'Equinoccio de Primavera', enName: 'Spring Equinox' },
+    { date: new Date('2027-06-21T08:11:00Z'), es: '☉Sol', en: '☉Sol', type: 'solstice', esName: 'Solsticio de Verano', enName: 'Summer Solstice' },
+    { date: new Date('2027-09-23T02:02:00Z'), es: '🍂Eq', en: '🍂Eq', type: 'equinox', esName: 'Equinoccio de Otoño', enName: 'Autumn Equinox' },
+    { date: new Date('2027-12-21T20:42:00Z'), es: '❄️Sol', en: '❄️Sol', type: 'solstice', esName: 'Solsticio de Invierno', enName: 'Winter Solstice' },
+    // 2028
+    { date: new Date('2028-03-20T02:17:00Z'), es: '☀️Eq', en: '☀️Eq', type: 'equinox', esName: 'Equinoccio de Primavera', enName: 'Spring Equinox' },
+    { date: new Date('2028-06-20T14:02:00Z'), es: '☉Sol', en: '☉Sol', type: 'solstice', esName: 'Solsticio de Verano', enName: 'Summer Solstice' },
+    { date: new Date('2028-09-22T07:45:00Z'), es: '🍂Eq', en: '🍂Eq', type: 'equinox', esName: 'Equinoccio de Otoño', enName: 'Autumn Equinox' },
+    { date: new Date('2028-12-21T02:20:00Z'), es: '❄️Sol', en: '❄️Sol', type: 'solstice', esName: 'Solsticio de Invierno', enName: 'Winter Solstice' }
 ];
 
 function isAstronomicalEvent(checkDate) {
@@ -4667,15 +4779,632 @@ function getCurrentSign() {
     return 0; // Default to first sign
 }
 
+// ══════════════════════════════════════════════════════════════
+// ██  EARTH INFO PANEL — Real-time Earth data
+// ══════════════════════════════════════════════════════════════
+
+function renderEarthInfoPanel() {
+    const now = new Date();
+    const uLat = ASTRO_USER_LAT || 9.16;
+    const uLon = ASTRO_USER_LON || -83.74;
+    const uAlt = 0; // sea level default
+    const DR = Math.PI / 180;
+
+    // ── Rotation speed at latitude ──
+    const earthRadiusEq = 6378.137; // km at equator
+    const circumAtLat = 2 * Math.PI * earthRadiusEq * Math.cos(uLat * DR);
+    const rotationSpeedKmH = circumAtLat / 23.9345; // sidereal day hours
+    const distToAxis = earthRadiusEq * Math.cos(uLat * DR);
+
+    // ── Local gravity (WGS84 Somigliana formula) ──
+    const sinLat2 = Math.sin(uLat * DR) ** 2;
+    const gLocal = 9.7803253359 * (1 + 0.00193185265241 * sinLat2) / Math.sqrt(1 - 0.00669437999014 * sinLat2);
+
+    // ── Earth orbital velocity (vis-viva) ──
+    const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / 86400000) + 1;
+    const perihelionDay = 3; // ~Jan 3
+    const meanAnomaly = ((dayOfYear - perihelionDay) / 365.25) * 2 * Math.PI;
+    const eccentricity = 0.0167086;
+    const semiMajorAU = 1.000001018;
+    const AU_KM = 149597870.7;
+    const semiMajor = semiMajorAU * AU_KM;
+    // Eccentric anomaly (Newton iteration)
+    let E = meanAnomaly;
+    for (let i = 0; i < 10; i++) E = E - (E - eccentricity * Math.sin(E) - meanAnomaly) / (1 - eccentricity * Math.cos(E));
+    const trueAnomaly = 2 * Math.atan2(Math.sqrt(1 + eccentricity) * Math.sin(E / 2), Math.sqrt(1 - eccentricity) * Math.cos(E / 2));
+    const currentRadius = semiMajor * (1 - eccentricity * Math.cos(E));
+    const mu = 1.32712440018e11; // km³/s² (GM_sun)
+    const orbitalSpeed = Math.sqrt(mu * (2 / currentRadius - 1 / semiMajor)); // km/s
+    // Distance traveled today
+    const secsSinceMidnight = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const distTodayKm = orbitalSpeed * secsSinceMidnight;
+    const distTodayFullKm = orbitalSpeed * 86400;
+    // Position in orbit (degrees from perihelion)
+    const orbitPositionDeg = (trueAnomaly / DR).toFixed(1);
+    // Orbital speed in km/h
+    const orbitalSpeedKmH = orbitalSpeed * 3600;
+    // Solar system through Milky Way: ~828,000 km/h (230 km/s)
+    const galacticSpeedKmS = 230;
+    const galacticSpeedKmH = galacticSpeedKmS * 3600;
+    // Total approximate speed through space (vector sum approximation)
+    const totalSpeedKmS = Math.sqrt(orbitalSpeed * orbitalSpeed + galacticSpeedKmS * galacticSpeedKmS);
+    const totalSpeedKmH = totalSpeedKmS * 3600;
+
+    // ── Seasons 2026 (UTC dates for solstices/equinoxes) ──
+    // Hemisphere-aware: flip season names for southern hemisphere
+    const isNorth = uLat >= 0;
+    const seasons2026 = [
+        { nameN: currentLang==='es'?'Primavera':'Spring', nameS: currentLang==='es'?'Otoño':'Autumn',
+          eventN: currentLang==='es'?'Equinoccio de Primavera':'Vernal Equinox', eventS: currentLang==='es'?'Equinoccio de Otoño':'Autumnal Equinox',
+          start: new Date(2026, 2, 20, 10, 46), end: new Date(2026, 5, 21, 6, 24), icon: '🌱', iconS: '🍂', color: '#4ecdc4', colorS: '#ff9500' },
+        { nameN: currentLang==='es'?'Verano':'Summer', nameS: currentLang==='es'?'Invierno':'Winter',
+          eventN: currentLang==='es'?'Solsticio de Verano':'Summer Solstice', eventS: currentLang==='es'?'Solsticio de Invierno':'Winter Solstice',
+          start: new Date(2026, 5, 21, 6, 24), end: new Date(2026, 8, 22, 22, 5), icon: '☀️', iconS: '❄️', color: '#ffe066', colorS: '#7ec8ff' },
+        { nameN: currentLang==='es'?'Otoño':'Autumn', nameS: currentLang==='es'?'Primavera':'Spring',
+          eventN: currentLang==='es'?'Equinoccio de Otoño':'Autumnal Equinox', eventS: currentLang==='es'?'Equinoccio de Primavera':'Vernal Equinox',
+          start: new Date(2026, 8, 22, 22, 5), end: new Date(2026, 11, 21, 20, 50), icon: '🍂', iconS: '🌱', color: '#ff9500', colorS: '#4ecdc4' },
+        { nameN: currentLang==='es'?'Invierno':'Winter', nameS: currentLang==='es'?'Verano':'Summer',
+          eventN: currentLang==='es'?'Solsticio de Invierno':'Winter Solstice', eventS: currentLang==='es'?'Solsticio de Verano':'Summer Solstice',
+          start: new Date(2026, 11, 21, 20, 50), end: new Date(2027, 2, 20, 16, 25), icon: '❄️', iconS: '☀️', color: '#7ec8ff', colorS: '#ffe066' }
+    ];
+    // Find current season
+    let currentSeasonIdx = 0;
+    for (let i = 0; i < seasons2026.length; i++) {
+        if (now >= seasons2026[i].start && now < seasons2026[i].end) { currentSeasonIdx = i; break; }
+    }
+    // If before spring equinox 2026, we're in winter 2025-2026
+    if (now < seasons2026[0].start) currentSeasonIdx = 3;
+    const curSeason = seasons2026[currentSeasonIdx];
+    // Days in each season
+    const seasonDays = seasons2026.map(s => Math.round((s.end - s.start) / 86400000));
+    // Days remaining in current season
+    const daysRemaining = Math.max(0, Math.ceil((curSeason.end - now) / 86400000));
+    const seasonProgress = Math.min(100, ((now - curSeason.start) / (curSeason.end - curSeason.start)) * 100);
+
+    // ── Schumann Resonance ──
+    // Base frequencies with harmonics (theoretical, with simulated real-time variance)
+    const schumannBase = [7.83, 14.3, 20.8, 27.3, 33.8, 39.0, 45.0];
+    const schumannLabels = currentLang==='es' ? ['1ª', '2ª', '3ª', '4ª', '5ª', '6ª', '7ª'] : ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'];
+    // Simulate slight natural variation (±0.3 Hz based on time)
+    const seed = now.getMinutes() * 60 + now.getSeconds();
+    const schumannNow = schumannBase.map((f, i) => {
+        const variation = (Math.sin(seed * 0.01 * (i + 1)) * 0.3 + Math.cos(seed * 0.007 * (i + 2)) * 0.15);
+        return (f + variation).toFixed(2);
+    });
+
+    // ── Hours of light vs darkness ──
+    const sunDecl = getSunDeclination(now);
+    const tanProd = Math.tan(uLat * DR) * Math.tan(sunDecl * DR);
+    let dayHours = 12, nightHours = 12;
+    if (tanProd < 1 && tanProd > -1) {
+        const halfDayRad = Math.acos(-tanProd);
+        dayHours = (halfDayRad / Math.PI) * 24;
+        nightHours = 24 - dayHours;
+    }
+    // Light bar percentage
+    const lightPct = (dayHours / 24 * 100).toFixed(0);
+
+    // ── Circadian phase ──
+    const solarNoon = 12 - (uLon / 15); // approx UTC hour of solar noon
+    const localSolarTime = (now.getUTCHours() + now.getUTCMinutes() / 60) - (solarNoon - 12);
+    let circadianPhase = '';
+    let circadianColor = '';
+    const lst = ((localSolarTime % 24) + 24) % 24;
+    if (lst >= 5 && lst < 7) { circadianPhase = currentLang==='es'?'Despertar / Cortisol ↑':'Waking / Cortisol ↑'; circadianColor = '#ff9500'; }
+    else if (lst >= 7 && lst < 10) { circadianPhase = currentLang==='es'?'Alerta máxima':'Peak Alertness'; circadianColor = '#ffe066'; }
+    else if (lst >= 10 && lst < 14) { circadianPhase = currentLang==='es'?'Máximo rendimiento':'Peak Performance'; circadianColor = '#4ecdc4'; }
+    else if (lst >= 14 && lst < 17) { circadianPhase = currentLang==='es'?'Coordinación óptima':'Optimal Coordination'; circadianColor = '#7ec8ff'; }
+    else if (lst >= 17 && lst < 19) { circadianPhase = currentLang==='es'?'Fuerza muscular máx.':'Peak Muscle Strength'; circadianColor = '#ff6b6b'; }
+    else if (lst >= 19 && lst < 21) { circadianPhase = currentLang==='es'?'Melatonina comienza':'Melatonin Onset'; circadianColor = '#9b59b6'; }
+    else if (lst >= 21 || lst < 2) { circadianPhase = currentLang==='es'?'Sueño profundo':'Deep Sleep'; circadianColor = '#34495e'; }
+    else { circadianPhase = currentLang==='es'?'Sueño REM / Pre-despertar':'REM Sleep / Pre-wake'; circadianColor = '#8e44ad'; }
+
+    // ── Axial Tilt & Solar Incidence ──
+    const axialTilt = 23.4393; // degrees (current epoch)
+    const sunDecl2 = getSunDeclination(now); // solar declination in degrees
+    // Solar elevation at solar noon for user's latitude
+    const solarNoonElevation = 90 - Math.abs(uLat - sunDecl2);
+    // Current solar elevation (approximate)
+    const hourAngleDeg = (lst - 12) * 15; // degrees from solar noon
+    const sinElev = Math.sin(uLat * DR) * Math.sin(sunDecl2 * DR) + Math.cos(uLat * DR) * Math.cos(sunDecl2 * DR) * Math.cos(hourAngleDeg * DR);
+    const currentSolarElevation = Math.asin(Math.max(-1, Math.min(1, sinElev))) / DR;
+    // Solar energy factor (cosine of zenith angle, clamped to 0)
+    const solarEnergyFactor = Math.max(0, sinElev);
+    const solarEnergyPct = (solarEnergyFactor * 100).toFixed(0);
+    // Tilt effect description
+    let tiltEffect = '';
+    let tiltColor = '';
+    if (Math.abs(sunDecl2 - uLat) < 5) { tiltEffect = currentLang==='es'?'Sol casi cenital — máxima radiación':'Sun near zenith — peak radiation'; tiltColor = '#ff6b6b'; }
+    else if (solarNoonElevation > 60) { tiltEffect = currentLang==='es'?'Ángulo solar alto — fuerte radiación':'High sun angle — strong radiation'; tiltColor = '#ffe066'; }
+    else if (solarNoonElevation > 30) { tiltEffect = currentLang==='es'?'Ángulo solar moderado':'Moderate sun angle'; tiltColor = '#4ecdc4'; }
+    else { tiltEffect = currentLang==='es'?'Ángulo solar bajo — radiación débil':'Low sun angle — weak radiation'; tiltColor = '#7ec8ff'; }
+
+    // ── Length of Day (LOD) ──
+    // Earth's rotation is not exactly 24h. LOD varies by ~1-2 ms due to tidal friction,
+    // atmospheric/oceanic currents, core-mantle coupling, etc.
+    // Approximate LOD excess over 86400s using seasonal + lunar tidal model
+    const yearFrac = (dayOfYear / 365.25) * 2 * Math.PI;
+    // Seasonal component: ~0.5ms amplitude, peaks in spring/fall
+    const lodSeasonal = 0.5 * Math.sin(2 * yearFrac + 0.5);
+    // Long-term secular trend: ~+2.3 ms/century (tidal deceleration)
+    const lodSecular = 1.4; // current excess ms over nominal 86400s
+    const lodExcessMs = lodSecular + lodSeasonal;
+    const lodActualS = 86400 + lodExcessMs / 1000;
+    const lodHours = Math.floor(lodActualS / 3600);
+    const lodMins = Math.floor((lodActualS % 3600) / 60);
+    const lodSecs = (lodActualS % 60).toFixed(3);
+    // Earth rotation is slowing: days were shorter millions of years ago
+    const daysInYear400Mya = 400; // ~400 days/year 400M years ago (22h days)
+    const dayLength400Mya = (365.25 * 24 / daysInYear400Mya).toFixed(1);
+
+    // ── Tides ──
+    const earthTideCurve = getTideCurveForLocation(now, uLat, uLon);
+    const earthTideExtremes = getTideExtremes(earthTideCurve);
+    const earthAstro = getAstroData(now);
+    const nearestStation = findNearestTideStation(uLat, uLon);
+    const earthExtremesHTML = earthTideExtremes.slice(0, 6).map(e =>
+        '<span style="margin-right:8px;color:' + (e.type==='alta'?'#4FC3F7':'#01579B') + ';">' + (e.type==='alta'?'▲':'▼') + ' ' + e.hour + ':00 (' + e.level.toFixed(2) + 'm)</span>'
+    ).join('');
+    // Current tide level (interpolate from curve — curve items are {hour, level})
+    const curHour = now.getHours() + now.getMinutes() / 60;
+    const curHourIdx = Math.min(Math.floor(curHour), earthTideCurve.length - 1);
+    const nextHourIdx = Math.min(curHourIdx + 1, earthTideCurve.length - 1);
+    const frac = curHour - Math.floor(curHour);
+    const lvlA = (earthTideCurve[curHourIdx] && typeof earthTideCurve[curHourIdx] === 'object') ? earthTideCurve[curHourIdx].level : (earthTideCurve[curHourIdx] || 0);
+    const lvlB = (earthTideCurve[nextHourIdx] && typeof earthTideCurve[nextHourIdx] === 'object') ? earthTideCurve[nextHourIdx].level : (earthTideCurve[nextHourIdx] || 0);
+    const currentTideLevel = lvlA + (lvlB - lvlA) * frac;
+    // Next extreme
+    let nextExtreme = null;
+    for (const e of earthTideExtremes) {
+        if (parseInt(e.hour) > now.getHours()) { nextExtreme = e; break; }
+    }
+
+    // ── Build panel ──
+    let panel = document.getElementById('earthInfoPanel');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'earthInfoPanel';
+        panel.style.marginTop = '8px';
+        const nav = document.querySelector('.navigation');
+        if (nav) nav.parentNode.insertBefore(panel, nav.nextSibling);
+    }
+    panel.style.display = 'block';
+
+    // Weather placeholder (will be filled by API)
+    const weatherId = 'earthWeatherData';
+
+    panel.innerHTML = `
+    <div style="background:linear-gradient(160deg,rgba(0,20,15,0.98) 0%,rgba(0,12,8,0.98) 100%); border-radius:12px; border:1px solid rgba(78,205,196,0.28); border-top:2px solid rgba(78,205,196,0.55); box-shadow:0 0 22px rgba(78,205,196,0.09); padding:8px 10px; font-size:0.78em;">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(78,205,196,0.18);">
+            <span style="font-size:1.5em;">🌍</span>
+            <span style="font-family:'Cinzel',serif;color:#4ecdc4;font-weight:600;letter-spacing:1px;font-size:0.85em;">
+                ${currentLang==='es' ? 'Información Terrestre' : 'Earth Information'}
+            </span>
+            <span style="color:#6aaa9e;font-size:0.68em;margin-left:4px;">${formatLongDate(now)} · ${uLat.toFixed(2)}°${uLat>=0?'N':'S'} · 📍 ${ASTRO_USER_NAME.split(',')[0]}</span>
+        </div>
+
+        <!-- Meteorología -->
+        <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(78,205,196,0.12);">
+            <div style="font-family:'Cinzel',serif;color:#4ecdc4;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
+                🌤️ ${currentLang==='es'?'Meteorología en Tiempo Real':'Real-Time Weather'}
+            </div>
+            <div id="${weatherId}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;">
+                <div style="text-align:center;color:rgba(78,205,196,0.5);padding:15px;font-size:0.8em;">${currentLang==='es'?'Cargando datos meteorológicos...':'Loading weather data...'}</div>
+            </div>
+        </div>
+
+        <!-- Velocidad en el Espacio (banner destacado) -->
+        <div style="margin-bottom:10px;padding:10px;background:linear-gradient(135deg,rgba(78,205,196,0.12) 0%,rgba(255,224,102,0.08) 100%);border:1px solid rgba(78,205,196,0.3);border-radius:10px;border-left:3px solid #4ecdc4;">
+            <div style="font-family:'Cinzel',serif;color:#4ecdc4;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
+                🚀 ${currentLang==='es'?'Velocidad de la Tierra en el Espacio':'Earth\'s Speed Through Space'}
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                <!-- Traslación (orbital around Sun) -->
+                <div style="text-align:center;padding:6px;background:rgba(255,224,102,0.08);border-radius:8px;border:1px solid rgba(255,224,102,0.2);">
+                    <div style="font-size:0.65em;color:rgba(255,224,102,0.6);">☀️ ${currentLang==='es'?'Traslación (órbita solar)':'Translation (solar orbit)'}</div>
+                    <div style="font-size:1.4em;font-weight:bold;color:#ffe066;">${Math.round(orbitalSpeedKmH).toLocaleString()}</div>
+                    <div style="font-size:0.6em;color:rgba(255,255,255,0.4);">km/h (${orbitalSpeed.toFixed(1)} km/s)</div>
+                    <div style="font-size:0.58em;color:rgba(255,224,102,0.4);margin-top:2px;">${currentLang==='es'?'Tierra alrededor del Sol':'Earth around the Sun'}</div>
+                </div>
+                <!-- Sistema Solar en la Vía Láctea -->
+                <div style="text-align:center;padding:6px;background:rgba(155,89,182,0.08);border-radius:8px;border:1px solid rgba(155,89,182,0.2);">
+                    <div style="font-size:0.65em;color:rgba(155,89,182,0.7);">🌌 ${currentLang==='es'?'Sistema Solar (Vía Láctea)':'Solar System (Milky Way)'}</div>
+                    <div style="font-size:1.4em;font-weight:bold;color:#9b59b6;">${galacticSpeedKmH.toLocaleString()}</div>
+                    <div style="font-size:0.6em;color:rgba(255,255,255,0.4);">km/h (${galacticSpeedKmS} km/s)</div>
+                    <div style="font-size:0.58em;color:rgba(155,89,182,0.4);margin-top:2px;">${currentLang==='es'?'Órbita galáctica ~225 M años':'Galactic orbit ~225 M years'}</div>
+                </div>
+                <!-- Total combinada -->
+                <div style="text-align:center;padding:6px;background:rgba(78,205,196,0.1);border-radius:8px;border:1px solid rgba(78,205,196,0.3);">
+                    <div style="font-size:0.65em;color:rgba(78,205,196,0.7);">🌀 ${currentLang==='es'?'Velocidad total combinada':'Total combined speed'}</div>
+                    <div style="font-size:1.4em;font-weight:bold;color:#4ecdc4;">${Math.round(totalSpeedKmH).toLocaleString()}</div>
+                    <div style="font-size:0.6em;color:rgba(255,255,255,0.4);">km/h (${totalSpeedKmS.toFixed(1)} km/s)</div>
+                    <div style="font-size:0.58em;color:rgba(78,205,196,0.4);margin-top:2px;">${currentLang==='es'?'Tú viajas a esta velocidad ahora':'You travel at this speed right now'}</div>
+                </div>
+            </div>
+            <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.72em;">
+                <div style="color:rgba(255,255,255,0.5);">📏 ${currentLang==='es'?'Recorrido hoy':'Traveled today'}: <span style="color:#ffe066;">${Math.round(distTodayKm).toLocaleString()} km</span></div>
+                <div style="color:rgba(255,255,255,0.5);">📅 ${currentLang==='es'?'Recorrido en 24h':'24h distance'}: <span style="color:#ffe066;">${(distTodayFullKm/1e6).toFixed(2)} M km</span></div>
+                <div style="color:rgba(255,255,255,0.5);">🎯 ${currentLang==='es'?'Posición orbital':'Orbit position'}: <span style="color:#7ec8ff;">${orbitPositionDeg}° ${currentLang==='es'?'desde perihelio':'from perihelion'}</span></div>
+                <div style="color:rgba(255,255,255,0.5);">🌀 ${currentLang==='es'?'Rotación en tu latitud':'Rotation at your lat'}: <span style="color:#4ecdc4;">${Math.round(rotationSpeedKmH).toLocaleString()} km/h</span></div>
+            </div>
+        </div>
+
+        <!-- Estaciones del Año 2026 — Ambos Hemisferios -->
+        <div style="margin-bottom:10px;padding:10px;background:rgba(5,7,30,0.95);border:1px solid rgba(78,205,196,0.25);border-radius:10px;border-top:2px solid rgba(78,205,196,0.5);">
+            <div style="font-family:'Cinzel',serif;color:#4ecdc4;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
+                🌍 ${currentLang==='es'?'Estaciones del Año 2026':'Seasons of 2026'}
+            </div>
+
+            <!-- Hemisferio Norte -->
+            <div style="margin-bottom:8px;">
+                <div style="font-size:0.7em;color:${isNorth?'#4ecdc4':'rgba(255,255,255,0.4)'};font-weight:600;margin-bottom:4px;padding-left:2px;">
+                    🌐 ${currentLang==='es'?'Hemisferio Norte':'Northern Hemisphere'} ${isNorth?('⬅ '+(currentLang==='es'?'Tu ubicación':'Your location')):''}
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+                    ${seasons2026.map((s, i) => {
+                        const days = seasonDays[i];
+                        const isCurrent = i === currentSeasonIdx;
+                        const startStr = s.start.toLocaleDateString(currentLang==='es'?'es':'en', {month:'short',day:'numeric'});
+                        const endStr = s.end.toLocaleDateString(currentLang==='es'?'es':'en', {month:'short',day:'numeric'});
+                        return '<div style="text-align:center;padding:5px;background:' + (isCurrent ? s.color+'22' : 'rgba(255,255,255,0.03)') + ';border:1px solid ' + (isCurrent ? s.color+'66' : 'rgba(255,255,255,0.06)') + ';border-radius:7px;' + (isCurrent ? 'box-shadow:0 0 10px '+s.color+'33;' : '') + '">'
+                            + '<div style="font-size:1.2em;">' + s.icon + '</div>'
+                            + '<div style="font-size:0.75em;font-weight:bold;color:' + (isCurrent ? s.color : 'rgba(255,255,255,0.55)') + ';">' + s.nameN + '</div>'
+                            + '<div style="font-size:0.52em;color:rgba(255,255,255,0.28);margin-top:1px;">' + s.eventN + '</div>'
+                            + '<div style="font-size:0.6em;color:rgba(255,255,255,0.35);margin-top:2px;">' + startStr + ' — ' + endStr + '</div>'
+                            + '<div style="font-size:0.8em;font-weight:bold;color:' + (isCurrent ? s.color : 'rgba(255,255,255,0.45)') + ';margin-top:2px;">' + days + ' ' + (currentLang==='es'?'días':'days') + '</div>'
+                            + (isCurrent ? '<div style="margin-top:3px;"><div style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;"><div style="width:'+seasonProgress.toFixed(0)+'%;height:100%;background:'+s.color+';border-radius:2px;"></div></div><div style="font-size:0.55em;color:'+s.color+';margin-top:1px;">'+daysRemaining+' '+(currentLang==='es'?'días restantes':'days left')+'</div></div>' : '')
+                            + '</div>';
+                    }).join('')}
+                </div>
+            </div>
+
+            <!-- Hemisferio Sur -->
+            <div>
+                <div style="font-size:0.7em;color:${!isNorth?'#4ecdc4':'rgba(255,255,255,0.4)'};font-weight:600;margin-bottom:4px;padding-left:2px;">
+                    🌐 ${currentLang==='es'?'Hemisferio Sur':'Southern Hemisphere'} ${!isNorth?('⬅ '+(currentLang==='es'?'Tu ubicación':'Your location')):''}
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+                    ${seasons2026.map((s, i) => {
+                        const days = seasonDays[i];
+                        const isCurrent = i === currentSeasonIdx;
+                        const clrS = s.colorS || s.color;
+                        const startStr = s.start.toLocaleDateString(currentLang==='es'?'es':'en', {month:'short',day:'numeric'});
+                        const endStr = s.end.toLocaleDateString(currentLang==='es'?'es':'en', {month:'short',day:'numeric'});
+                        return '<div style="text-align:center;padding:5px;background:' + (isCurrent ? clrS+'22' : 'rgba(255,255,255,0.03)') + ';border:1px solid ' + (isCurrent ? clrS+'66' : 'rgba(255,255,255,0.06)') + ';border-radius:7px;' + (isCurrent ? 'box-shadow:0 0 10px '+clrS+'33;' : '') + '">'
+                            + '<div style="font-size:1.2em;">' + s.iconS + '</div>'
+                            + '<div style="font-size:0.75em;font-weight:bold;color:' + (isCurrent ? clrS : 'rgba(255,255,255,0.55)') + ';">' + s.nameS + '</div>'
+                            + '<div style="font-size:0.52em;color:rgba(255,255,255,0.28);margin-top:1px;">' + s.eventS + '</div>'
+                            + '<div style="font-size:0.6em;color:rgba(255,255,255,0.35);margin-top:2px;">' + startStr + ' — ' + endStr + '</div>'
+                            + '<div style="font-size:0.8em;font-weight:bold;color:' + (isCurrent ? clrS : 'rgba(255,255,255,0.45)') + ';margin-top:2px;">' + days + ' ' + (currentLang==='es'?'días':'days') + '</div>'
+                            + (isCurrent ? '<div style="margin-top:3px;"><div style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;"><div style="width:'+seasonProgress.toFixed(0)+'%;height:100%;background:'+clrS+';border-radius:2px;"></div></div><div style="font-size:0.55em;color:'+clrS+';margin-top:1px;">'+daysRemaining+' '+(currentLang==='es'?'días restantes':'days left')+'</div></div>' : '')
+                            + '</div>';
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+
+        <!-- Resonancia Schumann -->
+        <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(78,205,196,0.12);">
+            <div style="font-family:'Cinzel',serif;color:#4ecdc4;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
+                ⚡ ${currentLang==='es'?'Resonancia Schumann — Pulso Electromagnético de la Tierra':'Schumann Resonance — Earth\'s Electromagnetic Pulse'}
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
+                ${schumannNow.map((f, i) => `
+                    <div style="background:rgba(78,205,196,${i===0?'0.18':'0.08'});border:1px solid rgba(78,205,196,${i===0?'0.4':'0.2'});border-radius:8px;padding:4px 8px;text-align:center;min-width:55px;">
+                        <div style="font-size:0.6em;color:rgba(78,205,196,0.6);">${schumannLabels[i]}</div>
+                        <div style="font-size:${i===0?'1.3em':'0.95em'};font-weight:bold;color:${i===0?'#4ecdc4':'rgba(78,205,196,0.75)'};">${f} Hz</div>
+                    </div>
+                `).join('')}
+            </div>
+            <div style="font-size:0.65em;color:rgba(78,205,196,0.4);margin-top:4px;text-align:center;">${currentLang==='es'?'Frecuencias electromagnéticas entre la superficie terrestre y la ionosfera':'Electromagnetic frequencies between Earth surface and ionosphere'}</div>
+        </div>
+
+        <!-- Inclinación Axial y Ángulo Solar -->
+        <div style="margin-bottom:10px;padding:10px;background:rgba(5,7,30,0.95);border:1px solid rgba(255,149,0,0.25);border-radius:10px;border-top:2px solid rgba(255,149,0,0.5);">
+            <div style="font-family:'Cinzel',serif;color:#ff9500;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
+                🌍 ${currentLang==='es'?'Inclinación Axial y Ángulo Solar':'Axial Tilt & Solar Angle'}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                <!-- Axial tilt -->
+                <div style="text-align:center;padding:6px;background:rgba(255,149,0,0.08);border-radius:8px;border:1px solid rgba(255,149,0,0.2);">
+                    <div style="font-size:0.65em;color:rgba(255,149,0,0.6);">🌍 ${currentLang==='es'?'Inclinación axial':'Axial tilt'}</div>
+                    <div style="font-size:1.4em;font-weight:bold;color:#ff9500;">${axialTilt}°</div>
+                    <div style="font-size:0.58em;color:rgba(255,255,255,0.35);margin-top:2px;">${currentLang==='es'?'Causa las estaciones':'Causes the seasons'}</div>
+                </div>
+                <!-- Solar declination -->
+                <div style="text-align:center;padding:6px;background:rgba(255,224,102,0.08);border-radius:8px;border:1px solid rgba(255,224,102,0.2);">
+                    <div style="font-size:0.65em;color:rgba(255,224,102,0.6);">☀️ ${currentLang==='es'?'Declinación solar':'Solar declination'}</div>
+                    <div style="font-size:1.4em;font-weight:bold;color:#ffe066;">${sunDecl2 > 0 ? '+' : ''}${sunDecl2.toFixed(2)}°</div>
+                    <div style="font-size:0.58em;color:rgba(255,255,255,0.35);margin-top:2px;">${sunDecl2 > 0 ? (currentLang==='es'?'Sol en hemisferio norte':'Sun in northern hemisphere') : (currentLang==='es'?'Sol en hemisferio sur':'Sun in southern hemisphere')}</div>
+                </div>
+                <!-- Noon elevation -->
+                <div style="text-align:center;padding:6px;background:rgba(255,107,107,0.08);border-radius:8px;border:1px solid rgba(255,107,107,0.2);">
+                    <div style="font-size:0.65em;color:rgba(255,107,107,0.6);">📐 ${currentLang==='es'?'Elevación al mediodía':'Noon elevation'}</div>
+                    <div style="font-size:1.4em;font-weight:bold;color:#ff6b6b;">${solarNoonElevation.toFixed(1)}°</div>
+                    <div style="font-size:0.58em;color:rgba(255,255,255,0.35);margin-top:2px;">${currentLang==='es'?'Ángulo máx. del sol hoy':'Max sun angle today'}</div>
+                </div>
+            </div>
+            <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.72em;">
+                <div style="color:rgba(255,255,255,0.5);">☀️ ${currentLang==='es'?'Elevación actual':'Current elevation'}: <span style="color:${currentSolarElevation > 0 ? '#ffe066' : '#7ec8ff'};">${currentSolarElevation.toFixed(1)}° ${currentSolarElevation < 0 ? (currentLang==='es'?'(bajo horizonte)':'(below horizon)') : ''}</span></div>
+                <div style="color:rgba(255,255,255,0.5);">⚡ ${currentLang==='es'?'Energía solar':'Solar energy'}: <span style="color:#ffe066;">${solarEnergyPct}%</span></div>
+            </div>
+            <div style="margin-top:6px;padding:5px 8px;background:${tiltColor}15;border-radius:6px;border-left:3px solid ${tiltColor};">
+                <div style="font-size:0.72em;color:${tiltColor};">${tiltEffect}</div>
+            </div>
+        </div>
+
+        <!-- Duración del Día (LOD) -->
+        <div style="margin-bottom:10px;padding:10px;background:rgba(5,7,30,0.95);border:1px solid rgba(126,200,255,0.25);border-radius:10px;border-top:2px solid rgba(126,200,255,0.5);">
+            <div style="font-family:'Cinzel',serif;color:#7ec8ff;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
+                ⏱️ ${currentLang==='es'?'Duración Real del Día — Rotación Terrestre':'True Length of Day — Earth Rotation'}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div style="text-align:center;padding:8px;background:rgba(126,200,255,0.08);border-radius:8px;border:1px solid rgba(126,200,255,0.2);">
+                    <div style="font-size:0.65em;color:rgba(126,200,255,0.6);">⏱️ ${currentLang==='es'?'Duración real hoy':'Actual day length today'}</div>
+                    <div style="font-size:1.2em;font-weight:bold;color:#7ec8ff;">${lodHours}h ${lodMins}m ${lodSecs}s</div>
+                    <div style="font-size:0.7em;color:rgba(255,255,255,0.4);margin-top:3px;">${currentLang==='es'?'Exceso sobre 24h':'Excess over 24h'}: <span style="color:#ff6b6b;">+${lodExcessMs.toFixed(2)} ms</span></div>
+                    <div style="font-size:0.6em;color:rgba(255,255,255,0.3);margin-top:2px;">${currentLang==='es'?'Variación estacional':'Seasonal variation'}: ${lodSeasonal > 0 ? '+' : ''}${lodSeasonal.toFixed(2)} ms</div>
+                </div>
+                <div style="padding:8px;background:rgba(126,200,255,0.05);border-radius:8px;border:1px solid rgba(126,200,255,0.15);">
+                    <div style="font-size:0.65em;color:rgba(126,200,255,0.6);margin-bottom:4px;">📊 ${currentLang==='es'?'Datos históricos':'Historical data'}</div>
+                    <div style="font-size:0.68em;color:rgba(255,255,255,0.45);line-height:1.6;">
+                        🦕 ${currentLang==='es'?'Hace 400M años':'400M years ago'}: <span style="color:#4ecdc4;">${dayLength400Mya}h/${currentLang==='es'?'día':'day'} (${daysInYear400Mya} ${currentLang==='es'?'días/año':'days/yr'})</span><br>
+                        🌙 ${currentLang==='es'?'Desaceleración':'Deceleration'}: <span style="color:#ff9500;">+2.3 ms/${currentLang==='es'?'siglo':'century'}</span><br>
+                        🌊 ${currentLang==='es'?'Causa':'Cause'}: <span style="color:rgba(255,255,255,0.5);">${currentLang==='es'?'Fricción de mareas Luna-Sol':'Moon-Sun tidal friction'}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actividad Sísmica -->
+        <div style="margin-bottom:10px;padding:10px;background:rgba(5,7,30,0.95);border:1px solid rgba(255,107,107,0.25);border-radius:10px;border-top:2px solid rgba(255,107,107,0.5);">
+            <div style="font-family:'Cinzel',serif;color:#ff6b6b;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
+                🌋 ${currentLang==='es'?'Actividad Sísmica — Últimas 24 Horas':'Seismic Activity — Last 24 Hours'}
+            </div>
+            <div id="earthSeismicData" style="text-align:center;color:rgba(255,107,107,0.5);padding:10px;font-size:0.8em;">
+                ${currentLang==='es'?'Cargando datos sísmicos...':'Loading seismic data...'}
+            </div>
+        </div>
+
+        <!-- Mareas -->
+        <div style="margin-bottom:10px;padding:10px;background:rgba(5,7,30,0.95);border:1px solid rgba(79,195,247,0.25);border-radius:10px;border-top:2px solid rgba(79,195,247,0.5);">
+            <div style="font-family:'Cinzel',serif;color:#4FC3F7;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
+                🌊 ${currentLang==='es'?'Mareas — Influencia Gravitacional Luna-Sol':'Tides — Moon-Sun Gravitational Influence'}
+                <span style="font-size:0.78em;color:rgba(79,195,247,0.5);font-weight:400;margin-left:6px;">${nearestStation ? nearestStation.n : ''}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;align-items:start;">
+                <!-- Tide info -->
+                <div>
+                    <div style="text-align:center;padding:8px;background:rgba(79,195,247,0.08);border-radius:8px;border:1px solid rgba(79,195,247,0.2);">
+                        <div style="font-size:0.65em;color:rgba(79,195,247,0.6);">${currentLang==='es'?'Nivel actual':'Current level'}</div>
+                        <div style="font-size:1.6em;font-weight:bold;color:#4FC3F7;">${currentTideLevel.toFixed(2)} m</div>
+                        ${nextExtreme ? '<div style="font-size:0.65em;color:rgba(255,255,255,0.4);margin-top:3px;">'+(currentLang==='es'?'Próxima':'Next')+': '+(nextExtreme.type==='alta'?'▲ '+(currentLang==='es'?'Pleamar':'High'):' ▼ '+(currentLang==='es'?'Bajamar':'Low'))+' '+nextExtreme.hour+':00</div>' : ''}
+                    </div>
+                    <div style="margin-top:6px;font-size:0.7em;color:rgba(255,255,255,0.45);">
+                        <div>🌙 ${currentLang==='es'?'Fuerza mareal':'Tidal force'}: <span style="color:#4FC3F7;font-weight:bold;">${earthAstro.tidePct}%</span></div>
+                        <div style="margin-top:2px;">${earthAstro.tideLabel}</div>
+                    </div>
+                </div>
+                <!-- Tide curve -->
+                <div>
+                    <div style="overflow:hidden;width:100%;border-radius:6px;background:rgba(0,10,30,0.5);padding:4px;">
+                        ${renderTideSVG(earthTideCurve, 500, 70)}
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:0.60em;color:rgba(255,255,255,0.22);margin-top:3px;padding:0 4px;">
+                        <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span>
+                    </div>
+                    <div style="font-size:0.68em;color:rgba(255,255,255,0.4);margin-top:4px;line-height:1.4;">
+                        ${earthExtremesHTML}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>`;
+
+    // Fetch weather from Open-Meteo API
+    fetchEarthWeather(uLat, uLon, weatherId);
+    // Fetch seismic data from USGS
+    fetchEarthquakes(uLat, uLon, 'earthSeismicData');
+}
+
+// ── Open-Meteo Weather API ──
+function fetchEarthWeather(lat, lon, containerId) {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat.toFixed(2)+'&longitude='+lon.toFixed(2)
+        +'&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,surface_pressure,uv_index'
+        +'&timezone=auto';
+    fetch(url).then(r => {
+        if (!r.ok) throw new Error('HTTP '+r.status);
+        return r.json();
+    }).then(data => {
+        const c = data.current;
+        if (!c) return;
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        // Weather code to emoji/description
+        const weatherDesc = (code) => {
+            if (code <= 1) return { e: '☀️', d: currentLang==='es'?'Despejado':'Clear' };
+            if (code <= 3) return { e: '⛅', d: currentLang==='es'?'Parcialmente nublado':'Partly cloudy' };
+            if (code <= 48) return { e: '🌫️', d: currentLang==='es'?'Neblina':'Fog' };
+            if (code <= 57) return { e: '🌧️', d: currentLang==='es'?'Llovizna':'Drizzle' };
+            if (code <= 67) return { e: '🌧️', d: currentLang==='es'?'Lluvia':'Rain' };
+            if (code <= 77) return { e: '❄️', d: currentLang==='es'?'Nieve':'Snow' };
+            if (code <= 82) return { e: '🌧️', d: currentLang==='es'?'Aguacero':'Showers' };
+            if (code <= 86) return { e: '❄️', d: currentLang==='es'?'Nevada':'Snow showers' };
+            return { e: '⛈️', d: currentLang==='es'?'Tormenta':'Thunderstorm' };
+        };
+        const w = weatherDesc(c.weather_code);
+        // Wind direction to compass
+        const windDir = (deg) => {
+            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+            return dirs[Math.round(deg / 22.5) % 16];
+        };
+        // Cloud cover assessment for moon observation
+        const moonObs = c.cloud_cover < 20 ? (currentLang==='es'?'Excelente para observar':'Excellent for observing')
+            : c.cloud_cover < 50 ? (currentLang==='es'?'Bueno para observar':'Good for observing')
+            : c.cloud_cover < 80 ? (currentLang==='es'?'Difícil observar':'Hard to observe')
+            : (currentLang==='es'?'No visible':'Not visible');
+
+        container.innerHTML = `
+            <div class="astro-card" style="margin-bottom:0;border-color:rgba(78,205,196,0.25);border-top-color:rgba(78,205,196,0.5);">
+                <h4 style="font-size:0.75em;color:#4ecdc4;">🌡️ ${currentLang==='es'?'Temperatura':'Temperature'}</h4>
+                <div class="astro-value" style="color:#ff6b6b;">${c.temperature_2m}°C</div>
+                <div class="astro-label">${currentLang==='es'?'Sensación':'Feels like'}: ${c.apparent_temperature}°C</div>
+                <div class="astro-label" style="margin-top:2px;">${w.e} ${w.d}</div>
+            </div>
+            <div class="astro-card" style="margin-bottom:0;border-color:rgba(78,205,196,0.25);border-top-color:rgba(78,205,196,0.5);">
+                <h4 style="font-size:0.75em;color:#4ecdc4;">💨 ${currentLang==='es'?'Viento':'Wind'}</h4>
+                <div class="astro-value" style="color:#7ec8ff;">${c.wind_speed_10m} km/h</div>
+                <div class="astro-label">${currentLang==='es'?'Dirección':'Direction'}: ${windDir(c.wind_direction_10m)} (${c.wind_direction_10m}°)</div>
+                <div class="astro-label" style="margin-top:2px;">${currentLang==='es'?'Presión':'Pressure'}: ${c.surface_pressure} hPa</div>
+            </div>
+            <div class="astro-card" style="margin-bottom:0;border-color:rgba(78,205,196,0.25);border-top-color:rgba(78,205,196,0.5);">
+                <h4 style="font-size:0.75em;color:#4ecdc4;">☁️ ${currentLang==='es'?'Nubes':'Clouds'}</h4>
+                <div class="astro-value" style="color:#aaa;">${c.cloud_cover}%</div>
+                <div class="astro-label">${currentLang==='es'?'Humedad':'Humidity'}: ${c.relative_humidity_2m}%</div>
+                <div class="astro-label" style="margin-top:2px;">🌙 ${moonObs}</div>
+            </div>
+            <div class="astro-card" style="margin-bottom:0;border-color:rgba(78,205,196,0.25);border-top-color:rgba(78,205,196,0.5);">
+                <h4 style="font-size:0.75em;color:#4ecdc4;">☔ ${currentLang==='es'?'Precipitación':'Precipitation'}</h4>
+                <div class="astro-value" style="color:#4FC3F7;">${c.precipitation} mm</div>
+                <div class="astro-label">UV: ${c.uv_index}</div>
+                <div class="astro-bar-bg"><div class="astro-bar-fill" style="width:${Math.min(c.uv_index/11*100,100)}%;background:linear-gradient(90deg,#4ecdc4,#ff6b6b);"></div></div>
+                <div style="display:flex;justify-content:space-between;font-size:0.60em;color:rgba(255,255,255,0.22);margin-top:2px;"><span>UV 0</span><span>UV 11+</span></div>
+            </div>
+        `;
+    }).catch(err => {
+        console.log('Weather fetch error:', err);
+        const container = document.getElementById(containerId);
+        if (container) container.innerHTML = '<div style="color:rgba(255,100,100,0.6);font-size:0.8em;padding:8px;text-align:center;">'
+            + (currentLang==='es'?'Error al cargar meteorología':'Weather loading error')
+            + '<br><span style="font-size:0.85em;color:rgba(255,255,255,0.3);">'+err.message+'</span>'
+            + '<br><button onclick="fetchEarthWeather('+lat+','+lon+',\''+containerId+'\')" style="margin-top:6px;padding:4px 12px;background:rgba(78,205,196,0.2);border:1px solid rgba(78,205,196,0.4);border-radius:6px;color:#4ecdc4;cursor:pointer;font-size:0.9em;">'
+            + (currentLang==='es'?'🔄 Reintentar':'🔄 Retry') + '</button></div>';
+    });
+}
+
+// ── USGS Earthquake API ──
+function fetchEarthquakes(lat, lon, containerId) {
+    const now = new Date();
+    const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const fmt = d => d.toISOString().split('T')[0];
+    const url = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson'
+        + '&starttime=' + fmt(start)
+        + '&endtime=' + fmt(now)
+        + '&limit=50&orderby=magnitude&minmagnitude=2.5';
+
+    fetch(url).then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+    }).then(data => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const features = data.features || [];
+        if (features.length === 0) {
+            container.innerHTML = '<div style="color:rgba(255,255,255,0.4);font-size:0.8em;">'
+                + (currentLang==='es'?'No se registraron sismos significativos en las últimas 24h':'No significant earthquakes recorded in the last 24h')
+                + '</div>';
+            return;
+        }
+
+        // Calculate distance from user for each earthquake
+        const toRad = d => d * Math.PI / 180;
+        const haversine = (lat1, lon1, lat2, lon2) => {
+            const R = 6371;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)*Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        };
+
+        const quakes = features.map(f => {
+            const p = f.properties;
+            const c = f.geometry.coordinates;
+            const dist = haversine(lat, lon, c[1], c[0]);
+            const time = new Date(p.time);
+            return { mag: p.mag, place: p.place, dist: dist, depth: c[2], time: time, url: p.url };
+        });
+
+        // Sort: nearest first, then show top 8
+        quakes.sort((a, b) => a.dist - b.dist);
+        const nearest = quakes.slice(0, 8);
+
+        // Summary stats
+        const maxMag = Math.max(...features.map(f => f.properties.mag));
+        const totalCount = data.metadata.count || features.length;
+
+        // Magnitude color
+        const magColor = m => m >= 6 ? '#ff4444' : m >= 5 ? '#ff6b6b' : m >= 4 ? '#ff9500' : m >= 3 ? '#ffd700' : '#4ecdc4';
+        const magBg = m => m >= 6 ? 'rgba(255,68,68,0.2)' : m >= 5 ? 'rgba(255,107,107,0.15)' : m >= 4 ? 'rgba(255,149,0,0.12)' : 'rgba(255,215,0,0.08)';
+
+        let html = '<div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">'
+            + '<div style="font-size:0.72em;color:rgba(255,255,255,0.5);">'
+            + (currentLang==='es'?'Total global M2.5+':'Global total M2.5+') + ': <span style="color:#ff6b6b;font-weight:bold;">' + totalCount + '</span>'
+            + '</div>'
+            + '<div style="font-size:0.72em;color:rgba(255,255,255,0.5);">'
+            + (currentLang==='es'?'Máx':'Max') + ': <span style="color:' + magColor(maxMag) + ';font-weight:bold;">' + maxMag.toFixed(1) + '</span>'
+            + '</div>'
+            + '</div>';
+
+        html += '<div style="display:flex;flex-direction:column;gap:4px;">';
+        nearest.forEach(q => {
+            const ago = Math.round((now - q.time) / (60 * 1000));
+            const agoStr = ago < 60
+                ? ago + (currentLang==='es'?' min':' min')
+                : Math.round(ago / 60) + (currentLang==='es'?' h':' h');
+            const distStr = q.dist < 100 ? q.dist.toFixed(0) + ' km' : (q.dist / 1000).toFixed(1) + 'k km';
+
+            html += '<div style="display:grid;grid-template-columns:42px 1fr auto;gap:6px;align-items:center;padding:4px 6px;background:' + magBg(q.mag) + ';border-radius:6px;border-left:3px solid ' + magColor(q.mag) + ';">'
+                + '<div style="text-align:center;">'
+                + '<div style="font-size:1.1em;font-weight:bold;color:' + magColor(q.mag) + ';">' + q.mag.toFixed(1) + '</div>'
+                + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + q.depth.toFixed(0) + ' km</div>'
+                + '</div>'
+                + '<div style="overflow:hidden;">'
+                + '<div style="font-size:0.7em;color:rgba(255,255,255,0.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (q.place || 'Unknown') + '</div>'
+                + '<div style="font-size:0.6em;color:rgba(255,255,255,0.35);">📍 ' + distStr + ' ' + (currentLang==='es'?'de ti':'from you') + '</div>'
+                + '</div>'
+                + '<div style="text-align:right;font-size:0.62em;color:rgba(255,255,255,0.35);white-space:nowrap;">' + agoStr + ' ' + (currentLang==='es'?'atrás':'ago') + '</div>'
+                + '</div>';
+        });
+        html += '</div>';
+
+        if (quakes.length > 8) {
+            html += '<div style="text-align:center;font-size:0.65em;color:rgba(255,255,255,0.3);margin-top:6px;">'
+                + (currentLang==='es'?'Mostrando 8 más cercanos de ':'Showing 8 nearest of ') + quakes.length + (currentLang==='es'?' registrados':' recorded')
+                + '</div>';
+        }
+
+        container.innerHTML = html;
+    }).catch(err => {
+        console.log('Earthquake fetch error:', err);
+        const container = document.getElementById(containerId);
+        if (container) container.innerHTML = '<div style="color:rgba(255,100,100,0.6);font-size:0.8em;padding:8px;text-align:center;">'
+            + (currentLang==='es'?'Error al cargar datos sísmicos':'Seismic data loading error')
+            + '<br><span style="font-size:0.85em;color:rgba(255,255,255,0.3);">' + err.message + '</span>'
+            + '<br><button onclick="fetchEarthquakes(' + lat + ',' + lon + ',\'' + containerId + '\')" style="margin-top:6px;padding:4px 12px;background:rgba(255,107,107,0.2);border:1px solid rgba(255,107,107,0.4);border-radius:6px;color:#ff6b6b;cursor:pointer;font-size:0.9em;">'
+            + (currentLang==='es'?'🔄 Reintentar':'🔄 Retry') + '</button></div>';
+    });
+}
+
 function switchToSolarMode() {
     calendarMode = 'solar';
     localStorage.setItem('calendarMode', 'solar');
     currentSignIndex = getCurrentSign();
-    
+
     // Apply solar theme
     document.body.classList.add('solar-mode');
     document.body.classList.remove('gregorian-mode');
-    
+
+    // Hide earth and solar system panels
+    const eip = document.getElementById('earthInfoPanel');
+    if (eip) eip.style.display = 'none';
+    const ssp = document.getElementById('solarSystemPanel');
+    if (ssp) ssp.style.display = 'none';
+
     updateModeButtons();
     renderSolarCalendar();
 }
@@ -4683,13 +5412,55 @@ function switchToSolarMode() {
 function switchToGregorianMode() {
     calendarMode = 'gregorian';
     localStorage.setItem('calendarMode', 'gregorian');
-    
+
     // Apply gregorian theme
     document.body.classList.add('gregorian-mode');
     document.body.classList.remove('solar-mode');
-    
+
+    // Hide solar, earth, and solar system panels
+    const sip = document.getElementById('solarInfoPanel');
+    if (sip) sip.style.display = 'none';
+    const eip = document.getElementById('earthInfoPanel');
+    if (eip) eip.style.display = 'none';
+    const ssp = document.getElementById('solarSystemPanel');
+    if (ssp) ssp.style.display = 'none';
+
     updateModeButtons();
     renderGregorianCalendar();
+}
+
+function switchToEarthMode() {
+    calendarMode = 'earth';
+    localStorage.setItem('calendarMode', 'earth');
+
+    document.body.classList.remove('solar-mode');
+    document.body.classList.remove('gregorian-mode');
+
+    // Hide other calendars
+    const lunarWeeks = document.getElementById('lunarWeeks');
+    if (lunarWeeks) lunarWeeks.style.display = 'none';
+    const solarWeeks = document.getElementById('solarWeeks');
+    if (solarWeeks) solarWeeks.style.display = 'none';
+    const gregorianCal = document.getElementById('gregorianCalendar');
+    if (gregorianCal) gregorianCal.style.display = 'none';
+    const sip = document.getElementById('solarInfoPanel');
+    if (sip) sip.style.display = 'none';
+    const ssp = document.getElementById('solarSystemPanel');
+    if (ssp) ssp.style.display = 'none';
+    const lib = document.getElementById('lunarInfoBanner');
+    if (lib) lib.style.display = 'none';
+    const cdi = document.getElementById('currentDayInfo');
+    if (cdi) cdi.style.display = 'none';
+
+    // Update title
+    document.getElementById('calendarTitle').innerHTML = currentLang==='es' ? '🌍 Tierra en Vivo' : '🌍 Earth Live';
+
+    // Navigation: empty for Earth mode
+    const nav = document.querySelector('.navigation');
+    nav.innerHTML = '<div class="cycle-info"><div class="cycle-number" id="cycleNumber">' + (currentLang==='es'?'Datos de la Tierra en Tiempo Real':'Real-Time Earth Data') + '</div><div class="cycle-dates" id="cycleDates">' + ASTRO_USER_NAME + '</div></div>';
+
+    updateModeButtons();
+    renderEarthInfoPanel();
 }
 
 function switchToLunarMode() {
@@ -4707,7 +5478,15 @@ function switchToLunarMode() {
     // Hide solar calendar
     const solarWeeks = document.getElementById('solarWeeks');
     if (solarWeeks) solarWeeks.style.display = 'none';
-    
+
+    // Hide solar, earth, and solar system panels
+    const sip = document.getElementById('solarInfoPanel');
+    if (sip) sip.style.display = 'none';
+    const eip = document.getElementById('earthInfoPanel');
+    if (eip) eip.style.display = 'none';
+    const ssp = document.getElementById('solarSystemPanel');
+    if (ssp) ssp.style.display = 'none';
+
     // Hide gregorian calendar
     const gregorianCal = document.getElementById('gregorianCalendar');
     if (gregorianCal) gregorianCal.style.display = 'none';
@@ -4730,11 +5509,710 @@ function switchToLunarMode() {
     renderCalendar();
 }
 
+// ══════════════════════════════════════════════════
+// ── SOLAR SYSTEM MODE ──
+// ══════════════════════════════════════════════════
+
+function switchToSolarSystemMode() {
+    calendarMode = 'solarsystem';
+    localStorage.setItem('calendarMode', 'solarsystem');
+
+    document.body.classList.remove('solar-mode');
+    document.body.classList.remove('gregorian-mode');
+
+    // Hide other panels
+    const lunarWeeks = document.getElementById('lunarWeeks');
+    if (lunarWeeks) lunarWeeks.style.display = 'none';
+    const solarWeeks = document.getElementById('solarWeeks');
+    if (solarWeeks) solarWeeks.style.display = 'none';
+    const gregorianCal = document.getElementById('gregorianCalendar');
+    if (gregorianCal) gregorianCal.style.display = 'none';
+    const sip = document.getElementById('solarInfoPanel');
+    if (sip) sip.style.display = 'none';
+    const eip = document.getElementById('earthInfoPanel');
+    if (eip) eip.style.display = 'none';
+    const lib = document.getElementById('lunarInfoBanner');
+    if (lib) lib.style.display = 'none';
+    const cdi = document.getElementById('currentDayInfo');
+    if (cdi) cdi.style.display = 'none';
+
+    // Update title
+    document.getElementById('calendarTitle').innerHTML = currentLang==='es' ? '☀️ Sistema Solar' : '☀️ Solar System';
+
+    // Navigation
+    const nav = document.querySelector('.navigation');
+    nav.innerHTML = '<div class="cycle-info"><div class="cycle-number" id="cycleNumber">' + (currentLang==='es'?'Explorador del Sistema Solar':'Solar System Explorer') + '</div><div class="cycle-dates" id="cycleDates">' + ASTRO_USER_NAME + '</div></div>';
+
+    updateModeButtons();
+    renderSolarSystemPanel();
+}
+
+function getSolarSystemData() {
+    const es = currentLang === 'es';
+    return [
+        {
+            name: es?'Mercurio':'Mercury', icon: '☿', color: '#b0b0b0', colorBg: 'rgba(176,176,176,',
+            photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Mercury_in_true_color.jpg/220px-Mercury_in_true_color.jpg',
+            diameter: 4879, mass: '3.30×10²³ kg', gravity: 3.7,
+            distSun: 57.9, distSunUnit: 'M km',
+            orbitalPeriod: 88, orbitalPeriodUnit: es?'días':'days',
+            rotationPeriod: '58.6 '+(es?'días':'days'),
+            orbitalSpeed: 47.4, axialTilt: 0.034,
+            tempMin: -180, tempMax: 430, tempAvg: 167,
+            moons: 0, moonNames: [],
+            atmosphere: es?'Casi inexistente (Na, K, O₂ trazas)':'Nearly nonexistent (Na, K, O₂ traces)',
+            composition: es?'Hierro (70%), Silicatos':'Iron (70%), Silicates',
+            magneticField: es?'Débil (1% de la Tierra)':'Weak (1% of Earth)',
+            rings: false,
+            funFact: es?'Un día en Mercurio dura 176 días terrestres':'A day on Mercury lasts 176 Earth days',
+            orbitRatio: 0.387, synodicPeriod: 115.9,
+            geoPattern: es?'Hexagrama roseta (6 pétalos)':'Rosette hexagram (6 petals)',
+            geoPetals: 6, geoLoops: 3, isEarth: false,
+            spiro: { layers: [{R:0.40,r:0.067,d:0.065,loops:6},{R:0.35,r:0.058,d:0.04,loops:6}] }
+        },
+        {
+            name: es?'Venus':'Venus', icon: '♀', color: '#f5deb3', colorBg: 'rgba(245,222,179,',
+            photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Venus-real_color.jpg/220px-Venus-real_color.jpg',
+            diameter: 12104, mass: '4.87×10²⁴ kg', gravity: 8.87,
+            distSun: 108.2, distSunUnit: 'M km',
+            orbitalPeriod: 225, orbitalPeriodUnit: es?'días':'days',
+            rotationPeriod: '243 '+(es?'días (retrógrado)':'days (retrograde)'),
+            orbitalSpeed: 35.0, axialTilt: 177.4,
+            tempMin: 462, tempMax: 462, tempAvg: 462,
+            moons: 0, moonNames: [],
+            atmosphere: 'CO₂ (96.5%), N₂ (3.5%)',
+            composition: es?'Silicatos, Hierro, Níquel':'Silicates, Iron, Nickel',
+            magneticField: es?'Ninguno significativo':'No significant field',
+            rings: false,
+            funFact: es?'Venus-Tierra crean un pentagrama perfecto cada 8 años':'Venus-Earth create a perfect pentagram every 8 years',
+            orbitRatio: 0.723, synodicPeriod: 583.9,
+            geoPattern: es?'Pentagrama sagrado (5 pétalos)':'Sacred pentagram (5 petals)',
+            geoPetals: 5, geoLoops: 8, isEarth: false,
+            spiro: { layers: [{R:0.42,r:0.084,d:0.082,loops:5},{R:0.36,r:0.072,d:0.055,loops:5},{R:0.30,r:0.06,d:0.035,loops:5}] }
+        },
+        {
+            name: es?'Tierra':'Earth', icon: '🌍', color: '#4ecdc4', colorBg: 'rgba(78,205,196,',
+            photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/The_Blue_Marble_%28remastered%29.jpg/220px-The_Blue_Marble_%28remastered%29.jpg',
+            diameter: 12742, mass: '5.97×10²⁴ kg', gravity: 9.81,
+            distSun: 149.6, distSunUnit: 'M km',
+            orbitalPeriod: 365, orbitalPeriodUnit: es?'días':'days',
+            rotationPeriod: '23.93 '+(es?'horas':'hours'),
+            orbitalSpeed: 29.78, axialTilt: 23.44,
+            tempMin: -89.2, tempMax: 56.7, tempAvg: 15,
+            moons: 1, moonNames: [es?'Luna (La Luna)':'Moon (The Moon)'],
+            atmosphere: 'N₂ (78%), O₂ (21%), Ar (0.9%), CO₂',
+            composition: es?'Hierro, Oxígeno, Silicio, Magnesio':'Iron, Oxygen, Silicon, Magnesium',
+            magneticField: es?'Fuerte dipolar (protege de viento solar)':'Strong dipolar (shields from solar wind)',
+            rings: false,
+            funFact: es?'Único planeta conocido con vida — 71% cubierto por agua':'Only known planet with life — 71% covered by water',
+            orbitRatio: 1.0, synodicPeriod: 0,
+            geoPattern: es?'Referencia central (1 AU)':'Central reference (1 AU)',
+            geoPetals: 1, geoLoops: 1, isEarth: true,
+            spiro: { layers: [{R:0.40,r:0.40,d:0.0,loops:1}] }
+        },
+        {
+            name: es?'Marte':'Mars', icon: '♂', color: '#ff6b6b', colorBg: 'rgba(255,107,107,',
+            photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/OSIRIS_Mars_true_color.jpg/220px-OSIRIS_Mars_true_color.jpg',
+            diameter: 6792, mass: '6.42×10²³ kg', gravity: 3.72,
+            distSun: 227.9, distSunUnit: 'M km',
+            orbitalPeriod: 687, orbitalPeriodUnit: es?'días':'days',
+            rotationPeriod: '24.6 '+(es?'horas':'hours'),
+            orbitalSpeed: 24.1, axialTilt: 25.2,
+            tempMin: -140, tempMax: 20, tempAvg: -63,
+            moons: 2, moonNames: ['Phobos', 'Deimos'],
+            atmosphere: 'CO₂ (95%), N₂ (2.7%), Ar (1.6%)',
+            composition: es?'Hierro, Óxidos de hierro, Silicatos, Basalto':'Iron, Iron oxides, Silicates, Basalt',
+            magneticField: es?'Remanente (sin campo global)':'Remnant (no global field)',
+            rings: false,
+            funFact: es?'Monte Olimpo: volcán más alto del sistema solar (21.9 km)':'Olympus Mons: tallest volcano in the solar system (21.9 km)',
+            orbitRatio: 1.524, synodicPeriod: 779.9,
+            geoPattern: es?'Mandala de 7 lazos':'7-loop mandala',
+            geoPetals: 7, geoLoops: 15, isEarth: false,
+            spiro: { layers: [{R:0.42,r:0.06,d:0.058,loops:7},{R:0.36,r:0.051,d:0.038,loops:7},{R:0.28,r:0.04,d:0.025,loops:7}] }
+        },
+        {
+            name: es?'Júpiter':'Jupiter', icon: '♃', color: '#f5a623', colorBg: 'rgba(245,166,35,',
+            photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Jupiter_New_Horizons.jpg/220px-Jupiter_New_Horizons.jpg',
+            diameter: 142984, mass: '1.90×10²⁷ kg', gravity: 24.79,
+            distSun: 778.6, distSunUnit: 'M km',
+            orbitalPeriod: 4333, orbitalPeriodUnit: es?'días (11.86 años)':'days (11.86 years)',
+            rotationPeriod: '9.9 '+(es?'horas':'hours'),
+            orbitalSpeed: 13.1, axialTilt: 3.1,
+            tempMin: -145, tempMax: -108, tempAvg: -110,
+            moons: 95,
+            moonNames: ['Io', 'Europa', 'Ganymede', 'Callisto', '+91 '+(es?'más':'more')],
+            atmosphere: 'H₂ (89%), He (10%), CH₄, NH₃',
+            composition: es?'Hidrógeno, Helio (gigante gaseoso)':'Hydrogen, Helium (gas giant)',
+            magneticField: es?'Intensísimo (20,000× Tierra)':'Extremely strong (20,000× Earth)',
+            rings: true,
+            funFact: es?'Gran Mancha Roja: tormenta activa >350 años':'Great Red Spot: storm active >350 years',
+            orbitRatio: 5.203, synodicPeriod: 398.9,
+            geoPattern: es?'Flor de 11 pétalos':'11-petal flower',
+            geoPetals: 11, geoLoops: 12, isEarth: false,
+            spiro: { layers: [{R:0.43,r:0.039,d:0.037,loops:11},{R:0.38,r:0.035,d:0.025,loops:11},{R:0.30,r:0.027,d:0.018,loops:11}] }
+        },
+        {
+            name: es?'Saturno':'Saturn', icon: '♄', color: '#e8c84a', colorBg: 'rgba(232,200,74,',
+            photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/220px-Saturn_during_Equinox.jpg',
+            diameter: 120536, mass: '5.68×10²⁶ kg', gravity: 10.44,
+            distSun: 1433.5, distSunUnit: 'M km',
+            orbitalPeriod: 10759, orbitalPeriodUnit: es?'días (29.46 años)':'days (29.46 years)',
+            rotationPeriod: '10.7 '+(es?'horas':'hours'),
+            orbitalSpeed: 9.7, axialTilt: 26.7,
+            tempMin: -178, tempMax: -139, tempAvg: -140,
+            moons: 146,
+            moonNames: ['Titan', 'Enceladus', 'Mimas', 'Rhea', '+142 '+(es?'más':'more')],
+            atmosphere: 'H₂ (96%), He (3%), CH₄',
+            composition: es?'Hidrógeno, Helio (densidad < agua)':'Hydrogen, Helium (density < water)',
+            magneticField: es?'Fuerte (578× Tierra)':'Strong (578× Earth)',
+            rings: true,
+            funFact: es?'¡Flotaría en agua! Densidad 0.687 g/cm³':'Would float in water! Density 0.687 g/cm³',
+            orbitRatio: 9.537, synodicPeriod: 378.1,
+            geoPattern: es?'Mandala de 29 puntas':'29-point mandala',
+            geoPetals: 29, geoLoops: 30, isEarth: false,
+            spiro: { layers: [{R:0.43,r:0.0148,d:0.0145,loops:29},{R:0.38,r:0.0131,d:0.010,loops:29},{R:0.32,r:0.011,d:0.007,loops:29}] }
+        },
+        {
+            name: es?'Urano':'Uranus', icon: '♅', color: '#7ec8ff', colorBg: 'rgba(126,200,255,',
+            photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Uranus_as_seen_by_NASA%27s_Voyager_2_%28reprocessed%29.png/220px-Uranus_as_seen_by_NASA%27s_Voyager_2_%28reprocessed%29.png',
+            diameter: 51118, mass: '8.68×10²⁵ kg', gravity: 8.87,
+            distSun: 2872.5, distSunUnit: 'M km',
+            orbitalPeriod: 30687, orbitalPeriodUnit: es?'días (84 años)':'days (84 years)',
+            rotationPeriod: '17.2 '+(es?'horas (retrógrado)':'hours (retrograde)'),
+            orbitalSpeed: 6.8, axialTilt: 97.8,
+            tempMin: -224, tempMax: -197, tempAvg: -195,
+            moons: 28,
+            moonNames: ['Titania', 'Oberon', 'Umbriel', 'Ariel', 'Miranda'],
+            atmosphere: 'H₂ (83%), He (15%), CH₄ (2%)',
+            composition: es?'Agua, Metano, Amoníaco (gigante helado)':'Water, Methane, Ammonia (ice giant)',
+            magneticField: es?'Inclinado 59° del eje':'Tilted 59° from axis',
+            rings: true,
+            funFact: es?'Rota de lado (inclinación axial 97.8°)':'Rotates on its side (97.8° axial tilt)',
+            orbitRatio: 19.19, synodicPeriod: 369.7,
+            geoPattern: es?'Rosa circular densa (84 pétalos)':'Dense circular rose (84 petals)',
+            geoPetals: 84, geoLoops: 85, isEarth: false,
+            spiro: { layers: [{R:0.43,r:0.0051,d:0.005,loops:42},{R:0.39,r:0.0046,d:0.004,loops:42},{R:0.34,r:0.004,d:0.003,loops:42}] }
+        },
+        {
+            name: es?'Neptuno':'Neptune', icon: '♆', color: '#4169e1', colorBg: 'rgba(65,105,225,',
+            photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Neptune_Voyager2_color_calibrated.png/220px-Neptune_Voyager2_color_calibrated.png',
+            diameter: 49528, mass: '1.02×10²⁶ kg', gravity: 11.15,
+            distSun: 4495.1, distSunUnit: 'M km',
+            orbitalPeriod: 60190, orbitalPeriodUnit: es?'días (164.8 años)':'days (164.8 years)',
+            rotationPeriod: '16.1 '+(es?'horas':'hours'),
+            orbitalSpeed: 5.4, axialTilt: 28.3,
+            tempMin: -218, tempMax: -200, tempAvg: -200,
+            moons: 16,
+            moonNames: ['Triton', 'Proteus', 'Nereid', 'Larissa', '+12 '+(es?'más':'more')],
+            atmosphere: 'H₂ (80%), He (19%), CH₄ (1%)',
+            composition: es?'Agua, Metano, Amoníaco (gigante helado)':'Water, Methane, Ammonia (ice giant)',
+            magneticField: es?'Fuerte, inclinado 47° del eje':'Strong, tilted 47° from axis',
+            rings: true,
+            funFact: es?'Vientos más rápidos del sistema solar: 2,100 km/h':'Fastest winds in the solar system: 2,100 km/h',
+            orbitRatio: 30.07, synodicPeriod: 367.5,
+            geoPattern: es?'Mandala de 165 puntas':'165-point mandala',
+            geoPetals: 165, geoLoops: 166, isEarth: false,
+            spiro: { layers: [{R:0.44,r:0.0027,d:0.0026,loops:55},{R:0.40,r:0.0024,d:0.002,loops:55},{R:0.35,r:0.0021,d:0.0016,loops:55}] }
+        },
+        {
+            name: es?'Plutón':'Pluto', icon: '⯓', color: '#c9a87c', colorBg: 'rgba(201,168,124,',
+            photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Pluto_in_True_Color_-_High-Res.jpg/220px-Pluto_in_True_Color_-_High-Res.jpg',
+            diameter: 2377, mass: '1.30×10²² kg', gravity: 0.62,
+            distSun: 5906.4, distSunUnit: 'M km',
+            orbitalPeriod: 90560, orbitalPeriodUnit: es?'días (247.9 años)':'days (247.9 years)',
+            rotationPeriod: '6.39 '+(es?'días (retrógrado)':'days (retrograde)'),
+            orbitalSpeed: 4.7, axialTilt: 122.5,
+            tempMin: -240, tempMax: -218, tempAvg: -229,
+            moons: 5,
+            moonNames: ['Charon', 'Nix', 'Hydra', 'Kerberos', 'Styx'],
+            atmosphere: es?'Tenue: N₂, CH₄, CO (se congela)':'Tenuous: N₂, CH₄, CO (freezes out)',
+            composition: es?'Hielo de nitrógeno, Roca, Hielo de agua':'Nitrogen ice, Rock, Water ice',
+            magneticField: es?'Desconocido (probablemente ninguno)':'Unknown (probably none)',
+            rings: false,
+            funFact: es?'Tiene un corazón gigante de hielo de nitrógeno (Tombaugh Regio)':'Has a giant heart of nitrogen ice (Tombaugh Regio)',
+            orbitRatio: 39.48, synodicPeriod: 366.7,
+            geoPattern: es?'Espiral densa de 248 puntas':'Dense 248-point spiral',
+            geoPetals: 248, geoLoops: 249, isEarth: false,
+            isDwarf: true,
+            spiro: { layers: [{R:0.44,r:0.0018,d:0.0017,loops:60},{R:0.40,r:0.0016,d:0.0013,loops:60},{R:0.35,r:0.0014,d:0.001,loops:60}] }
+        }
+    ];
+}
+
+function renderOrbitGeometrySVG(planet, size) {
+    // Multi-layer spirograph — creates complex mandala patterns like real orbital geometry
+    const cx = size / 2, cy = size / 2;
+    const layers = (planet.spiro && planet.spiro.layers) || [{R:0.4,r:0.1,d:0.09,loops:8}];
+
+    let svg = '<svg viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '" style="display:block;margin:0 auto;">'
+        + '<defs><radialGradient id="glow' + planet.geoPetals + '"><stop offset="0%" stop-color="' + planet.color + '" stop-opacity="0.12"/><stop offset="100%" stop-color="' + planet.color + '" stop-opacity="0"/></radialGradient></defs>'
+        + '<rect width="' + size + '" height="' + size + '" fill="rgba(0,2,15,0.95)" rx="8"/>'
+        + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (size * 0.47) + '" fill="url(#glow' + planet.geoPetals + ')"/>';
+
+    // Draw each spirograph layer with decreasing opacity
+    layers.forEach(function(sp, li) {
+        const R = size * sp.R;
+        const r = size * sp.r;
+        const d = size * sp.d;
+        const totalLoops = sp.loops;
+        const steps = Math.min(totalLoops * 400, 18000);
+        const points = [];
+        for (let i = 0; i <= steps; i++) {
+            const t = (i / steps) * totalLoops * 2 * Math.PI;
+            const x = cx + (R - r) * Math.cos(t) + d * Math.cos(((R - r) / r) * t);
+            const y = cy + (R - r) * Math.sin(t) - d * Math.sin(((R - r) / r) * t);
+            points.push(x.toFixed(1) + ',' + y.toFixed(1));
+        }
+        let pathD = 'M' + points[0];
+        for (let i = 1; i < points.length; i++) { pathD += 'L' + points[i]; }
+        const opacity = (0.9 - li * 0.2).toFixed(2);
+        const width = (0.5 - li * 0.1).toFixed(2);
+        svg += '<path d="' + pathD + '" fill="none" stroke="' + planet.color + '" stroke-width="' + Math.max(0.2, width) + '" stroke-opacity="' + opacity + '" stroke-linejoin="round"/>';
+    });
+
+    // Center dot
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="2" fill="' + planet.color + '" opacity="0.9"/>';
+    // Outer ring
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (size * 0.46) + '" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>';
+    svg += '</svg>';
+    return svg;
+}
+
+function renderPlanetSVG(planet, size) {
+    // Procedural planet illustration using SVG gradients
+    const cx = size / 2, cy = size / 2, r = size * 0.42;
+    const id = 'pl' + planet.geoPetals;
+    let svg = '<svg viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '" style="display:block;margin:0 auto;">';
+    svg += '<defs>';
+    // Planet body gradient
+    svg += '<radialGradient id="' + id + 'body" cx="35%" cy="35%"><stop offset="0%" stop-color="' + planet.color + '" stop-opacity="1"/><stop offset="100%" stop-color="' + planet.colorBg + '0.3)" stop-opacity="1"/></radialGradient>';
+    // Atmosphere glow
+    svg += '<radialGradient id="' + id + 'atm" cx="50%" cy="50%"><stop offset="60%" stop-color="' + planet.color + '" stop-opacity="0"/><stop offset="100%" stop-color="' + planet.color + '" stop-opacity="0.15"/></radialGradient>';
+    // Shadow
+    svg += '<radialGradient id="' + id + 'shd" cx="70%" cy="60%"><stop offset="0%" stop-color="rgba(0,0,0,0)" /><stop offset="70%" stop-color="rgba(0,0,0,0.6)"/></radialGradient>';
+    svg += '</defs>';
+    // Glow
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 1.3) + '" fill="url(#' + id + 'atm)"/>';
+    // Body
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="url(#' + id + 'body)"/>';
+    // Surface details per planet
+    const pn = planet.icon;
+    if (pn === '☿') { // Mercury - craters
+        for (let i = 0; i < 8; i++) {
+            const a = i * 0.8 + 0.3, cr = r * (0.06 + Math.sin(i * 3) * 0.04);
+            const px = cx + r * 0.5 * Math.cos(a), py = cy + r * 0.5 * Math.sin(a);
+            svg += '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="'+cr.toFixed(1)+'" fill="rgba(0,0,0,0.15)" stroke="rgba(0,0,0,0.1)" stroke-width="0.3"/>';
+        }
+    } else if (pn === '♀') { // Venus - cloud bands
+        for (let i = -2; i <= 2; i++) {
+            svg += '<ellipse cx="' + cx + '" cy="' + (cy + i * r * 0.25) + '" rx="' + (r * 0.9) + '" ry="' + (r * 0.08) + '" fill="rgba(255,220,180,0.15)" transform="rotate(' + (i * 5) + ' ' + cx + ' ' + cy + ')"/>';
+        }
+    } else if (pn === '♂') { // Mars - polar cap + valles
+        svg += '<ellipse cx="' + cx + '" cy="' + (cy - r * 0.75) + '" rx="' + (r * 0.35) + '" ry="' + (r * 0.12) + '" fill="rgba(255,255,255,0.35)"/>';
+        svg += '<path d="M' + (cx - r * 0.3) + ',' + cy + ' Q' + cx + ',' + (cy + r * 0.15) + ' ' + (cx + r * 0.4) + ',' + (cy - r * 0.1) + '" fill="none" stroke="rgba(139,69,19,0.3)" stroke-width="1"/>';
+    } else if (pn === '♃') { // Jupiter - bands + GRS
+        for (let i = -3; i <= 3; i++) {
+            const bclr = i % 2 === 0 ? 'rgba(200,140,60,0.2)' : 'rgba(180,120,40,0.15)';
+            svg += '<ellipse cx="' + cx + '" cy="' + (cy + i * r * 0.18) + '" rx="' + (r * 0.95) + '" ry="' + (r * 0.07) + '" fill="' + bclr + '"/>';
+        }
+        svg += '<ellipse cx="' + (cx + r * 0.25) + '" cy="' + (cy + r * 0.2) + '" rx="' + (r * 0.18) + '" ry="' + (r * 0.12) + '" fill="rgba(200,80,50,0.4)" stroke="rgba(180,60,30,0.3)" stroke-width="0.5"/>';
+    } else if (pn === '♄') { // Saturn - bands + rings
+        for (let i = -2; i <= 2; i++) {
+            svg += '<ellipse cx="' + cx + '" cy="' + (cy + i * r * 0.2) + '" rx="' + (r * 0.9) + '" ry="' + (r * 0.06) + '" fill="rgba(210,190,100,0.15)"/>';
+        }
+        // Ring behind
+        svg += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + (r * 1.6) + '" ry="' + (r * 0.35) + '" fill="none" stroke="rgba(210,190,130,0.3)" stroke-width="' + (r * 0.15) + '" stroke-dasharray="0.5 0.5" clip-path="url(#'+id+'clipBack)"/>';
+        // Clip for ring behind planet
+        svg += '<defs><clipPath id="'+id+'clipBack"><rect x="0" y="0" width="'+size+'" height="'+(cy - r * 0.05)+'"/></clipPath>';
+        svg += '<clipPath id="'+id+'clipFront"><rect x="0" y="'+(cy + r * 0.05)+'" width="'+size+'" height="'+size+'"/></clipPath></defs>';
+        // Ring front
+        svg += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + (r * 1.6) + '" ry="' + (r * 0.35) + '" fill="none" stroke="rgba(210,190,130,0.4)" stroke-width="' + (r * 0.12) + '" clip-path="url(#'+id+'clipFront)"/>';
+    } else if (pn === '♅') { // Uranus - tilted, icy
+        svg += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + (r * 1.3) + '" ry="' + (r * 0.08) + '" fill="none" stroke="rgba(126,200,255,0.2)" stroke-width="2" transform="rotate(98 '+cx+' '+cy+')"/>';
+        svg += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + (r * 0.9) + '" ry="' + (r * 0.05) + '" fill="rgba(200,230,255,0.1)" transform="rotate(15 '+cx+' '+cy+')"/>';
+    } else if (pn === '♆') { // Neptune - dark spot
+        svg += '<ellipse cx="' + (cx - r * 0.15) + '" cy="' + (cy - r * 0.1) + '" rx="' + (r * 0.15) + '" ry="' + (r * 0.1) + '" fill="rgba(20,40,120,0.4)"/>';
+        for (let i = -1; i <= 1; i++) {
+            svg += '<ellipse cx="' + cx + '" cy="' + (cy + i * r * 0.3) + '" rx="' + (r * 0.85) + '" ry="' + (r * 0.05) + '" fill="rgba(100,150,255,0.1)"/>';
+        }
+    } else if (pn === '🌍') { // Earth - continents + ocean
+        svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="rgba(30,90,200,0.3)"/>';
+        // Simplified continent shapes
+        svg += '<ellipse cx="' + (cx - r * 0.15) + '" cy="' + (cy - r * 0.25) + '" rx="' + (r * 0.25) + '" ry="' + (r * 0.2) + '" fill="rgba(60,160,80,0.3)" transform="rotate(-15 '+cx+' '+cy+')"/>';
+        svg += '<ellipse cx="' + (cx + r * 0.2) + '" cy="' + (cy - r * 0.1) + '" rx="' + (r * 0.18) + '" ry="' + (r * 0.3) + '" fill="rgba(60,160,80,0.25)" transform="rotate(10 '+cx+' '+cy+')"/>';
+        svg += '<ellipse cx="' + (cx - r * 0.1) + '" cy="' + (cy + r * 0.35) + '" rx="' + (r * 0.2) + '" ry="' + (r * 0.12) + '" fill="rgba(60,160,80,0.2)"/>';
+        // Polar caps
+        svg += '<ellipse cx="' + cx + '" cy="' + (cy - r * 0.8) + '" rx="' + (r * 0.3) + '" ry="' + (r * 0.1) + '" fill="rgba(255,255,255,0.25)"/>';
+        svg += '<ellipse cx="' + cx + '" cy="' + (cy + r * 0.82) + '" rx="' + (r * 0.25) + '" ry="' + (r * 0.08) + '" fill="rgba(255,255,255,0.2)"/>';
+        // Cloud wisps
+        svg += '<ellipse cx="' + (cx + r * 0.1) + '" cy="' + (cy - r * 0.4) + '" rx="' + (r * 0.3) + '" ry="' + (r * 0.04) + '" fill="rgba(255,255,255,0.15)" transform="rotate(-10 '+cx+' '+cy+')"/>';
+        svg += '<ellipse cx="' + (cx - r * 0.2) + '" cy="' + (cy + r * 0.15) + '" rx="' + (r * 0.25) + '" ry="' + (r * 0.035) + '" fill="rgba(255,255,255,0.12)" transform="rotate(5 '+cx+' '+cy+')"/>';
+    } else if (pn === '⯓') { // Pluto - heart
+        for (let i = 0; i < 5; i++) {
+            const a = i * 1.2, cr = r * 0.08;
+            const px2 = cx + r * 0.3 * Math.cos(a), py2 = cy + r * 0.3 * Math.sin(a);
+            svg += '<circle cx="'+px2.toFixed(1)+'" cy="'+py2.toFixed(1)+'" r="'+cr.toFixed(1)+'" fill="rgba(255,200,150,0.2)"/>';
+        }
+        // Heart feature (Tombaugh)
+        svg += '<path d="M' + (cx - r * 0.12) + ',' + (cy - r * 0.05) + ' Q' + (cx - r * 0.15) + ',' + (cy - r * 0.2) + ' ' + cx + ',' + (cy - r * 0.1) + ' Q' + (cx + r * 0.15) + ',' + (cy - r * 0.2) + ' ' + (cx + r * 0.12) + ',' + (cy - r * 0.05) + ' Q' + cx + ',' + (cy + r * 0.1) + ' ' + (cx - r * 0.12) + ',' + (cy - r * 0.05) + '" fill="rgba(255,220,200,0.25)"/>';
+    }
+    // Shadow overlay
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="url(#' + id + 'shd)"/>';
+    // Specular highlight
+    svg += '<circle cx="' + (cx - r * 0.25) + '" cy="' + (cy - r * 0.25) + '" r="' + (r * 0.15) + '" fill="rgba(255,255,255,0.12)"/>';
+    svg += '</svg>';
+    return svg;
+}
+
+function calcDistanceFromEarth(planet) {
+    if (planet.isEarth) return { au: 0, mkm: 0 };
+    // Rough current distance using simplified circular orbits
+    const now = new Date();
+    const J2000 = new Date(2000, 0, 1, 12, 0, 0);
+    const daysSinceJ2000 = (now - J2000) / 86400000;
+    const earthAU = 1.0;
+    const planetAU = planet.orbitRatio;
+
+    // Angular positions (simplified)
+    const earthAngle = (daysSinceJ2000 / 365.25) * 2 * Math.PI;
+    const planetPeriodDays = planet.orbitalPeriod;
+    const planetAngle = (daysSinceJ2000 / planetPeriodDays) * 2 * Math.PI;
+
+    // Cartesian positions
+    const ex = earthAU * Math.cos(earthAngle);
+    const ey = earthAU * Math.sin(earthAngle);
+    const px = planetAU * Math.cos(planetAngle);
+    const py = planetAU * Math.sin(planetAngle);
+
+    const distAU = Math.sqrt((px - ex) * (px - ex) + (py - ey) * (py - ey));
+    const distMkm = distAU * 149.6; // AU to million km
+    return { au: distAU, mkm: distMkm };
+}
+
+function renderSolarSystemPanel() {
+    const es = currentLang === 'es';
+    const planets = getSolarSystemData();
+
+    let panel = document.getElementById('solarSystemPanel');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'solarSystemPanel';
+        panel.style.marginTop = '8px';
+        const nav = document.querySelector('.navigation');
+        if (nav) nav.parentNode.insertBefore(panel, nav.nextSibling);
+    }
+    panel.style.display = 'block';
+
+    // Overview solar system summary
+    let html = '<div style="padding:6px;font-size:0.8em;">';
+
+    // Header summary
+    html += '<div style="margin-bottom:10px;padding:12px;background:rgba(5,7,30,0.95);border:1px solid rgba(255,165,0,0.3);border-radius:12px;border-top:2px solid rgba(255,165,0,0.6);text-align:center;">'
+        + '<div style="font-family:\'Cinzel\',serif;color:#ff9500;font-size:1em;font-weight:600;letter-spacing:2px;margin-bottom:6px;">'
+        + '☀️ ' + (es?'NUESTRO SISTEMA SOLAR':'OUR SOLAR SYSTEM') + '</div>'
+        + '<div style="color:rgba(255,255,255,0.5);font-size:0.8em;line-height:1.5;">'
+        + (es?'8 planetas • 5 planetas enanos • 290+ lunas • Edad: 4,600 millones de años':'8 planets • 5 dwarf planets • 290+ moons • Age: 4.6 billion years')
+        + '<br>' + (es?'Diámetro del Sistema Solar: ~287 mil millones km':'Solar System diameter: ~287 billion km')
+        + '</div>'
+        + '</div>';
+
+    // Planet cards
+    planets.forEach((p, idx) => {
+        const dist = calcDistanceFromEarth(p);
+        const sizeVsEarth = (p.diameter / 12742).toFixed(2);
+        const gravVsEarth = (p.gravity / 9.81).toFixed(2);
+
+        html += '<div style="margin-bottom:10px;padding:10px;background:rgba(5,7,30,0.95);border:1px solid ' + p.colorBg + '0.25);border-radius:12px;border-top:2px solid ' + p.colorBg + '0.6);">';
+
+        // Planet header with mini photo
+        html += '<div onclick="togglePlanetDetails(' + idx + ')" style="cursor:pointer;display:flex;align-items:center;gap:10px;">'
+            + '<div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px solid ' + p.colorBg + '0.4);box-shadow:0 0 12px ' + p.colorBg + '0.3);flex-shrink:0;">'
+            + '<img src="' + p.photo + '" alt="' + p.icon + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"/>'
+            + '<div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:radial-gradient(circle,' + p.colorBg + '0.5),' + p.colorBg + '0.2));font-size:1.6em;">' + p.icon + '</div>'
+            + '</div>'
+            + '<div style="flex:1;">'
+            + '<div style="font-family:\'Cinzel\',serif;color:' + p.color + ';font-size:0.9em;font-weight:700;letter-spacing:1px;">' + p.name.toUpperCase()
+            + (p.rings ? ' <span style="font-size:0.65em;color:rgba(255,255,255,0.3);">💍 '+(es?'Anillos':'Rings')+'</span>' : '')
+            + '</div>'
+            + '<div style="font-size:0.68em;color:rgba(255,255,255,0.4);">'
+            + '📏 ' + p.diameter.toLocaleString() + ' km'
+            + ' • 🌡️ ' + p.tempAvg + '°C'
+            + ' • 🛰️ ' + p.moons + ' '+(es?'lunas':'moons')
+            + '</div>'
+            + '</div>'
+            + '<div style="color:rgba(255,255,255,0.3);font-size:1.2em;" id="planetArrow' + idx + '">▼</div>'
+            + '</div>';
+
+        // Quick stats row (always visible)
+        const distLabel = p.isEarth ? (es?'Dist. al Sol':'Dist. to Sun') : (es?'Dist. actual':'Current dist.');
+        const distVal = p.isEarth ? p.distSun : dist.mkm.toFixed(1);
+        const distSub = p.isEarth ? 'M km (1.00 AU)' : 'M km (' + dist.au.toFixed(2) + ' AU)';
+        html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px;">'
+            + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+            + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + distLabel + '</div>'
+            + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">' + distVal + '</div>'
+            + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + distSub + '</div>'
+            + '</div>'
+            + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+            + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es?'Vel. orbital':'Orbital speed') + '</div>'
+            + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">' + p.orbitalSpeed + '</div>'
+            + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">km/s (' + (p.orbitalSpeed * 3600).toLocaleString() + ' km/h)</div>'
+            + '</div>'
+            + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+            + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es?'Órbita':'Orbit') + '</div>'
+            + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">' + p.orbitalPeriod.toLocaleString() + '</div>'
+            + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + p.orbitalPeriodUnit + '</div>'
+            + '</div>'
+            + '</div>';
+
+        // Expandable details (hidden by default)
+        html += '<div id="planetDetails' + idx + '" style="display:none;margin-top:8px;">';
+
+        // Planet real photo + SVG fallback
+        const planetImgId = 'planetImg' + idx;
+        html += '<div style="text-align:center;margin-bottom:8px;padding:12px;background:radial-gradient(circle,' + p.colorBg + '0.1) 0%,rgba(0,0,0,0) 70%);border-radius:10px;">'
+            + '<div id="' + planetImgId + '" style="width:130px;height:130px;margin:0 auto;border-radius:50%;overflow:hidden;border:2px solid ' + p.colorBg + '0.3);box-shadow:0 0 25px ' + p.colorBg + '0.3),0 0 50px ' + p.colorBg + '0.15);">'
+            + '<img src="' + p.photo + '" alt="' + p.name + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"/>'
+            + '<div style="display:none;">' + renderPlanetSVG(p, 126) + '</div>'
+            + '</div>'
+            + '<div style="font-size:0.65em;color:rgba(255,255,255,0.3);margin-top:6px;">' + p.name + (p.isDwarf ? ' — '+(es?'Planeta Enano':'Dwarf Planet') : '') + ' <span style="font-size:0.85em;color:rgba(255,255,255,0.15);">NASA</span></div>'
+            + '</div>';
+
+        // Detail grid
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">';
+
+        // Physical properties
+        html += '<div style="padding:6px;background:' + p.colorBg + '0.05);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);">'
+            + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:4px;">' + (es?'PROPIEDADES FÍSICAS':'PHYSICAL PROPERTIES') + '</div>'
+            + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.6;">'
+            + '⚖️ ' + (es?'Masa':'Mass') + ': ' + p.mass + '<br>'
+            + '📏 ' + (es?'Diámetro':'Diameter') + ': ' + p.diameter.toLocaleString() + ' km<br>'
+            + '🌍 ' + (es?'vs Tierra':'vs Earth') + ': ' + sizeVsEarth + '×<br>'
+            + '⬇️ ' + (es?'Gravedad':'Gravity') + ': ' + p.gravity + ' m/s² (' + gravVsEarth + '× 🌍)<br>'
+            + '📐 ' + (es?'Inclinación axial':'Axial tilt') + ': ' + p.axialTilt + '°'
+            + '</div></div>';
+
+        // Temperature
+        html += '<div style="padding:6px;background:' + p.colorBg + '0.05);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);">'
+            + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:4px;">' + (es?'TEMPERATURA':'TEMPERATURE') + '</div>'
+            + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.6;">'
+            + '❄️ Min: ' + p.tempMin + '°C<br>'
+            + '🔥 Max: ' + p.tempMax + '°C<br>'
+            + '🌡️ ' + (es?'Promedio':'Average') + ': <span style="color:' + p.color + ';font-weight:bold;">' + p.tempAvg + '°C</span>'
+            + '</div>'
+            // Temperature bar
+            + '<div style="margin-top:4px;height:6px;background:rgba(0,0,0,0.3);border-radius:3px;overflow:hidden;">'
+            + '<div style="height:100%;width:' + Math.min(100, ((p.tempAvg + 230) / 700 * 100)) + '%;background:linear-gradient(90deg,#4169e1,#ff6b6b);border-radius:3px;"></div>'
+            + '</div>'
+            + '<div style="display:flex;justify-content:space-between;font-size:0.5em;color:rgba(255,255,255,0.2);"><span>-230°C</span><span>470°C</span></div>'
+            + '</div>';
+
+        // Composition & Atmosphere
+        html += '<div style="padding:6px;background:' + p.colorBg + '0.05);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);">'
+            + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:4px;">' + (es?'COMPOSICIÓN':'COMPOSITION') + '</div>'
+            + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.6;">'
+            + '🪨 ' + p.composition + '<br>'
+            + '💨 ' + (es?'Atmósfera':'Atmosphere') + ': ' + p.atmosphere + '<br>'
+            + '🧲 ' + (es?'Campo magnético':'Magnetic field') + ': ' + p.magneticField
+            + '</div></div>';
+
+        // Orbital mechanics
+        html += '<div style="padding:6px;background:' + p.colorBg + '0.05);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);">'
+            + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:4px;">' + (es?'MECÁNICA ORBITAL':'ORBITAL MECHANICS') + '</div>'
+            + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.6;">'
+            + '☀️ ' + (es?'Dist. al Sol':'Dist. to Sun') + ': ' + p.distSun + ' ' + p.distSunUnit + '<br>'
+            + '🔄 ' + (es?'Rotación':'Rotation') + ': ' + p.rotationPeriod + '<br>'
+            + '📡 ' + (es?'Periodo sinódico':'Synodic period') + ': ' + p.synodicPeriod + ' ' + (es?'días':'days')
+            + '</div></div>';
+
+        html += '</div>'; // end detail grid
+
+        // Moons section
+        if (p.moons > 0) {
+            html += '<div style="padding:6px;background:' + p.colorBg + '0.04);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);margin-bottom:6px;">'
+                + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:3px;">🛰️ ' + (es?'LUNAS':'MOONS') + ' (' + p.moons + ')</div>'
+                + '<div style="font-size:0.72em;color:rgba(255,255,255,0.5);">';
+            p.moonNames.forEach((m, mi) => {
+                html += '<span style="display:inline-block;padding:2px 6px;margin:2px;background:' + p.colorBg + '0.08);border:1px solid ' + p.colorBg + '0.15);border-radius:10px;font-size:0.9em;">' + m + '</span>';
+            });
+            html += '</div></div>';
+        }
+
+        // Orbit geometry (spirograph pattern) — skip for Earth
+        if (!p.isEarth) {
+        html += '<div style="padding:8px;background:rgba(0,5,20,0.8);border-radius:10px;border:1px solid ' + p.colorBg + '0.15);margin-bottom:6px;">'
+            + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:6px;text-align:center;">'
+            + '🌀 ' + (es?'GEOMETRÍA ORBITAL CON LA TIERRA':'ORBITAL GEOMETRY WITH EARTH') + '</div>'
+            + '<div style="text-align:center;margin-bottom:6px;">' + renderOrbitGeometrySVG(p, 200) + '</div>'
+            + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.5;text-align:center;">'
+            + (es?'Patrón':'Pattern') + ': <span style="color:' + p.color + ';font-weight:bold;">' + p.geoPattern + '</span><br>'
+            + '<span style="font-size:0.85em;color:rgba(255,255,255,0.3);">' + (es?'Las órbitas combinadas de ':'The combined orbits of ') + p.name + (es?' y la Tierra trazan este patrón geométrico en el espacio.':' and Earth trace this geometric pattern in space.') + '</span>'
+            + '</div></div>';
+        }
+
+        // Fun fact
+        html += '<div style="padding:5px 8px;background:rgba(255,255,255,0.03);border-radius:6px;border-left:3px solid ' + p.colorBg + '0.3);">'
+            + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);">💡 ' + p.funFact + '</div>'
+            + '</div>';
+
+        html += '</div>'; // end planetDetails
+        html += '</div>'; // end planet card
+    });
+
+    // ═══ VISUAL SCALE COMPARISON - Planets to scale with Sun ═══
+    html += '<div style="margin-bottom:10px;padding:10px;background:rgba(0,2,15,0.98);border:1px solid rgba(255,165,0,0.25);border-radius:12px;border-top:2px solid rgba(255,165,0,0.5);overflow:hidden;">'
+        + '<div style="font-family:\'Cinzel\',serif;color:#ff9500;font-size:0.72em;font-weight:600;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;text-align:center;">'
+        + '🔭 ' + (es?'TAMAÑO REAL A ESCALA':'TRUE SIZE TO SCALE') + '</div>'
+        + '<div style="font-size:0.6em;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:10px;">'
+        + (es?'Diámetros proporcionales reales — Sol: 1,392,700 km':'Real proportional diameters — Sun: 1,392,700 km') + '</div>';
+
+    // Build SVG with real proportional sizes
+    // Sun diameter = 1,392,700 km. We'll show the Sun edge on the left
+    // Scale: Jupiter (142,984 km) should be visible, so Sun is ~9.7x Jupiter
+    // SVG width=600, height=200
+    const svgW = 600, svgH = 220;
+    const sunDiam = 1392700;
+    // Scale so Jupiter = ~36px diameter
+    const scale = 36 / 142984;
+    const sunR = sunDiam * scale / 2; // ~17.5px radius... too small. Let's use a different scale
+    // Better: show Sun as a huge arc on the left. Jupiter ~36px
+    const jupR = 18; // Jupiter radius in pixels
+    const scaleP = jupR / (142984 / 2); // px per km radius
+
+    // Planet radii in pixels (proportional)
+    const planetSizes = planets.map(p => ({
+        name: p.name, icon: p.icon, color: p.color, colorBg: p.colorBg,
+        r: Math.max(1, (p.diameter / 2) * scaleP),
+        diam: p.diameter, isDwarf: p.isDwarf
+    }));
+
+    // Sun radius in pixels at this scale
+    const sunRpx = (sunDiam / 2) * scaleP; // huge ~175px
+
+    let svgContent = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" width="100%" style="display:block;border-radius:8px;background:radial-gradient(ellipse at 0% 50%,rgba(255,165,0,0.08),transparent 50%);">';
+
+    // Sun as a huge arc on the left edge
+    svgContent += '<defs>'
+        + '<radialGradient id="sunGrad" cx="0%" cy="50%"><stop offset="0%" stop-color="#fff8e0" stop-opacity="1"/><stop offset="30%" stop-color="#ffcc00"/><stop offset="60%" stop-color="#ff9500"/><stop offset="90%" stop-color="#ff6600" stop-opacity="0.8"/><stop offset="100%" stop-color="#cc3300" stop-opacity="0.4"/></radialGradient>'
+        + '<radialGradient id="sunGlow" cx="0%" cy="50%"><stop offset="0%" stop-color="#ff9500" stop-opacity="0.3"/><stop offset="100%" stop-color="#ff9500" stop-opacity="0"/></radialGradient>'
+        + '</defs>';
+
+    // Sun glow
+    svgContent += '<circle cx="-' + (sunRpx - 10) + '" cy="' + (svgH / 2) + '" r="' + (sunRpx + 30) + '" fill="url(#sunGlow)"/>';
+    // Sun body (most will be off-screen to the left)
+    svgContent += '<circle cx="-' + (sunRpx - 10) + '" cy="' + (svgH / 2) + '" r="' + sunRpx + '" fill="url(#sunGrad)"/>';
+    // Sun label
+    svgContent += '<text x="16" y="20" fill="rgba(255,165,0,0.6)" font-size="7" font-family="sans-serif">' + (es?'Sol':'Sun') + '</text>';
+    svgContent += '<text x="16" y="28" fill="rgba(255,165,0,0.35)" font-size="5" font-family="sans-serif">1,392,700 km</text>';
+
+    // Place planets from left to right
+    // Separate: rocky planets + Earth closer together, then gas/ice giants
+    let xPos = 55;
+    const yCenter = svgH * 0.45;
+    const yDwarf = svgH * 0.82;
+
+    planetSizes.forEach((ps, i) => {
+        const y = ps.isDwarf ? yDwarf : yCenter;
+        const spacing = ps.r < 3 ? 20 : ps.r < 8 ? 30 : ps.r < 15 ? 45 : 55;
+        xPos += spacing;
+
+        // Planet glow
+        if (ps.r > 3) {
+            svgContent += '<circle cx="' + xPos + '" cy="' + y + '" r="' + (ps.r * 1.4) + '" fill="' + ps.colorBg + '0.1)" />';
+        }
+
+        // Planet photo circle with clip
+        const clipId = 'pclip' + i;
+        svgContent += '<defs><clipPath id="' + clipId + '"><circle cx="' + xPos + '" cy="' + y + '" r="' + ps.r + '"/></clipPath></defs>';
+        svgContent += '<image href="' + planets[i].photo + '" x="' + (xPos - ps.r) + '" y="' + (y - ps.r) + '" width="' + (ps.r * 2) + '" height="' + (ps.r * 2) + '" clip-path="url(#' + clipId + ')" preserveAspectRatio="xMidYMid slice"/>';
+        // Fallback circle (shows if image fails)
+        svgContent += '<circle cx="' + xPos + '" cy="' + y + '" r="' + ps.r + '" fill="none" stroke="' + ps.color + '" stroke-width="0.5" stroke-opacity="0.4"/>';
+
+        // Shadow
+        svgContent += '<defs><radialGradient id="psh' + i + '" cx="65%" cy="55%"><stop offset="0%" stop-color="rgba(0,0,0,0)"/><stop offset="80%" stop-color="rgba(0,0,0,0.5)"/></radialGradient></defs>';
+        svgContent += '<circle cx="' + xPos + '" cy="' + y + '" r="' + ps.r + '" fill="url(#psh' + i + ')"/>';
+
+        // Label below
+        const labelY = ps.isDwarf ? y + ps.r + 8 : y + ps.r + 8;
+        svgContent += '<text x="' + xPos + '" y="' + labelY + '" fill="' + ps.color + '" font-size="5.5" font-family="sans-serif" text-anchor="middle" opacity="0.7">' + ps.name + '</text>';
+        // Diameter
+        svgContent += '<text x="' + xPos + '" y="' + (labelY + 7) + '" fill="rgba(255,255,255,0.25)" font-size="4" font-family="sans-serif" text-anchor="middle">' + (ps.diam > 10000 ? (ps.diam / 1000).toFixed(0) + 'k' : ps.diam.toLocaleString()) + ' km</text>';
+
+        xPos += ps.r;
+    });
+
+    // Labels for rows
+    svgContent += '<text x="' + svgW * 0.65 + '" y="' + (svgH * 0.08) + '" fill="rgba(255,255,255,0.2)" font-size="6" font-family="sans-serif" text-anchor="middle" font-style="italic">"' + (es?'Planetas':'Planets') + '"</text>';
+
+    svgContent += '</svg>';
+    html += svgContent;
+
+    // Scale note
+    html += '<div style="font-size:0.55em;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;">'
+        + (es?'Los diámetros están a escala real entre sí. El Sol se muestra cortado (es 9.7× más grande que Júpiter).':'Diameters are to real scale relative to each other. Sun shown cropped (it is 9.7× larger than Jupiter).') + '</div>';
+    html += '</div>'; // end visual scale
+
+    // ═══ BAR SIZE COMPARISON ═══
+    html += '<div style="margin-bottom:10px;padding:10px;background:rgba(5,7,30,0.95);border:1px solid rgba(255,165,0,0.2);border-radius:12px;border-top:2px solid rgba(255,165,0,0.4);">'
+        + '<div style="font-family:\'Cinzel\',serif;color:#ff9500;font-size:0.72em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">'
+        + '📊 ' + (es?'COMPARACIÓN DE TAMAÑOS':'SIZE COMPARISON') + '</div>';
+
+    // Proportional size bars
+    const maxDiam = 142984; // Jupiter
+    planets.forEach(p => {
+        const pct = (p.diameter / maxDiam * 100).toFixed(1);
+        html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">'
+            + '<div style="width:55px;font-size:0.62em;color:rgba(255,255,255,0.4);text-align:right;">' + p.icon + ' ' + p.name + '</div>'
+            + '<div style="flex:1;height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;">'
+            + '<div style="height:100%;width:' + Math.max(1, pct) + '%;background:linear-gradient(90deg,' + p.color + ',' + p.colorBg + '0.3));border-radius:4px;transition:width 0.5s;"></div>'
+            + '</div>'
+            + '<div style="width:48px;font-size:0.58em;color:rgba(255,255,255,0.3);">' + (p.diameter / 1000).toFixed(0) + 'k km</div>'
+            + '</div>';
+    });
+
+    html += '</div>'; // end bar size comparison
+
+    // ═══ DISTANCE FROM SUN ═══
+    html += '<div style="margin-bottom:10px;padding:10px;background:rgba(5,7,30,0.95);border:1px solid rgba(255,165,0,0.2);border-radius:12px;border-top:2px solid rgba(255,165,0,0.4);">'
+        + '<div style="font-family:\'Cinzel\',serif;color:#ff9500;font-size:0.72em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">'
+        + '☀️ ' + (es?'DISTANCIA AL SOL':'DISTANCE FROM SUN') + ' (AU)</div>';
+
+    planets.forEach(p => {
+        const pctAU = (p.orbitRatio / 39.48 * 100).toFixed(1);
+        html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">'
+            + '<div style="width:55px;font-size:0.62em;color:rgba(255,255,255,0.4);text-align:right;">' + p.icon + ' ' + p.name + '</div>'
+            + '<div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;">'
+            + '<div style="height:100%;width:' + Math.max(1, pctAU) + '%;background:' + p.color + ';border-radius:3px;"></div>'
+            + '</div>'
+            + '<div style="width:48px;font-size:0.58em;color:rgba(255,255,255,0.3);">' + p.orbitRatio.toFixed(1) + ' AU</div>'
+            + '</div>';
+    });
+
+    html += '</div>';
+
+    html += '</div>'; // close main container
+
+    panel.innerHTML = html;
+}
+
+function togglePlanetDetails(idx) {
+    const el = document.getElementById('planetDetails' + idx);
+    const arrow = document.getElementById('planetArrow' + idx);
+    if (!el) return;
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+        if (arrow) arrow.textContent = '▲';
+    } else {
+        el.style.display = 'none';
+        if (arrow) arrow.textContent = '▼';
+    }
+}
+
 function updateCurrentDayInfoForMode(mode) {
     const today = new Date();
     today.setHours(0,0,0,0);
 
-    let displayTitle = 'Luna Hoy';
+    let displayTitle = currentLang === 'es' ? 'Aspectos de Hoy' : 'Today\'s Aspects';
     let displayEmoji = '☽';
     let displayDay = 0;
     let displayInfo = '';
@@ -4800,10 +6278,10 @@ function updateCurrentDayInfoForMode(mode) {
             ...(todayEclipse ? [{ type: 'eclipse', data: todayEclipse }] : []),
             ...(todayAstroEvent ? [{ type: 'astroEvent', data: todayAstroEvent }] : []),
             ...(todayStellium ? [{ type: 'stellium', data: todayStellium }] : []),
-            ...todayInterAspects.map(asp => ({ type: 'interPlanetaryAspect', data: asp })),
-            ...todayAspects.map(asp => ({ type: 'aspect', data: asp })),
             ...todaySignChanges.map(ch => ({ type: 'signChange', data: ch })),
-            ...todayRetrogrades.map(ret => ({ type: 'retrograde', data: ret }))
+            ...todayRetrogrades.map(ret => ({ type: 'retrograde', data: ret })),
+            ...todayInterAspects.map(asp => ({ type: 'interPlanetaryAspect', data: asp })),
+            ...todayAspects.map(asp => ({ type: 'aspect', data: asp }))
         ];
 
         // Regenerate the HTML
@@ -4842,30 +6320,31 @@ function updateCurrentDayInfoForMode(mode) {
                         ${displayTitle}${allPlanetaryEvents.length > 0 ? ` (${allPlanetaryEvents.length})` : ''}
                     </div>
                     ${allPlanetaryEvents.length > 0 ? `
-                    <div style="display:flex;flex-direction:column;gap:2px;align-items:stretch;">
-                        ${allPlanetaryEvents.slice(0, 6).map(event => {
+                    <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
+                        ${allPlanetaryEvents.slice(0, 8).map(event => {
                             if (event.type === 'eclipse') {
                                 const ecl = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.2);border-radius:4px;border-left:2px solid #f5576c;font-weight:bold;">🌑 ${ecl.type || (currentLang==='es'?'Eclipse':'Eclipse')}</div>`;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.2);border-radius:4px;border-left:2px solid #f5576c;font-weight:bold;text-align:center;width:100%;">🌑 ${ecl.type || (currentLang==='es'?'Eclipse':'Eclipse')}</div>`;
                             } else if (event.type === 'astroEvent') {
                                 const ae = event.data;
-                                const lbl = ae.type==='equinox'?(currentLang==='es'?'Equinoccio':'Equinox'):(currentLang==='es'?'Solsticio':'Solstice');
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(255,215,0,0.15);border-radius:4px;border-left:2px solid #FFD700;font-weight:bold;">${ae[currentLang]} ${lbl}</div>`;
+                                const lbl = currentLang==='es'?(ae.esName||'Evento'):(ae.enName||'Event');
+                                const timeStr = ae.date ? ae.date.toLocaleTimeString(currentLang==='es'?'es':'en',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(255,215,0,0.15);border-radius:4px;border-left:2px solid #FFD700;font-weight:bold;text-align:center;width:100%;">☀️ ${lbl}${timeStr?' · '+timeStr:''}</div>`;
                             } else if (event.type === 'stellium') {
                                 const st = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(201,168,64,0.15);border-radius:4px;border-left:2px solid #c9a840;">✨ ${currentLang==='es'?'Stellium':'Stellium'} ${st.sign||''}</div>`;
-                            } else if (event.type === 'interPlanetaryAspect') {
-                                const asp = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;border-left:2px solid ${asp.color};">${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)}</div>`;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(201,168,64,0.15);border-radius:4px;border-left:2px solid #c9a840;text-align:center;width:100%;">✨ ${currentLang==='es'?'Stellium':'Stellium'} ${st.sign||''}</div>`;
                             } else if (event.type === 'signChange') {
                                 const ch = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(78,205,196,0.12);border-radius:4px;border-left:2px solid #4ecdc4;">${tp(ch.planet)}→${ts(ch.toSign) || ch.toSign}</div>`;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(78,205,196,0.12);border-radius:4px;border-left:2px solid ${ch.color||'#4ecdc4'};text-align:center;width:100%;">${tp(ch.planet)} → ${ts(ch.toSign) || ch.toSign}${ch.time?' <span style="font-weight:bold;color:#c9a840;">'+ch.time+'</span>':''}</div>`;
                             } else if (event.type === 'retrograde') {
                                 const ret = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.12);border-radius:4px;border-left:2px solid #e85d7a;">${tp(ret.planet)} ${ret.type==='start'?(currentLang==='es'?'℞ Retro':'℞ Retro'):(currentLang==='es'?'℞ Directo':'℞ Direct')}</div>`;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.12);border-radius:4px;border-left:2px solid #e85d7a;text-align:center;width:100%;">${tp(ret.planet)} ${ret.type==='start'?(currentLang==='es'?'℞ Retro':'℞ Retro'):(currentLang==='es'?'℞ Directo':'℞ Direct')}</div>`;
+                            } else if (event.type === 'interPlanetaryAspect') {
+                                const asp = event.data;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;border-left:2px solid ${asp.color};text-align:center;width:100%;">☽ ${asp.symbol} ${tp(asp.planet2)}</div>`;
                             } else if (event.type === 'aspect') {
                                 const asp = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(124,77,255,0.12);border-radius:4px;border-left:2px solid #7c4dff;">${asp.symbol || '☽'} ${asp.name || asp.type || ''}</div>`;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(124,77,255,0.12);border-radius:4px;border-left:2px solid #7c4dff;text-align:center;width:100%;">☽ ${asp.symbol || ''} ${asp.name || asp.type || ''}</div>`;
                             }
                             return '';
                         }).join('')}
@@ -4880,29 +6359,29 @@ function updateCurrentDayInfoForMode(mode) {
 function updateModeButtons() {
     const lunarBtn = document.getElementById('lunarModeBtn');
     const solarBtn = document.getElementById('solarModeBtn');
+    const earthBtn = document.getElementById('earthModeBtn');
+    const ssBtn = document.getElementById('solarSystemModeBtn');
     const gregorianBtn = document.getElementById('gregorianModeBtn');
-    
+
     // Reset all
-    [lunarBtn, solarBtn, gregorianBtn].forEach(btn => {
+    [lunarBtn, solarBtn, earthBtn, ssBtn, gregorianBtn].forEach(btn => {
+        if (!btn) return;
         btn.style.background = 'rgba(255,255,255,0.04)'; btn.style.border = '1px solid rgba(255,255,255,0.10)';
         btn.style.color = 'rgba(255,255,255,0.45)';
         btn.style.boxShadow = 'none';
     });
-    
+
     // Highlight active
-    if (calendarMode === 'lunar') {
-        lunarBtn.style.background = 'linear-gradient(135deg, rgba(201,168,64,0.28) 0%, rgba(201,168,64,0.10) 100%)';
-        lunarBtn.style.color = '#e8c84a'; lunarBtn.style.border = '1px solid rgba(201,168,64,0.42)';
-        lunarBtn.style.boxShadow = '0 0 16px rgba(201,168,64,0.22)';
-    } else if (calendarMode === 'solar') {
-        solarBtn.style.background = 'linear-gradient(135deg, rgba(201,168,64,0.28) 0%, rgba(201,168,64,0.10) 100%)';
-        solarBtn.style.color = '#e8c84a'; solarBtn.style.border = '1px solid rgba(201,168,64,0.42)';
-        solarBtn.style.boxShadow = '0 0 16px rgba(201,168,64,0.22)';
-    } else if (calendarMode === 'gregorian') {
-        gregorianBtn.style.background = 'linear-gradient(135deg, rgba(201,168,64,0.28) 0%, rgba(201,168,64,0.10) 100%)';
-        gregorianBtn.style.color = '#e8c84a'; gregorianBtn.style.border = '1px solid rgba(201,168,64,0.42)';
-        gregorianBtn.style.boxShadow = '0 0 16px rgba(201,168,64,0.22)';
-    }
+    const activeStyle = (btn, color) => {
+        btn.style.background = `linear-gradient(135deg, ${color}44 0%, ${color}18 100%)`;
+        btn.style.color = color; btn.style.border = `1px solid ${color}6b`;
+        btn.style.boxShadow = `0 0 16px ${color}38`;
+    };
+    if (calendarMode === 'lunar') activeStyle(lunarBtn, '#e8c84a');
+    else if (calendarMode === 'solar') activeStyle(solarBtn, '#ff9500');
+    else if (calendarMode === 'earth') activeStyle(earthBtn, '#4ecdc4');
+    else if (calendarMode === 'solarsystem') activeStyle(ssBtn, '#ff9500');
+    else if (calendarMode === 'gregorian') activeStyle(gregorianBtn, '#e8c84a');
 }
 
 let currentGregorianMonth = new Date().getMonth(); // 0-11
@@ -5104,6 +6583,9 @@ function renderSolarCalendar() {
     // Update currentDayInfo to show solar data instead of lunar
     updateCurrentDayInfoForMode('solar');
 
+    // Render solar info panel (sunrise/sunset, day duration, max altitude, Earth-Sun distance)
+    renderSolarInfoPanel();
+
     // Show lunar info banner
     const cday = getLunarDayForDate(today);
     if (cday) {
@@ -5111,6 +6593,275 @@ function renderSolarCalendar() {
         if (banner) banner.style.display = 'none';
         // renderLunarInfoBanner(today, cday, null, -1);
     }
+}
+
+function renderSolarInfoPanel() {
+    const now = new Date();
+    const uLat = ASTRO_USER_LAT || 9.93;
+    const uLon = ASTRO_USER_LON || -84;
+    const cityLabel = (ASTRO_USER_NAME || 'Tu ubicación').split(',')[0];
+    const locale = currentLang === 'es' ? 'es' : 'en';
+    const timeFmt = { hour: '2-digit', minute: '2-digit', hour12: false };
+
+    // Solar calculations
+    const sunDecl = getSunDeclination(now);
+    const subsolarLon = getSubsolarLonDeg(now);
+    const srs = getSunRiseSet(now, uLat, uLon);
+    const sunRiseStr = srs.rise ? srs.rise.toLocaleTimeString(locale, timeFmt) : '--:--';
+    const sunSetStr = srs.set ? srs.set.toLocaleTimeString(locale, timeFmt) : '--:--';
+    let dayDurStr = '--:--';
+    if (srs.rise && srs.set) {
+        const durMs = srs.set.getTime() - srs.rise.getTime();
+        if (durMs > 0) {
+            const durH = Math.floor(durMs / 3600000);
+            const durM = Math.floor((durMs % 3600000) / 60000);
+            dayDurStr = durH + 'h ' + (durM < 10 ? '0' : '') + durM + 'm';
+        }
+    }
+    const maxAlt = getSunMaxAltitude(now, uLat, uLon);
+    const earthSunDist = getEarthSunDistance(now);
+
+    // Distance from subsolar point to user
+    const distToUser = haversineKm(uLat, uLon, sunDecl, subsolarLon);
+
+    // Find closest approach in next 12h
+    let closestDist = distToUser, closestTime = now;
+    for (let m = 0; m <= 720; m += 15) {
+        const t = new Date(now.getTime() + m * 60000);
+        const sLat = getSunDeclination(t);
+        const sLon = getSubsolarLonDeg(t);
+        const d = haversineKm(uLat, uLon, sLat, sLon);
+        if (d < closestDist) { closestDist = d; closestTime = t; }
+    }
+    const closestTimeStr = closestTime.toLocaleTimeString(locale, timeFmt);
+
+    // Solar trajectory: future only, stop at map edge
+    const W = 860, H = 430;
+    const mx = lo => ((lo + 180) / 360 * W);
+    const my = la => ((90 - la) / 180 * H);
+    const futurePts = [];
+    let prevLon = subsolarLon;
+    for (let m = 0; m <= 780; m += 10) {
+        const t = new Date(now.getTime() + m * 60000);
+        const pLon = getSubsolarLonDeg(t);
+        const pLat = getSunDeclination(t);
+        if (futurePts.length > 0 && Math.abs(pLon - prevLon) > 200) break;
+        futurePts.push({ lon: pLon, lat: pLat });
+        prevLon = pLon;
+    }
+    const leadPts = futurePts.map(p => mx(p.lon).toFixed(1) + ',' + my(p.lat).toFixed(1));
+    const leadSVG = leadPts.length > 1 ? '<polyline points="' + leadPts.join(' ') + '" fill="none" stroke="rgba(255,149,0,0.5)" stroke-width="2" stroke-dasharray="8,4" stroke-linecap="round"/>' : '';
+    let arrow = '';
+    if (futurePts.length >= 4) {
+        const last = futurePts[futurePts.length-1], prev = futurePts[futurePts.length-4];
+        const ax = mx(last.lon), ay = my(last.lat);
+        const ang = Math.atan2(my(last.lat)-my(prev.lat), mx(last.lon)-mx(prev.lon))*180/Math.PI;
+        arrow = '<polygon points="-9,-4 0,0 -9,4" fill="rgba(255,149,0,0.9)" transform="translate(' + ax.toFixed(1) + ',' + ay.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')"/>';
+    }
+
+    const sx = mx(subsolarLon), sy = my(sunDecl);
+    const ux = mx(uLon), uy = my(uLat);
+
+    // Use same landSVG as lunar map
+    const landSVG = `<path d="M28.7,43.0 L35.8,45.4 L43.0,47.8 L52.6,45.4 L59.7,45.4 L71.7,47.8 L83.6,50.2 L93.2,47.8 L100.3,50.2 L105.1,52.6 L107.5,57.3 L112.3,71.7 L117.1,81.2 L119.4,83.6 L124.2,90.8 L129.0,95.6 L131.4,97.9 L133.8,105.1 L133.8,112.3 L138.6,119.4 L143.3,129.0 L148.1,133.8 L150.5,136.2 L150.5,138.6 L155.3,140.9 L160.1,145.7 L167.2,150.5 L172.0,155.3 L176.8,160.1 L179.2,164.8 L183.9,169.6 L191.1,172.0 L198.3,174.4 L200.7,176.8 L205.4,176.8 L210.2,179.2 L215.0,176.8 L219.8,174.4 L224.6,176.8 L229.3,181.6 L231.7,186.3 L234.1,191.1 L238.9,193.5 L241.3,193.5 L243.7,193.5 L238.9,186.3 L236.5,179.2 L234.1,172.0 L236.5,162.4 L236.5,155.3 L238.9,152.9 L238.9,148.1 L236.5,143.3 L234.1,140.9 L238.9,138.6 L243.7,133.8 L248.4,131.4 L250.8,126.6 L255.6,121.8 L258.0,117.1 L262.8,114.7 L265.2,112.3 L267.6,109.9 L269.9,107.5 L272.3,102.7 L274.7,100.3 L277.1,102.7 L281.9,105.1 L286.7,102.7 L289.1,100.3 L293.8,95.6 L298.6,102.7 L303.4,102.7 L298.6,95.6 L293.8,90.8 L289.1,88.4 L281.9,83.6 L277.1,78.8 L272.3,76.4 L267.6,71.7 L258.0,69.3 L250.8,66.9 L243.7,64.5 L234.1,62.1 L224.6,59.7 L215.0,54.9 L203.1,50.2 L191.1,45.4 L179.2,43.0 L167.2,40.6 L155.3,40.6 L143.3,40.6 L119.4,43.0 L95.6,43.0 L71.7,43.0 L47.8,43.0 L28.7,43.0 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M238.9,191.1 L243.7,188.7 L248.4,186.3 L253.2,186.3 L258.0,186.3 L262.8,186.3 L267.6,188.7 L274.7,191.1 L279.5,193.5 L286.7,195.9 L291.4,200.7 L298.6,203.1 L305.8,205.4 L310.6,210.2 L312.9,215.0 L315.3,219.8 L317.7,224.6 L320.1,229.3 L324.9,234.1 L329.7,238.9 L334.4,243.7 L339.2,246.1 L341.6,250.8 L344.0,253.2 L339.2,258.0 L334.4,262.8 L332.1,267.6 L327.3,269.9 L324.9,272.3 L320.1,274.7 L315.3,279.5 L312.9,284.3 L310.6,289.1 L308.2,293.8 L303.4,296.2 L298.6,298.6 L293.8,303.4 L289.1,305.8 L281.9,308.2 L277.1,310.6 L274.7,312.9 L272.3,317.7 L269.9,320.1 L272.3,322.5 L267.6,327.3 L265.2,329.7 L260.4,334.4 L258.0,339.2 L253.2,339.2 L250.8,334.4 L253.2,329.7 L255.6,324.9 L258.0,320.1 L258.0,315.3 L260.4,310.6 L260.4,305.8 L260.4,298.6 L262.8,291.4 L262.8,281.9 L262.8,272.3 L262.8,262.8 L262.8,258.0 L258.0,253.2 L253.2,248.4 L248.4,243.7 L246.1,238.9 L243.7,231.7 L241.3,226.9 L238.9,222.2 L238.9,215.0 L241.3,210.2 L243.7,205.4 L246.1,200.7 L243.7,195.9 L241.3,193.5 L238.9,191.1 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M406.1,129.0 L408.5,126.6 L408.5,124.2 L408.5,119.4 L410.9,117.1 L408.5,112.3 L420.4,112.3 L425.2,109.9 L430.0,112.3 L432.4,109.9 L437.2,112.3 L437.2,105.1 L432.4,102.7 L430.0,100.3 L425.2,100.3 L420.4,100.3 L418.1,97.9 L415.7,93.2 L418.1,90.8 L420.4,88.4 L422.8,86.0 L418.1,81.2 L415.7,76.4 L418.1,74.1 L422.8,76.4 L430.0,78.8 L432.4,83.6 L434.8,88.4 L437.2,90.8 L439.6,90.8 L441.9,88.4 L444.3,86.0 L446.7,83.6 L449.1,83.6 L451.5,83.6 L453.9,86.0 L456.3,86.0 L458.7,83.6 L458.7,78.8 L461.1,81.2 L463.4,83.6 L465.8,83.6 L468.2,86.0 L470.6,83.6 L473.0,83.6 L475.4,86.0 L477.8,83.6 L480.2,83.6 L482.6,81.2 L484.9,81.2 L487.3,76.4 L484.9,71.7 L480.2,71.7 L475.4,71.7 L473.0,69.3 L468.2,66.9 L463.4,64.5 L463.4,59.7 L465.8,57.3 L470.6,52.6 L475.4,50.2 L480.2,47.8 L487.3,45.4 L494.5,45.4 L501.7,47.8 L506.4,50.2 L513.6,52.6 L520.8,52.6 L525.6,54.9 L530.3,59.7 L535.1,66.9 L530.3,76.4 L525.6,81.2 L520.8,83.6 L516.0,88.4 L511.2,90.8 L506.4,95.6 L501.7,100.3 L496.9,105.1 L494.5,109.9 L492.1,114.7 L494.5,117.1 L496.9,119.4 L492.1,119.4 L489.7,124.2 L487.3,126.6 L484.9,126.6 L482.6,124.2 L477.8,121.8 L473.0,124.2 L468.2,124.2 L465.8,124.2 L463.4,126.6 L461.1,124.2 L458.7,114.7 L456.3,109.9 L453.9,107.5 L451.5,109.9 L449.1,109.9 L446.7,109.9 L449.1,114.7 L449.1,119.4 L446.7,124.2 L441.9,109.9 L439.6,109.9 L437.2,112.3 L432.4,112.3 L430.0,114.7 L427.6,119.4 L425.2,124.2 L420.4,126.6 L415.7,129.0 L410.9,129.0 L406.1,129.0 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M389.4,179.2 L389.4,183.9 L391.8,186.3 L394.2,188.7 L396.6,191.1 L401.3,195.9 L406.1,200.7 L410.9,203.1 L418.1,203.1 L422.8,203.1 L430.0,203.1 L434.8,205.4 L439.6,205.4 L444.3,205.4 L449.1,205.4 L453.9,207.8 L453.9,212.6 L453.9,215.0 L451.5,219.8 L453.9,224.6 L458.7,226.9 L463.4,224.6 L468.2,222.2 L473.0,224.6 L477.8,229.3 L482.6,231.7 L489.7,236.5 L496.9,241.3 L501.7,246.1 L506.4,250.8 L511.2,255.6 L513.6,260.4 L516.0,267.6 L513.6,272.3 L508.8,277.1 L504.1,281.9 L499.3,289.1 L496.9,293.8 L494.5,296.2 L499.3,293.8 L504.1,286.7 L508.8,281.9 L513.6,274.7 L518.4,267.6 L520.8,258.0 L525.6,243.7 L527.9,234.1 L530.3,224.6 L532.7,215.0 L535.1,207.8 L539.9,203.1 L544.7,195.9 L549.4,188.7 L551.8,186.3 L544.7,186.3 L539.9,186.3 L535.1,186.3 L530.3,186.3 L525.6,181.6 L520.8,183.9 L516.0,181.6 L511.2,183.9 L508.8,181.6 L508.8,174.4 L508.8,169.6 L508.8,162.4 L508.8,155.3 L508.8,148.1 L508.8,143.3 L508.8,138.6 L511.2,131.4 L508.8,129.0 L504.1,129.0 L496.9,131.4 L489.7,131.4 L482.6,131.4 L473.0,131.4 L465.8,131.4 L458.7,129.0 L453.9,129.0 L449.1,129.0 L441.9,129.0 L437.2,129.0 L430.0,131.4 L422.8,131.4 L418.1,131.4 L410.9,133.8 L406.1,136.2 L401.3,138.6 L396.6,143.3 L394.2,148.1 L391.8,155.3 L389.4,162.4 L389.4,167.2 L389.4,172.0 L389.4,179.2 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M492.1,114.7 L496.9,112.3 L501.7,109.9 L506.4,114.7 L511.2,119.4 L516.0,124.2 L520.8,126.6 L523.2,129.0 L525.6,124.2 L530.3,119.4 L535.1,119.4 L539.9,124.2 L544.7,126.6 L549.4,126.6 L554.2,129.0 L559.0,143.3 L561.4,152.9 L563.8,157.7 L566.2,162.4 L568.6,167.2 L570.9,162.4 L573.3,155.3 L578.1,155.3 L585.3,152.9 L592.4,155.3 L597.2,160.1 L602.0,162.4 L604.4,167.2 L609.2,174.4 L611.6,181.6 L613.9,191.1 L616.3,195.9 L618.7,195.9 L621.1,191.1 L621.1,183.9 L625.9,176.8 L630.7,167.2 L635.4,162.4 L640.2,162.4 L642.6,162.4 L645.0,162.4 L649.8,167.2 L654.6,172.0 L659.3,174.4 L664.1,176.8 L668.9,179.2 L671.3,200.7 L673.7,207.8 L676.1,212.6 L678.4,212.6 L683.2,219.8 L688.0,226.9 L683.2,231.7 L688.0,231.7 L697.6,231.7 L704.7,234.1 L709.5,234.1 L716.7,226.9 L721.4,215.0 L719.1,203.1 L716.7,191.1 L714.3,181.6 L711.9,172.0 L707.1,167.2 L702.3,162.4 L697.6,162.4 L692.8,162.4 L688.0,167.2 L683.2,172.0 L678.4,172.0 L673.7,172.0 L673.7,167.2 L680.8,162.4 L688.0,157.7 L692.8,152.9 L699.9,148.1 L707.1,143.3 L714.3,138.6 L719.1,133.8 L719.1,129.0 L716.7,124.2 L721.4,119.4 L726.2,121.8 L731.0,126.6 L735.8,129.0 L740.6,133.8 L745.3,131.4 L747.7,129.0 L750.1,124.2 L754.9,129.0 L759.7,131.4 L764.4,129.0 L764.4,124.2 L766.8,119.4 L769.2,112.3 L774.0,109.9 L774.0,105.1 L769.2,100.3 L764.4,95.6 L759.7,90.8 L752.5,90.8 L745.3,95.6 L740.6,100.3 L735.8,114.7 L731.0,124.2 L726.2,119.4 L716.7,114.7 L707.1,109.9 L697.6,100.3 L688.0,95.6 L678.4,90.8 L668.9,86.0 L659.3,83.6 L649.8,81.2 L640.2,81.2 L630.7,76.4 L621.1,71.7 L609.2,66.9 L597.2,64.5 L585.3,66.9 L573.3,66.9 L561.4,76.4 L554.2,81.2 L549.4,83.6 L544.7,88.4 L535.1,95.6 L525.6,100.3 L516.0,105.1 L506.4,107.5 L496.9,109.9 L492.1,114.7 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M704.7,248.4 L709.5,246.1 L716.7,246.1 L723.8,248.4 L731.0,246.1 L740.6,243.7 L747.7,243.7 L754.9,246.1 L759.7,253.2 L764.4,258.0 L769.2,248.4 L774.0,248.4 L778.8,253.2 L783.6,260.4 L788.3,267.6 L793.1,274.7 L795.5,281.9 L793.1,289.1 L788.3,296.2 L783.6,303.4 L778.8,308.2 L771.6,308.2 L764.4,305.8 L757.3,301.0 L752.5,298.6 L745.3,296.2 L738.2,293.8 L731.0,293.8 L721.4,293.8 L714.3,296.2 L707.1,296.2 L704.7,293.8 L702.3,286.7 L702.3,279.5 L704.7,272.3 L707.1,267.6 L704.7,258.0 L704.7,248.4 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M298.6,71.7 L310.6,71.7 L322.5,69.3 L334.4,64.5 L346.4,57.3 L363.1,52.6 L377.4,47.8 L387.0,40.6 L382.2,33.4 L370.3,28.7 L358.3,23.9 L339.2,23.9 L322.5,26.3 L310.6,28.7 L298.6,33.4 L291.4,38.2 L291.4,43.0 L296.2,52.6 L301.0,62.1 L298.6,71.7 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M406.1,93.2 L410.9,93.2 L415.7,90.8 L418.1,90.8 L418.1,86.0 L420.4,83.6 L418.1,81.2 L415.7,76.4 L418.1,74.1 L420.4,76.4 L422.8,76.4 L425.2,78.8 L430.0,81.2 L432.4,88.4 L434.8,93.2 L430.0,93.2 L425.2,95.6 L418.1,95.6 L413.3,93.2 L406.1,93.2 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M740.6,140.9 L742.9,136.2 L745.3,133.8 L750.1,133.8 L754.9,131.4 L759.7,131.4 L764.4,129.0 L764.4,124.2 L766.8,119.4 L769.2,112.3 L771.6,109.9 L766.8,109.9 L764.4,114.7 L759.7,124.2 L754.9,129.0 L750.1,133.8 L745.3,136.2 L740.6,140.9 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M621.1,191.1 L623.5,195.9 L625.9,198.3 L623.5,200.7 L621.1,198.3 L621.1,191.1 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M535.1,243.7 L539.9,248.4 L544.7,255.6 L547.1,262.8 L544.7,269.9 L542.3,274.7 L537.5,274.7 L535.1,269.9 L532.7,262.8 L532.7,253.2 L535.1,243.7 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M843.3,298.6 L848.1,303.4 L855.2,305.8 L852.8,310.6 L848.1,312.9 L845.7,310.6 L843.3,305.8 L843.3,298.6 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M828.9,320.1 L831.3,322.5 L836.1,324.9 L840.9,320.1 L840.9,315.3 L836.1,315.3 L831.3,317.7 L828.9,320.1 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M709.5,172.0 L711.9,176.8 L716.7,181.6 L721.4,186.3 L726.2,191.1 L731.0,195.9 L731.0,191.1 L726.2,186.3 L721.4,181.6 L719.1,176.8 L716.7,172.0 L711.9,169.6 L709.5,172.0 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M716.7,162.4 L719.1,160.1 L721.4,155.3 L719.1,155.3 L716.7,157.7 L716.7,162.4 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M226.9,162.4 L231.7,160.1 L236.5,160.1 L241.3,162.4 L246.1,167.2 L250.8,167.2 L253.2,167.2 L248.4,164.8 L243.7,162.4 L238.9,160.1 L234.1,160.1 L226.9,162.4 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>
+        <path d="M0.0,363.1 L47.8,367.9 L95.6,372.7 L143.3,377.4 L191.1,382.2 L238.9,377.4 L286.7,372.7 L334.4,370.3 L382.2,375.1 L430.0,377.4 L477.8,372.7 L525.6,370.3 L573.3,375.1 L621.1,379.8 L668.9,382.2 L716.7,377.4 L764.4,372.7 L812.2,367.9 L860.0,363.1 L860.0,430.0 L0.0,430.0 L0.0,363.1 Z" fill="#3d2a0a" stroke="#5a4012" stroke-width="0.6" stroke-linejoin="round"/>`;
+
+    // Build the SVG map
+    const mapSVG = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;border-radius:8px;border:1px solid rgba(255,149,0,0.2);">'
+        + '<defs>'
+        + '<radialGradient id="bgS" cx="50%" cy="40%" r="70%"><stop offset="0%" stop-color="#1a0e00"/><stop offset="100%" stop-color="#080400"/></radialGradient>'
+        + '<radialGradient id="sg5" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff9500" stop-opacity="0.65"/><stop offset="100%" stop-color="#ff9500" stop-opacity="0"/></radialGradient>'
+        + '<filter id="gf5"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+        + '</defs>'
+        + '<rect width="' + W + '" height="' + H + '" fill="url(#bgS)"/>'
+        // Grid
+        + '<g stroke="rgba(255,149,0,0.06)" stroke-width="0.5">'
+        + [30,60,90,120,150,180,210,240,270,300,330].map(l=>'<line x1="'+mx(l-180)+'" y1="0" x2="'+mx(l-180)+'" y2="'+H+'"/>').join('')
+        + [30,60,90,120,150].map(l=>'<line x1="0" y1="'+my(90-l)+'" x2="'+W+'" y2="'+my(90-l)+'"/>').join('')
+        + '</g>'
+        // Equator & tropics
+        + '<line x1="0" y1="'+my(0)+'" x2="'+W+'" y2="'+my(0)+'" stroke="rgba(255,149,0,0.25)" stroke-width="1" stroke-dasharray="5,4"/>'
+        + '<line x1="0" y1="'+my(23.5)+'" x2="'+W+'" y2="'+my(23.5)+'" stroke="rgba(255,200,0,0.2)" stroke-width="0.7" stroke-dasharray="2,5"/>'
+        + '<line x1="0" y1="'+my(-23.5)+'" x2="'+W+'" y2="'+my(-23.5)+'" stroke="rgba(255,200,0,0.2)" stroke-width="0.7" stroke-dasharray="2,5"/>'
+        // Continents (warm tone)
+        + landSVG
+        // Labels
+        + '<text x="5" y="'+(my(0)-4)+'" fill="rgba(255,149,0,0.4)" font-size="9" font-family="monospace">0°</text>'
+        + '<text x="5" y="'+(my(23.5)-4)+'" fill="rgba(255,200,0,0.4)" font-size="8" font-family="monospace">23.5°N</text>'
+        + '<text x="5" y="'+(my(-23.5)-4)+'" fill="rgba(255,200,0,0.4)" font-size="8" font-family="monospace">23.5°S</text>'
+        // Day/night terminator overlay — scanline approach (handles wrapping correctly)
+        + (function() {
+            const DR = Math.PI/180;
+            const bandDeg = 2;
+            let nightSVG = '';
+            // Evening terminator points for the terminator line
+            const eveningPts = [];
+            const morningPts = [];
+
+            for (let lat = -90; lat <= 90; lat += bandDeg) {
+                const lat2 = Math.min(lat + bandDeg, 90);
+                const midLat = (lat + lat2) / 2;
+                const y1 = my(lat2); // top of band (higher lat = lower y)
+                const y2 = my(lat);  // bottom of band
+                const bh = y2 - y1;
+                if (bh <= 0) continue;
+
+                const tanProd = Math.tan(midLat*DR) * Math.tan(sunDecl*DR);
+
+                if (tanProd >= 1) {
+                    // 24h night at this latitude
+                    nightSVG += '<rect x="0" y="'+y1.toFixed(1)+'" width="'+W+'" height="'+bh.toFixed(1)+'" fill="rgba(0,0,15,0.45)"/>';
+                    continue;
+                }
+                if (tanProd <= -1) {
+                    // 24h daylight — warm glow
+                    nightSVG += '<rect x="0" y="'+y1.toFixed(1)+'" width="'+W+'" height="'+bh.toFixed(1)+'" fill="rgba(255,180,50,0.10)"/>';
+                    continue;
+                }
+
+                // Half-day angle in degrees
+                const halfDay = Math.acos(-tanProd) / DR;
+                // Day extends from subsolarLon - halfDay to subsolarLon + halfDay
+                const dayStartLon = subsolarLon - halfDay;
+                const dayEndLon = subsolarLon + halfDay;
+                const dsx = mx(dayStartLon);
+                const dex = mx(dayEndLon);
+
+                // Store terminator points for the line
+                eveningPts.push({ x: dex, y: (y1+y2)/2 });
+                morningPts.push({ x: dsx, y: (y1+y2)/2 });
+
+                if (dsx < dex) {
+                    // Day doesn't wrap — day is in middle, night on sides
+                    nightSVG += '<rect x="'+dsx.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(dex-dsx).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(255,180,50,0.10)"/>';
+                    if (dsx > 0) nightSVG += '<rect x="0" y="'+y1.toFixed(1)+'" width="'+dsx.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(0,0,15,0.45)"/>';
+                    if (dex < W) nightSVG += '<rect x="'+dex.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(W-dex).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(0,0,15,0.45)"/>';
+                } else {
+                    // Day wraps around ±180° — day on edges, night in middle
+                    nightSVG += '<rect x="0" y="'+y1.toFixed(1)+'" width="'+dex.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(255,180,50,0.10)"/>';
+                    nightSVG += '<rect x="'+dsx.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(W-dsx).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(255,180,50,0.10)"/>';
+                    nightSVG += '<rect x="'+dex.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(dsx-dex).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(0,0,15,0.45)"/>';
+                }
+            }
+            // Terminator lines (evening + morning)
+            if (eveningPts.length > 2) {
+                nightSVG += '<polyline points="'+eveningPts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ')+'" fill="none" stroke="rgba(255,200,80,0.7)" stroke-width="1.5"/>';
+                nightSVG += '<polyline points="'+morningPts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ')+'" fill="none" stroke="rgba(255,200,80,0.7)" stroke-width="1.5"/>';
+            }
+            return nightSVG;
+        })()
+        // User location only (no sun marker, no trajectory)
+        // User location
+        + '<circle cx="'+ux.toFixed(1)+'" cy="'+uy.toFixed(1)+'" r="7" fill="none" stroke="#4ecdc4" stroke-width="2" filter="url(#gf5)"/>'
+        + '<circle cx="'+ux.toFixed(1)+'" cy="'+uy.toFixed(1)+'" r="3.5" fill="#4ecdc4"/>'
+        + '<circle cx="'+ux.toFixed(1)+'" cy="'+uy.toFixed(1)+'" r="1.5" fill="white"/>'
+        + '<text x="'+(ux+10).toFixed(0)+'" y="'+(uy+4).toFixed(0)+'" fill="#4ecdc4" font-size="10" font-family="monospace" font-weight="bold">'+cityLabel+'</text>'
+        + '</svg>';
+
+    // Distance bar percentage (147.1 = perihelion, 152.1 = aphelion)
+    const distPct = ((earthSunDist - 147.1) / (152.1 - 147.1) * 100).toFixed(0);
+    const distLabel = earthSunDist < 148.5 ? (currentLang==='es'?'Cerca del Perihelio':'Near Perihelion') : earthSunDist > 151 ? (currentLang==='es'?'Cerca del Afelio':'Near Aphelion') : (currentLang==='es'?Math.round(distPct)+'% del rango orbital':Math.round(distPct)+'% of orbital range');
+
+    // Declination direction
+    const decColor = sunDecl > 15 ? '#ff6b6b' : sunDecl < -15 ? '#7E57C2' : '#ffe066';
+    const isZenith = Math.abs(sunDecl - uLat) < 1.5;
+
+    // Light travel time: distance in M km / speed of light (299,792.458 km/s)
+    const lightSeconds = (earthSunDist * 1e6 / 299792.458).toFixed(1);
+    const lightMin = Math.floor(lightSeconds / 60);
+    const lightSec = (lightSeconds % 60).toFixed(0);
+    const lightTimeStr = lightMin + 'm ' + lightSec + 's';
+
+    // Info boxes matching lunar design
+    const infoHTML = '<div class="astro-info-grid" style="margin-top:8px;">'
+        // Box 1: Distancia Tierra-Sol
+        + '<div class="astro-card" style="margin-bottom:0;border-color:rgba(255,149,0,0.25);border-top-color:rgba(255,149,0,0.5);">'
+        + '<h4 style="font-size:0.75em;color:#ff9500;">📏 ' + (currentLang==='es'?'Distancia':'Distance') + '</h4>'
+        + '<div class="astro-value" style="color:#ff9500;">' + earthSunDist.toFixed(3) + ' M km</div>'
+        + '<div class="astro-label">' + distLabel + '</div>'
+        + '<div style="font-size:0.78em;color:#ffe066;margin-top:4px;">' + (currentLang==='es'?'Luz a la Tierra':'Light to Earth') + ': ' + lightTimeStr + '</div>'
+        + '<div class="astro-bar-bg"><div class="astro-bar-fill" style="width:' + distPct + '%;background:linear-gradient(90deg,#ff6b6b,#7E57C2);"></div></div>'
+        + '<div style="display:flex;justify-content:space-between;font-size:0.65em;color:rgba(255,255,255,0.28);margin-top:3px;"><span>' + (currentLang==='es'?'Perihelio':'Perihelion') + ' (147.1)</span><span>' + (currentLang==='es'?'Afelio':'Aphelion') + ' (152.1)</span></div>'
+        + '</div>'
+        // Box 2: Declinación Solar
+        + '<div class="astro-card" style="margin-bottom:0;border-color:rgba(255,149,0,0.25);border-top-color:rgba(255,149,0,0.5);">'
+        + '<h4 style="font-size:0.75em;color:#ff9500;">📐 ' + (currentLang==='es'?'Declinación':'Declination') + '</h4>'
+        + '<div class="astro-value" style="color:' + decColor + ';">' + (sunDecl>=0?'+':'') + sunDecl.toFixed(2) + '°</div>'
+        + '<div class="astro-label">Subsolar: ' + sunDecl.toFixed(1) + '° ' + (sunDecl>=0?'N':'S') + '</div>'
+        + '<div class="astro-label" style="margin-top:4px;">' + Math.abs(sunDecl-uLat).toFixed(1) + '° ' + (currentLang==='es'?'de tu cenit':'from your zenith') + ' (' + Math.round(Math.abs(sunDecl-uLat)*111) + ' km)</div>'
+        + '</div>'
+        // Box 3: Amanecer / Atardecer
+        + '<div class="astro-card" style="margin-bottom:0;border-color:rgba(255,149,0,0.25);border-top-color:rgba(255,149,0,0.5);">'
+        + '<h4 style="font-size:0.75em;color:#ff9500;">🌅 ' + (currentLang==='es'?'Duración del Día':'Day Length') + '</h4>'
+        + '<div class="astro-value" style="color:#ffc800;font-size:1.5em;">⏱ ' + dayDurStr + '</div>'
+        + '<div style="display:flex;justify-content:space-around;margin-top:6px;font-size:0.85em;">'
+        + '<span style="color:#ff9500;">☀️↑ ' + sunRiseStr + '</span>'
+        + '<span style="color:#ff6600;">☀️↓ ' + sunSetStr + '</span>'
+        + '</div>'
+        + '</div>'
+        // Box 4: Altitud Solar Máxima
+        + '<div class="astro-card" style="margin-bottom:0;border-color:rgba(255,149,0,0.25);border-top-color:rgba(255,149,0,0.5);">'
+        + '<h4 style="font-size:0.75em;color:#ff9500;">☀️ ' + (currentLang==='es'?'Altitud Máxima':'Max Altitude') + '</h4>'
+        + '<div class="astro-value" style="color:#ffe066;">' + maxAlt.toFixed(1) + '°</div>'
+        + '<div class="astro-label">' + (maxAlt > 80 ? (currentLang==='es'?'Sol casi cenital':'Near-zenith sun') : maxAlt > 60 ? (currentLang==='es'?'Sol alto':'High sun') : maxAlt > 40 ? (currentLang==='es'?'Sol moderado':'Moderate sun') : (currentLang==='es'?'Sol bajo':'Low sun')) + '</div>'
+        + '<div class="astro-bar-bg"><div class="astro-bar-fill" style="width:' + (maxAlt/90*100).toFixed(0) + '%;background:linear-gradient(90deg,#ff6600,#ffe066);"></div></div>'
+        + '<div style="display:flex;justify-content:space-between;font-size:0.65em;color:rgba(255,255,255,0.28);margin-top:3px;"><span>0° Horizonte</span><span>90° Cenit</span></div>'
+        + '</div>'
+        + '</div>';
+
+    // Find or create the panel container
+    let panel = document.getElementById('solarInfoPanel');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'solarInfoPanel';
+        const solarWeeks = document.getElementById('solarWeeks');
+        if (solarWeeks) {
+            solarWeeks.parentNode.insertBefore(panel, solarWeeks.nextSibling);
+        }
+    }
+    panel.style.display = 'block';
+
+    // Header banner matching lunar design
+    const headerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,149,0,0.18);">'
+        + '<span style="font-size:1.5em;">☀️</span>'
+        + '<span style="font-family:\'Cinzel\',serif;color:#ff9500;font-weight:600;letter-spacing:1px;font-size:0.85em;">'
+        + (currentLang==='es' ? 'Información Solar' : 'Solar Information')
+        + '</span>'
+        + '<span style="color:#a08040;font-size:0.68em;margin-left:4px;">' + formatLongDate(now) + ' · ' + ASTRO_USER_LAT.toFixed(1) + '°' + (ASTRO_USER_LAT>=0?'N':'S') + ' · 📍 ' + ASTRO_USER_NAME.split(',')[0] + '</span>'
+        + '</div>';
+
+    // Subsolar position title
+    const titleHTML = '<div style="font-family:\'Cinzel\',serif;color:#ff9500;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">'
+        + '☀ ' + (currentLang==='es'?'Posición Subsolar — Punto sobre la Tierra':'Subsolar Point — Position over Earth')
+        + '<span style="font-size:0.78em;color:#a08040;font-weight:400;margin-left:8px;">' + (currentLang==='es'?'Lat':'Lat') + ': ' + sunDecl.toFixed(1) + '°' + (sunDecl>=0?'N':'S') + ' · ' + (currentLang==='es'?'Lon':'Lon') + ': ' + Math.abs(subsolarLon).toFixed(1) + '°' + (subsolarLon>=0?'E':'W') + '</span>'
+        + '</div>';
+    const gridHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;">'
+        + '<div>' + mapSVG + '</div>'
+        + '<div><canvas id="subsolarGlobe" width="260" height="180" style="border-radius:8px;border:1px solid rgba(255,149,0,0.25);display:block;width:100%;"></canvas></div>'
+        + '</div>';
+
+    panel.innerHTML = '<div style="background:linear-gradient(160deg,rgba(25,15,0,0.98) 0%,rgba(15,8,0,0.98) 100%); border-radius:12px; border:1px solid rgba(255,149,0,0.28); border-top:2px solid rgba(255,149,0,0.55); box-shadow:0 0 22px rgba(255,149,0,0.09); padding:8px 10px; font-size:0.78em;">'
+        + headerHTML + titleHTML + gridHTML + infoHTML + '</div>';
+
+    // Render 3D globe after DOM update
+    setTimeout(() => {
+        renderSubsolarGlobe(sunDecl, subsolarLon);
+    }, 50);
 }
 
 function previousSign() {
@@ -5459,7 +7210,7 @@ function renderDayCell(date, dayNumber, displayInfo, additionalClasses = '') {
     const tideColor = astro.tideStrength > 0.75 ? '#4FC3F7' : astro.tideStrength > 0.5 ? '#0288D1' : astro.tideStrength > 0.3 ? '#01579B' : '#0D1B2A';
     astroIndicator += `<div class="astro-indicator" title="Marea: ${astro.tidePct}% | Dist: ${astro.distance.toLocaleString()}km | Dec: ${astro.decStr}">`;
     astroIndicator += `<span class="tide-bar" style="width:${tideW}px;background:${tideColor};"></span>`;
-    if (astro.isZenith) astroIndicator += `<span style="color:#4FC3F7;font-size:0.9em;" title="Luna en tu cenit">✦</span>`;
+    // zenith indicator removed
     if (astro.isPerigee) astroIndicator += `<span style="color:#FF6B6B;font-size:0.7em;font-weight:bold;" title="Perigeo">P</span>`;
     if (astro.isApogee) astroIndicator += `<span style="color:#7E57C2;font-size:0.7em;font-weight:bold;" title="Apogeo">A</span>`;
     astroIndicator += `</div>`;
@@ -5493,12 +7244,12 @@ function renderDayCell(date, dayNumber, displayInfo, additionalClasses = '') {
 
 // ── Sublunar longitude calculation ──────────────────────────
 function getSublunaryLonDeg(date) {
-    // Julian Day Number
-    const a = Math.floor((14 - (date.getMonth() + 1)) / 12);
-    const y = date.getFullYear() + 4800 - a;
-    const m = (date.getMonth() + 1) + 12 * a - 3;
-    const jdn = date.getDate() + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
-    const jd = jdn + (date.getHours() - 12) / 24.0 + date.getMinutes() / 1440.0 + date.getSeconds() / 86400.0;
+    // Julian Day Number (using UTC to ensure correct astronomical calculations)
+    const a = Math.floor((14 - (date.getUTCMonth() + 1)) / 12);
+    const y = date.getUTCFullYear() + 4800 - a;
+    const m = (date.getUTCMonth() + 1) + 12 * a - 3;
+    const jdn = date.getUTCDate() + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+    const jd = jdn + (date.getUTCHours() - 12) / 24.0 + date.getUTCMinutes() / 1440.0 + date.getUTCSeconds() / 86400.0;
 
     const T = (jd - 2451545.0) / 36525.0;
     const rad = Math.PI / 180;
@@ -5617,6 +7368,7 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
         + '<radialGradient id="bgG" cx="50%" cy="40%" r="70%"><stop offset="0%" stop-color="#091a3a"/><stop offset="100%" stop-color="#030810"/></radialGradient>'
         + '<radialGradient id="mg4" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#c9a840" stop-opacity="0.65"/><stop offset="100%" stop-color="#c9a840" stop-opacity="0"/></radialGradient>'
         + '<filter id="gf4"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+        + '<radialGradient id="sg4" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff9500" stop-opacity="0.7"/><stop offset="100%" stop-color="#ff9500" stop-opacity="0"/></radialGradient>'
         + '</defs>'
         + '<rect width="' + W + '" height="' + H + '" fill="url(#bgG)"/>'
         // Grid
@@ -5645,7 +7397,7 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
         + '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="26" fill="url(#mg4)"/>'
         + '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="9" fill="#c9a840" filter="url(#gf4)" opacity="0.95"/>'
         + '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="4" fill="white"/>'
-        + '<text x="'+(px+12).toFixed(0)+'" y="'+(py-10).toFixed(0)+'" fill="#e8c84a" font-size="10" font-family="monospace" font-weight="bold">'+lat.toFixed(1)+'°'+(lat>=0?'N':'S')+' '+Math.abs(lonDeg).toFixed(1)+'°'+(lonDeg>=0?'E':'W')+'</text>'
+        + '<text x="'+(px+12).toFixed(0)+'" y="'+(py-10).toFixed(0)+'" fill="#e8c84a" font-size="10" font-family="monospace" font-weight="bold">☽ '+lat.toFixed(1)+'°'+(lat>=0?'N':'S')+' '+Math.abs(lonDeg).toFixed(1)+'°'+(lonDeg>=0?'E':'W')+'</text>'
         + '</svg>'
         + (function() {
             const mrs = getMoonRiseSet(now, uLat, uLon);
@@ -5821,13 +7573,245 @@ function renderSublunaryGlobe(lat, lon) {
         ctx.fill();
         ctx.fillStyle = '#4ecdc4';
         ctx.font = '8px monospace';
-        ctx.fillText('CR', pu.x + 4, pu.y + 3);
+        const locLabel2 = (ASTRO_USER_NAME || 'User').split(',')[0];
+        ctx.fillText(locLabel2, pu.x + 4, pu.y + 3);
     }
 
     // Border
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI*2);
     ctx.strokeStyle = 'rgba(74,158,255,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+}
+
+// ── Solar 3D Globe ──────────────────────────────────────────
+function renderSubsolarGlobe(lat, lon) {
+    const canvas = document.getElementById('subsolarGlobe');
+    if (!canvas) return;
+
+    lat = parseFloat(lat) || 0;  // sunDecl
+    lon = parseFloat(lon) || 0;  // subsolarLon
+
+    const w = canvas.offsetWidth || 260;
+    const h = canvas.offsetHeight || 180;
+    canvas.width = w * (window.devicePixelRatio || 1);
+    canvas.height = h * (window.devicePixelRatio || 1);
+    const ctx = canvas.getContext('2d');
+    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+
+    const cx = w / 2, cy = h / 2;
+    const r = Math.min(w, h) / 2 - 8;
+    // Center globe 90° west of subsolar (morning terminator)
+    // Right half (east) = day (sun risen), Left half (west) = night
+    const viewLon = lon - 90;
+    const rotLon = -viewLon * Math.PI / 180;
+    const rotLat = -lat * Math.PI / 180; // Tilt to follow solar declination like lunar globe
+
+    function project(latD, lonD) {
+        const la = latD * Math.PI / 180;
+        const lo = (lonD * Math.PI / 180) + rotLon;
+        let x = Math.cos(la) * Math.sin(lo);
+        let y = Math.sin(la) * Math.cos(rotLat) - Math.cos(la) * Math.cos(lo) * Math.sin(rotLat);
+        let z = Math.sin(la) * Math.sin(rotLat) + Math.cos(la) * Math.cos(lo) * Math.cos(rotLat);
+        return { x: cx + x * r, y: cy - y * r, visible: z > 0 };
+    }
+
+    // Background (warm)
+    ctx.fillStyle = '#0a0500';
+    ctx.fillRect(0, 0, w, h);
+
+    // Ocean (warm tones)
+    const ocean = ctx.createRadialGradient(cx - r*0.3, cy - r*0.3, r*0.1, cx, cy, r);
+    ocean.addColorStop(0, '#1a1000');
+    ocean.addColorStop(1, '#0a0600');
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = ocean;
+    ctx.fill();
+
+    // Grid
+    ctx.strokeStyle = 'rgba(255,149,0,0.08)';
+    ctx.lineWidth = 0.5;
+    for (let lo = -180; lo < 180; lo += 30) {
+        ctx.beginPath();
+        let first = true;
+        for (let la = -90; la <= 90; la += 3) {
+            const p = project(la, lo);
+            if (!p.visible) { first = true; continue; }
+            first ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+            first = false;
+        }
+        ctx.stroke();
+    }
+    for (let la = -60; la <= 60; la += 30) {
+        ctx.beginPath();
+        let first = true;
+        for (let lo = -180; lo <= 180; lo += 3) {
+            const p = project(la, lo);
+            if (!p.visible) { first = true; continue; }
+            first ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+            first = false;
+        }
+        ctx.stroke();
+    }
+
+    // Continents (warm)
+    const landMasses = [
+        [[-168,72],[-162,70],[-155,71],[-145,69],[-138,69],[-135,66],[-131,56],[-128,52],[-125,49],[-124,43],[-120,36],[-117,32],[-115,30],[-110,25],[-105,20],[-100,18],[-96,16],[-90,16],[-86,16],[-83,12],[-80,9],[-80,15],[-81,22],[-81,25],[-80,28],[-81,31],[-78,34],[-75,37],[-72,41],[-68,44],[-66,47],[-60,47],[-57,50],[-55,47],[-55,50],[-59,53],[-64,57],[-68,60],[-75,62],[-82,64],[-90,67],[-100,71],[-110,73],[-120,73],[-140,72],[-155,72],[-168,72]],
+        [[-80,10],[-76,12],[-72,12],[-68,11],[-63,9],[-58,6],[-52,4],[-49,0],[-47,-4],[-44,-8],[-40,-12],[-37,-15],[-38,-18],[-41,-22],[-44,-24],[-48,-27],[-50,-31],[-53,-34],[-57,-37],[-64,-40],[-67,-44],[-69,-48],[-72,-52],[-74,-52],[-73,-46],[-71,-40],[-70,-32],[-70,-24],[-70,-18],[-74,-14],[-77,-10],[-79,-5],[-80,0],[-78,4],[-78,8],[-80,10]],
+        [[-10,36],[-9,40],[-9,43],[-2,44],[3,43],[3,46],[0,48],[-5,49],[-6,52],[-3,54],[-5,58],[0,57],[2,53],[5,53],[8,55],[10,54],[12,55],[12,57],[16,55],[20,55],[24,58],[21,60],[18,61],[14,65],[17,68],[21,70],[27,71],[32,69],[38,68],[42,65],[44,62],[40,56],[36,53],[30,48],[27,44],[26,40],[24,37],[20,39],[16,38],[13,38],[12,42],[9,44],[7,38],[5,44],[3,43],[0,40],[-2,38],[-6,36],[-10,36]],
+        [[-17,15],[-15,11],[-10,6],[-5,5],[0,5],[4,4],[8,4],[10,1],[9,-3],[12,-5],[16,-3],[20,-6],[28,-11],[33,-15],[36,-22],[35,-24],[31,-28],[28,-33],[29,-33],[33,-28],[37,-22],[40,-12],[43,0],[46,5],[50,11],[48,12],[42,12],[38,13],[33,14],[33,20],[33,28],[34,35],[30,36],[20,35],[10,36],[5,36],[0,35],[-5,35],[-10,33],[-15,28],[-17,22],[-17,15]],
+        [[26,42],[30,44],[36,38],[40,38],[44,40],[48,37],[52,36],[55,26],[58,20],[60,25],[68,25],[72,22],[76,14],[78,8],[80,10],[84,20],[88,22],[92,20],[96,17],[100,15],[102,3],[106,-2],[108,-7],[115,-8],[120,-5],[121,5],[118,18],[114,22],[108,20],[104,18],[102,20],[108,24],[116,30],[121,34],[120,38],[124,39],[128,36],[132,35],[134,38],[140,36],[141,40],[144,44],[142,48],[138,52],[132,50],[128,42],[124,40],[116,44],[108,50],[100,54],[92,56],[84,58],[75,62],[65,62],[55,58],[48,53],[40,48],[32,45],[26,42]],
+        [[115,-14],[120,-13],[130,-12],[138,-16],[142,-14],[148,-19],[152,-25],[153,-28],[150,-34],[146,-39],[140,-38],[135,-35],[129,-33],[119,-34],[114,-30],[114,-27],[115,-22],[115,-14]],
+        [[-180,-62],[-140,-66],[-100,-70],[-60,-66],[-20,-67],[20,-66],[60,-67],[100,-70],[140,-66],[180,-62],[180,-90],[-180,-90],[-180,-62]]
+    ];
+
+    ctx.fillStyle = '#3d2a0a';
+    ctx.strokeStyle = '#5a4012';
+    ctx.lineWidth = 0.8;
+    landMasses.forEach(poly => {
+        ctx.beginPath();
+        let started = false;
+        poly.forEach(([lo, la]) => {
+            const p = project(la, lo);
+            if (!p.visible) { started = false; return; }
+            started ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y);
+            started = true;
+        });
+        ctx.fill();
+        ctx.stroke();
+    });
+
+    // Globe glow (warm)
+    const glow = ctx.createRadialGradient(cx - r*0.4, cy - r*0.4, r*0.05, cx, cy, r);
+    glow.addColorStop(0, 'rgba(255,180,50,0.1)');
+    glow.addColorStop(0.7, 'rgba(0,0,0,0)');
+    glow.addColorStop(1, 'rgba(40,20,0,0.5)');
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = glow;
+    ctx.fill();
+
+    // Equator
+    ctx.strokeStyle = 'rgba(255,149,0,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    let first = true;
+    for (let lo = -180; lo <= 180; lo += 2) {
+        const p = project(0, lo);
+        if (!p.visible) { first = true; continue; }
+        first ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+        first = false;
+    }
+    ctx.stroke();
+
+    // Day/night terminator on globe
+    // Draw night overlay: for each pixel-ish on visible globe, darken if it's on the night side
+    // Simplified: draw the terminator line and fill the night half
+    const DR2 = Math.PI / 180;
+    const declRad = lat * DR2; // lat = sunDecl for this function
+    // Draw terminator curve
+    ctx.strokeStyle = 'rgba(255,200,80,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    let firstT = true;
+    for (let la = -90; la <= 90; la += 2) {
+        // Terminator: points where sun altitude = 0
+        // At lat la, the terminator longitude offset from subsolar = ±acos(-tan(la)*tan(decl))
+        const tanProd = Math.tan(la*DR2) * Math.tan(declRad);
+        let termLonOffset;
+        if (tanProd >= 1 || tanProd <= -1) continue;
+        termLonOffset = Math.acos(-tanProd) / DR2;
+        // Evening terminator (west of subsolar)
+        const termLon = lon + termLonOffset; // lon = subsolarLon
+        const p = project(la, termLon);
+        if (!p.visible) { firstT = true; continue; }
+        firstT ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+        firstT = false;
+    }
+    ctx.stroke();
+    // Morning terminator
+    ctx.beginPath();
+    firstT = true;
+    for (let la = -90; la <= 90; la += 2) {
+        const tanProd = Math.tan(la*DR2) * Math.tan(declRad);
+        if (tanProd >= 1 || tanProd <= -1) continue;
+        const termLonOffset = Math.acos(-tanProd) / DR2;
+        const termLon = lon - termLonOffset;
+        const p = project(la, termLon);
+        if (!p.visible) { firstT = true; continue; }
+        firstT ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+        firstT = false;
+    }
+    ctx.stroke();
+
+    // Night side overlay — scan visible points and darken night side
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+    for (let py2 = cy - r; py2 <= cy + r; py2 += 3) {
+        for (let px2 = cx - r; px2 <= cx + r; px2 += 3) {
+            const nx = (px2 - cx) / r, ny = (cy - py2) / r;
+            if (nx*nx + ny*ny > 1) continue;
+            const nz = Math.sqrt(1 - nx*nx - ny*ny);
+            // Undo latitude rotation
+            const y2 = ny * Math.cos(-rotLat) - nz * Math.sin(-rotLat);
+            const z2 = ny * Math.sin(-rotLat) + nz * Math.cos(-rotLat);
+            const x2 = nx;
+            const ptLat = Math.asin(y2) / DR2;
+            // Longitude offset from view center (viewLon = subsolarLon - 90)
+            const ptLonFromView = Math.atan2(x2, z2) / DR2;
+            // Hour angle = longitude offset from subsolar point
+            // viewLon is 90° west of subsolar, so hourAngle = ptLonFromView - 90
+            const hourAngle = ptLonFromView - 90;
+            // Angular distance from subsolar point
+            const angDist = Math.acos(
+                Math.sin(ptLat*DR2)*Math.sin(declRad) +
+                Math.cos(ptLat*DR2)*Math.cos(declRad)*Math.cos(hourAngle*DR2)
+            );
+            if (angDist > Math.PI/2) {
+                ctx.fillStyle = 'rgba(0,0,15,0.45)';
+                ctx.fillRect(px2, py2, 3, 3);
+            } else {
+                ctx.fillStyle = 'rgba(255,180,50,0.08)';
+                ctx.fillRect(px2, py2, 3, 3);
+            }
+        }
+    }
+    ctx.restore();
+
+    // Small subsolar marker
+    const pc = project(lat, lon);
+    if (pc.visible) {
+        ctx.beginPath();
+        ctx.arc(pc.x, pc.y, 4, 0, Math.PI*2);
+        ctx.fillStyle = '#ff9500';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(pc.x, pc.y, 1.5, 0, Math.PI*2);
+        ctx.fillStyle = '#ffe066';
+        ctx.fill();
+    }
+
+    // User location
+    const pu = project(ASTRO_USER_LAT || 9.93, ASTRO_USER_LON || -84);
+    if (pu.visible) {
+        ctx.beginPath();
+        ctx.arc(pu.x, pu.y, 3, 0, Math.PI*2);
+        ctx.fillStyle = '#4ecdc4';
+        ctx.fill();
+        ctx.font = '8px monospace';
+        ctx.fillStyle = '#4ecdc4';
+        const locLabel = (ASTRO_USER_NAME || 'User').split(',')[0];
+        ctx.fillText(locLabel, pu.x + 4, pu.y + 3);
+    }
+
+    // Border
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,149,0,0.35)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 }
@@ -5844,7 +7828,17 @@ function startSublunaryRefresh() {
         const mapEl = document.getElementById('sublunaryMapContainer');
         if (mapEl) mapEl.innerHTML = renderSublunaryMap(lat, lon, ASTRO_USER_LAT, ASTRO_USER_LON);
         renderSublunaryGlobe(lat, lon);
-    }, 3 * 60 * 1000); // every 3 minutes
+        // Also refresh solar panel if visible
+        const solarPanel = document.getElementById('solarInfoPanel');
+        if (solarPanel && solarPanel.style.display !== 'none') {
+            renderSolarInfoPanel();
+        }
+        // Also refresh earth panel if visible
+        const earthPanel = document.getElementById('earthInfoPanel');
+        if (earthPanel && earthPanel.style.display !== 'none') {
+            renderEarthInfoPanel();
+        }
+    }, 60 * 1000); // every 1 minute for smoother globe rotation
 }
 
 
@@ -5945,10 +7939,7 @@ async function fetchOpenMeteoTides(lat, lon, dateStr) {
 
     const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&hourly=sea_level_height_msl&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`;
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
-        const res = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
+        const res = await fetch(url);
         const data = await res.json();
         if (data.hourly && data.hourly.sea_level_height_msl) {
             const hours = data.hourly.time.map((t, i) => ({
@@ -6037,19 +8028,38 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
             <span style="font-family:'Cinzel',serif;color:#7ec8ff;font-weight:600;letter-spacing:1px;font-size:0.85em;">
                 ${currentLang==='es' ? 'Información Lunar' : 'Lunar Information'}
             </span>
-            <span style="color:#8899cc;font-size:0.68em;margin-left:4px;">${formatLongDate(today)} · ${ASTRO_USER_LAT}°N · 🌊 ${findNearestTideStation(ASTRO_USER_LAT,ASTRO_USER_LON)?.n||''}</span>
-            <button onclick="openAstroModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay})" style="margin-left:auto;background:rgba(74,158,255,0.15);border:1px solid rgba(74,158,255,0.3);border-radius:6px;color:#7ec8ff;font-size:0.65em;padding:3px 8px;cursor:pointer;">${currentLang==='es'?'Ver detalle':'Details'} ↗</button>
-            <button onclick="openLocationSelector()" style="background:rgba(78,205,196,0.15);border:1px solid rgba(78,205,196,0.35);border-radius:6px;color:#4ecdc4;font-size:0.65em;padding:3px 8px;cursor:pointer;margin-left:4px;">📍 ${ASTRO_USER_NAME.split(',')[0]}</button>
+            <span style="color:#8899cc;font-size:0.68em;margin-left:4px;">${formatLongDate(today)} · ${ASTRO_USER_LAT}°N · 🌊 ${findNearestTideStation(ASTRO_USER_LAT,ASTRO_USER_LON)?.n||''} · 📍 ${ASTRO_USER_NAME.split(',')[0]}</span>
         </div>
 
-        <!-- Responsive 2x2 grid -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;align-items:start;">
+        <!-- Posición Sublunar: Mapa 2D + Globo 3D (arriba, como en solar) -->
+        <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(74,158,255,0.15);">
+            <div style="font-family:'Cinzel',serif;color:#7ec8ff;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
+                📍 ${currentLang==='es'?'Posición Sublunar — Punto sobre la Tierra':'Sublunar Point — Position over Earth'}
+                <span style="font-size:0.78em;color:#8899cc;font-weight:400;margin-left:8px;">${currentLang==='es'?'Lat':'Lat'}: ${astro.sublunarLat}°${astro.sublunarDir} · ${currentLang==='es'?'Lon':'Lon'}: ${getSublunaryLon(today)}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;">
+                <!-- Mapa 2D SVG -->
+                <div>
+                    <div id="sublunaryMapContainer" style="border-radius:8px;overflow:hidden;border:1px solid rgba(74,158,255,0.25);">
+                        ${renderSublunaryMap(astro.sublunarLat, getSublunaryLonDeg(today), ASTRO_USER_LAT, ASTRO_USER_LON)}
+                    </div>
+                </div>
+                <!-- Globo 3D -->
+                <div>
+                    <canvas id="sublunaryGlobe" width="260" height="180" style="border-radius:8px;border:1px solid rgba(74,158,255,0.25);display:block;width:100%;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4-column symmetric grid -->
+        <div class="astro-info-grid">
 
             <!-- Distancia -->
             <div class="astro-card" style="margin-bottom:0;">
                 <h4 style="font-size:0.75em;">📏 ${currentLang==='es'?'Distancia':'Distance'}</h4>
                 <div class="astro-value" style="color:${distColor}">${astro.distance.toLocaleString()} km</div>
                 <div class="astro-label">${distLabel}</div>
+                <div style="font-size:0.78em;color:#7ec8ff;margin-top:4px;">${currentLang==='es'?'Luz a la Tierra':'Light to Earth'}: ${(astro.distance / 299792.458).toFixed(2)}s</div>
                 <div class="astro-bar-bg">
                     <div class="astro-bar-fill" style="width:${100-astro.distancePct}%;background:linear-gradient(90deg,#FF6B6B,#7E57C2);"></div>
                 </div>
@@ -6063,10 +8073,7 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
                 <h4 style="font-size:0.75em;">📐 ${currentLang==='es'?'Declinación':'Declination'}</h4>
                 <div class="astro-value" style="color:${decColor}">${astro.decStr}</div>
                 <div class="astro-label">Sublunar: ${astro.sublunarLat}° ${astro.sublunarDir}</div>
-                ${astro.isZenith
-                    ? `<div class="zenith-badge" style="margin-top:6px;">✦ La Luna pasa por tu cenit hoy</div>`
-                    : `<div class="astro-label" style="margin-top:4px;">${astro.distFromUser}° de tu cenit (${Math.round(parseFloat(astro.distFromUser)*111)} km)</div>`
-                }
+                <div class="astro-label" style="margin-top:4px;">${astro.distFromUser}° de tu cenit (${Math.round(parseFloat(astro.distFromUser)*111)} km)</div>
             </div>
 
             <!-- Mareas fuerza -->
@@ -6089,26 +8096,6 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
                     <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span>
                 </div>
 
-            </div>
-        </div>
-
-        <!-- Posición Sublunar: Mapa 2D + Globo 3D -->
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(74,158,255,0.15);">
-            <div style="font-family:'Cinzel',serif;color:#7ec8ff;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
-                📍 ${currentLang==='es'?'Posición Sublunar — Punto sobre la Tierra':'Sublunar Point — Position over Earth'}
-                <span style="font-size:0.78em;color:#8899cc;font-weight:400;margin-left:8px;">${currentLang==='es'?'Lat':'Lat'}: ${astro.sublunarLat}°${astro.sublunarDir} · ${currentLang==='es'?'Lon':'Lon'}: ${getSublunaryLon(today)}</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;">
-                <!-- Mapa 2D SVG -->
-                <div>
-                    <div id="sublunaryMapContainer" style="border-radius:8px;overflow:hidden;border:1px solid rgba(74,158,255,0.25);">
-                        ${renderSublunaryMap(astro.sublunarLat, getSublunaryLonDeg(today), ASTRO_USER_LAT, ASTRO_USER_LON)}
-                    </div>
-                </div>
-                <!-- Globo 3D -->
-                <div>
-                    <canvas id="sublunaryGlobe" width="260" height="180" style="border-radius:8px;border:1px solid rgba(74,158,255,0.25);display:block;width:100%;"></canvas>
-                </div>
             </div>
         </div>
 
@@ -6177,7 +8164,7 @@ function renderCalendar() {
     // Mostrar título "Hoy" siempre (incluso si no se encuentra, mostrar info básica)
     if (currentDayInCycle) {
         // Determinar qué información mostrar según el modo de calendario
-        let displayTitle = 'Luna Hoy';
+        let displayTitle = currentLang === 'es' ? 'Aspectos de Hoy' : 'Today\'s Aspects';
         let displayEmoji = '';
         let displayDay = '';
         let displayInfo = '';
@@ -6189,7 +8176,7 @@ function renderCalendar() {
             const moonLongitude = getMoonPosition(today);
             const moonSignData = getZodiacSignWithDegree(moonLongitude);
             const moonSign = moonSignData.formatted;
-            displayTitle = currentLang === 'es' ? 'Luna Hoy' : 'Moon Today';
+            displayTitle = currentLang === 'es' ? 'Aspectos de Hoy' : 'Today\'s Aspects';
             displayEmoji = emoji;
             displayDay = currentDayInCycle.lunarDay;
             displayInfo = moonSign;
@@ -6261,15 +8248,15 @@ function renderCalendar() {
         const todayAstroEvent2 = isAstronomicalEvent(today);
         const todayStellium2 = getStellium(today);
 
-        // Combinar TODOS los eventos planetarios del día
+        // Combinar TODOS los eventos planetarios del día — orden: eclipses, equinoccios, stelliums, cambios signo, retrógrados, aspectos
         const allPlanetaryEvents = [
             ...(todayEclipse2 ? [{ type: 'eclipse', data: todayEclipse2 }] : []),
             ...(todayAstroEvent2 ? [{ type: 'astroEvent', data: todayAstroEvent2 }] : []),
             ...(todayStellium2 ? [{ type: 'stellium', data: todayStellium2 }] : []),
-            ...todayInterAspects.map(asp => ({ type: 'interPlanetaryAspect', data: asp })),
-            ...todayAspects.map(asp => ({ type: 'aspect', data: asp })),
             ...todaySignChanges.map(ch => ({ type: 'signChange', data: ch })),
-            ...todayRetrogrades.map(ret => ({ type: 'retrograde', data: ret }))
+            ...todayRetrogrades.map(ret => ({ type: 'retrograde', data: ret })),
+            ...todayInterAspects.map(asp => ({ type: 'interPlanetaryAspect', data: asp })),
+            ...todayAspects.map(asp => ({ type: 'aspect', data: asp }))
         ];
 
         document.getElementById('currentDayInfo').style.display = 'block';
@@ -6324,37 +8311,37 @@ function renderCalendar() {
                         ${displayTitle}${allPlanetaryEvents.length > 0 ? ` (${allPlanetaryEvents.length})` : ''}
                     </div>
                     ${allPlanetaryEvents.length > 0 ? `
-                    <div style="display:flex;flex-direction:column;gap:2px;align-items:stretch;">
-                        ${allPlanetaryEvents.slice(0, 6).map(event => {
+                    <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
+                        ${allPlanetaryEvents.slice(0, 8).map(event => {
                             if (event.type === 'eclipse') {
                                 const ecl = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.2);border-radius:4px;border-left:2px solid #f5576c;font-weight:bold;">🌑 ${ecl.type || 'Eclipse'}</div>`;
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.2);border-radius:4px;border-left:2px solid #f5576c;font-weight:bold;text-align:center;width:100%;">🌑 ${ecl.type || 'Eclipse'}</div>`;
                             } else if (event.type === 'astroEvent') {
                                 const ae = event.data;
-                                const lbl = ae.type==='equinox'?(currentLang==='es'?'Equinoccio':'Equinox'):(currentLang==='es'?'Solsticio':'Solstice');
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(255,215,0,0.15);border-radius:4px;border-left:2px solid #FFD700;font-weight:bold;">${ae[currentLang]} ${lbl}</div>`;
+                                const lbl = currentLang==='es'?(ae.esName||'Evento'):(ae.enName||'Event');
+                                const timeStr = ae.date ? ae.date.toLocaleTimeString(currentLang==='es'?'es':'en',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(255,215,0,0.15);border-radius:4px;border-left:2px solid #FFD700;font-weight:bold;text-align:center;width:100%;">☀️ ${lbl}${timeStr?' · '+timeStr:''}</div>`;
                             } else if (event.type === 'stellium') {
                                 const st = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(201,168,64,0.15);border-radius:4px;border-left:2px solid #c9a840;">✨ Stellium ${st.sign||''}</div>`;
-                            } else if (event.type === 'aspect') {
-                                const asp = event.data;
-                                const color = asp.class==='conjunction'?'#ff6b6b':asp.class==='sextile'?'#4ecdc4':asp.class==='square'?'#ff9f43':asp.class==='trine'?'#7c4dff':'#ee5a6f';
+                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(201,168,64,0.15);border-radius:4px;border-left:2px solid #c9a840;text-align:center;width:100%;">✨ Stellium ${st.sign||''}</div>`;
+                            } else if (event.type === 'signChange') {
+                                const ch = event.data;
                                 const ds = JSON.stringify(currentDayInCycle).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:2px;border-left:2px solid ${color};border-right:2px solid ${color};"><span style="color:#e8eaf6">☽ ${asp.symbol} ${tp(asp.planetName)}</span></div>`;
+                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${ch.color};"><span style="color:#e8eaf6">${tp(ch.planet)} → ${ts(ch.toSign)}${ch.time?' <span style="font-weight:bold;color:#c9a840">'+ch.time+'</span>':''}</span></div>`;
+                            } else if (event.type === 'retrograde') {
+                                const ret = event.data;
+                                const ds = JSON.stringify(currentDayInCycle).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid #ff6b6b;"><span style="color:#e8eaf6">${tp(ret.planet)} ${ret.isStart?'R':'D'}</span></div>`;
                             } else if (event.type === 'interPlanetaryAspect') {
                                 const asp = event.data;
                                 const ts2 = asp.time?`<span style="font-weight:bold;color:#c9a840">${asp.time}</span> `:'';
                                 const ds = JSON.stringify(currentDayInCycle).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:2px;border-left:2px solid ${asp.color};"><span style="color:#e8eaf6">${ts2}${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)}</span></div>`;
-                            } else if (event.type === 'signChange') {
-                                const ch = event.data;
-                                const ts2 = ch.time?`<span style="font-weight:bold;color:#c9a840">${ch.time}</span> `:'';
+                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${asp.color};"><span style="color:#e8eaf6">${ts2}${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)}</span></div>`;
+                            } else if (event.type === 'aspect') {
+                                const asp = event.data;
+                                const color = asp.class==='conjunction'?'#ff6b6b':asp.class==='sextile'?'#4ecdc4':asp.class==='square'?'#ff9f43':asp.class==='trine'?'#7c4dff':'#ee5a6f';
                                 const ds = JSON.stringify(currentDayInCycle).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:2px;border-left:2px solid ${ch.color};"><span style="color:#e8eaf6">${ts2}${tp(ch.planet)} → ${ts(ch.toSign)}</span></div>`;
-                            } else if (event.type === 'retrograde') {
-                                const ret = event.data;
-                                const ds = JSON.stringify(currentDayInCycle).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:2px;border-left:2px solid #ff6b6b;"><span style="color:#e8eaf6">${tp(ret.planet)} ${ret.isStart?'R':'D'}</span></div>`;
+                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${color};border-right:2px solid ${color};"><span style="color:#e8eaf6">☽ ${asp.symbol} ${tp(asp.planetName)}</span></div>`;
                             }
                         }).join('')}
                         ${allPlanetaryEvents.length > 6 ? `<div style="font-size:0.6em;text-align:center;color:#8899cc;">+${allPlanetaryEvents.length - 6}</div>` : ''}
@@ -6575,6 +8562,10 @@ if (calendarMode === 'solar') {
     document.body.classList.add('solar-mode');
     currentSignIndex = getCurrentSign();
     renderSolarCalendar();
+} else if (calendarMode === 'earth') {
+    switchToEarthMode();
+} else if (calendarMode === 'solarsystem') {
+    switchToSolarSystemMode();
 } else if (calendarMode === 'gregorian') {
     document.body.classList.add('gregorian-mode');
     renderGregorianCalendar();
@@ -6925,6 +8916,11 @@ window.toggleEventComplete = toggleEventComplete;
 window.switchToLunarMode = switchToLunarMode;
 window.switchToSolarMode = switchToSolarMode;
 window.switchToGregorianMode = switchToGregorianMode;
+window.switchToEarthMode = switchToEarthMode;
+window.switchToSolarSystemMode = switchToSolarSystemMode;
+window.togglePlanetDetails = togglePlanetDetails;
+window.fetchEarthWeather = fetchEarthWeather;
+window.fetchEarthquakes = fetchEarthquakes;
 window.previousCycle = previousCycle;
 window.nextCycle = nextCycle;
 window.previousSign = previousSign;
