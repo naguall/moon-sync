@@ -179,14 +179,14 @@
         .days-container::-webkit-scrollbar-thumb { background: rgba(201,168,64,0.28); border-radius: 2px; }
 
         .day-cell {
-            min-width: 100px; min-height: 82px;
+            min-width: 100px; min-height: 110px;
             display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
             background: rgba(5,7,30,0.95);
             border: 1px solid rgba(74,158,255,0.18);
             border-top: 2px solid rgba(74,158,255,0.22);
             border-radius: 7px; font-size: 0.75em;
             transition: all 0.2s; cursor: pointer; padding: 6px;
-            position: relative; overflow: hidden;
+            position: relative; overflow: visible;
         }
         .day-cell:hover {
             background: rgba(12,16,58,0.98);
@@ -222,7 +222,7 @@
         .day-cell.weekend .day-weekday { color: rgba(201,168,64,0.65); font-weight: bold; }
         .day-cell.today .day-date, .day-cell.today .day-weekday { color: rgba(255,255,255,0.85); }
 
-        .day-content { width: 100%; font-size: 0.5em; display: flex; flex-direction: row; gap: 4px; overflow: hidden; max-height: 45px; align-items: flex-start; justify-content: space-between; }
+        .day-content { width: 100%; font-size: 0.5em; display: flex; flex-direction: row; gap: 4px; overflow: visible; align-items: flex-start; justify-content: space-between; }
 
         .day-event-item { background: rgba(74,158,255,0.08); padding: 0px 2px; border-radius: 2px; border-left: 2px solid var(--blue-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; font-size: 0.9em; }
         .day-event-item.type-reminder { border-left-color: #e85d7a; background: rgba(232,93,122,0.08); }
@@ -428,11 +428,11 @@
             .moon-icon { font-size: 0.7em; }
             .days-container { gap: 4px; }
             .lunar-week > div:not(.week-header) { grid-template-columns: repeat(8, 1fr); gap: 2px; }
-            .day-cell { min-width: 60px; min-height: 65px; font-size: 0.7em; padding: 4px; }
+            .day-cell { min-width: 60px; min-height: 85px; font-size: 0.7em; padding: 4px; overflow: visible; }
             .day-number { font-size: 1em; }
             .day-date { font-size: 0.62em; }
             .day-weekday { font-size: 0.52em; }
-            .day-content { max-height: 28px; font-size: 0.5em; }
+            .day-content { font-size: 0.5em; overflow: visible; }
             .lunar-weeks { gap: 2px; margin-bottom: 5px; }
             .lunar-week { padding: 2px 4px; gap: 2px; }
             
@@ -3575,6 +3575,10 @@ function saveEvent() {
     }
 
     console.log(`✅ Event saved with ${reminders.length} reminders`);
+
+    // Log to notification history
+    const dateStr = selectedDate.toLocaleDateString(currentLang==='es'?'es':'en', {day:'numeric',month:'short'});
+    logNotificationEvent(`📅 ${currentLang==='es'?'Evento creado':'Event created'}: "${title}" - ${dateStr}${event.time?' '+event.time:''}`, 'event');
 }
 
 function editEvent(index) {
@@ -4572,10 +4576,10 @@ const solarSigns2026 = [
 // EQUINOX AND SOLSTICE DATA 2026
 // ==========================================
 const astronomicalEvents2026 = [
-    { date: new Date('2026-03-20T00:00:00'), es: '☀️ Equinoccio', en: '☀️ Equinox', type: 'equinox' },
-    { date: new Date('2026-06-21T00:00:00'), es: '☉ Solsticio', en: '☉ Solstice', type: 'solstice' },
-    { date: new Date('2026-09-22T00:00:00'), es: '🍂 Equinoccio', en: '🍂 Equinox', type: 'equinox' },
-    { date: new Date('2026-12-21T00:00:00'), es: '❄️ Solsticio', en: '❄️ Solstice', type: 'solstice' }
+    { date: new Date('2026-03-20T00:00:00'), es: '☀️Eq', en: '☀️Eq', type: 'equinox' },
+    { date: new Date('2026-06-21T00:00:00'), es: '☉Sol', en: '☉Sol', type: 'solstice' },
+    { date: new Date('2026-09-22T00:00:00'), es: '🍂Eq', en: '🍂Eq', type: 'equinox' },
+    { date: new Date('2026-12-21T00:00:00'), es: '❄️Sol', en: '❄️Sol', type: 'solstice' }
 ];
 
 function isAstronomicalEvent(checkDate) {
@@ -4952,7 +4956,7 @@ function generateGregorianMonth() {
         html += '<div style="display: flex; flex-direction: column; gap: 1px; text-align: right; flex-shrink: 0;">';
         
         // Planetary events
-        if (astronomicalEvent) html += `<div style="color: #e8c84a; font-weight: bold; font-size: 0.8em; text-align: center;">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>`;
+        if (astronomicalEvent) html += `<div style="color: #e8c84a; font-weight: bold; font-size: 0.8em; text-align: right;">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>`;
         if (moonEvent) html += `<div onclick="event.stopPropagation(); navigateToLunar2026Moon(${date.getTime()}, '${moonEvent.type}')" style="color:${moonEvent.type==='full'?'#FFD700':'#ccc'}; font-weight: bold; font-size: 0.6em; text-align: center; line-height: 1.2; overflow: visible; cursor:pointer; text-decoration:underline; text-underline-offset:2px;"><span style="font-size:0.9em;">${moonEvent.type==='full'?'🌕':moonEvent.icon}</span> ${moonEvent.label}</div>`;
         if (planetaryEvents.eclipse) html += `<div style="color:#FFD700; font-size: 0.6em; font-weight:bold;">${planetaryEvents.eclipse.type==='solar'?'☀️ Ecl.Sol':'🌒 Ecl.Lun'}</div>`;
         
@@ -4967,13 +4971,13 @@ function generateGregorianMonth() {
         planetaryEvents.signChanges.slice(0,2).forEach(sc => {
             const planetInit = getPlanetInitial(sc.planet);
             const signInit = sc.toSign.substring(0, 3);
-            html += `<div onclick="event.stopPropagation(); showSignChangeModal('${sc.planet}', '${sc.symbol}', '${sc.toSign}', '${sc.meaning}', '${date.getTime()}')" style="color:#7ec8ff;font-size:0.65em;cursor:pointer;font-weight:bold;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
+            html += `<div onclick="event.stopPropagation(); showSignChangeModal('${sc.planet}', '${sc.symbol}', '${sc.toSign}', '${sc.meaning}', '${date.getTime()}')" style="color:#7ec8ff;font-size:0.65em;cursor:pointer;font-weight:bold;text-align:right;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
         });
-        
+
         // Retrogrades (limit 2)
         planetaryEvents.retrogrades.slice(0,2).forEach(r => {
             const planetInit = getPlanetInitial(r.planet);
-            html += `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${date.toDateString()}')" style="color:#7ec8ff;font-size:0.65em;cursor:pointer;font-weight:bold;" title="${r.planet} ${r.isStart ? 'inicia retrogradación' : 'vuelve directo'}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
+            html += `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${date.toDateString()}')" style="color:#7ec8ff;font-size:0.65em;cursor:pointer;font-weight:bold;text-align:right;" title="${r.planet} ${r.isStart ? 'inicia retrogradación' : 'vuelve directo'}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
         });
         
         html += '</div></div></div>';
@@ -5220,8 +5224,8 @@ function generateSolarWeeks(sign) {
                         <!-- Derecha: Símbolos astronómicos -->
                         ${(eclipse || retrogrades.length > 0 || signChanges.length > 0 || interAspects.length > 0 || stellium || majorAspect || astronomicalEvent || moonEvent) ? `
                         <div style="display: flex; flex-direction: column; gap: 2px; font-size: 1.2em; flex-shrink: 0; margin-left: auto;">
-                            ${astronomicalEvent ? `<div style="color: #e8c84a; font-weight: bold; line-height: 1; font-size: 0.9em; text-align: center; cursor: default;" title="${astronomicalEvent[currentLang]}">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>` : ''}
-                            ${moonEvent ? `<div onclick="event.stopPropagation(); navigateToLunar2026Moon(${dayDate.getTime()}, '${moonEvent.type}')" style="color:${moonEvent.type==='full'?'#FFD700':'#ccc'};font-weight:bold;font-size:0.65em;text-align:center;line-height:1.2;overflow:visible;cursor:pointer;text-decoration:underline;text-underline-offset:2px;"><span style="font-size:0.9em;">${moonEvent.type==='full'?'🌕':moonEvent.icon}</span> ${moonEvent.label}</div>` : ''}
+                            ${astronomicalEvent ? `<div style="color: #e8c84a; font-weight: bold; line-height: 1; font-size: 0.9em; text-align: right; cursor: default;" title="${astronomicalEvent[currentLang]}">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>` : ''}
+                            ${moonEvent ? `<div onclick="event.stopPropagation(); navigateToLunar2026Moon(${dayDate.getTime()}, '${moonEvent.type}')" style="color:${moonEvent.type==='full'?'#FFD700':'#ccc'};font-weight:bold;font-size:0.65em;text-align:right;line-height:1.2;overflow:visible;cursor:pointer;text-decoration:underline;text-underline-offset:2px;"><span style="font-size:0.9em;">${moonEvent.type==='full'?'🌕':moonEvent.icon}</span> ${moonEvent.label}</div>` : ''}
                             ${eclipse ? `<div onclick="event.stopPropagation(); showEclipseModal('${eclipse.type}', '${eclipse.name}', '${dayDate.getTime()}')" style="cursor: pointer; line-height: 1.2; font-size:0.7em; font-weight:bold; color:#FFD700;" title="${eclipse.name}">${eclipse.type === 'solar' ? '☀️' : '🌒'} ${currentLang==='es'?'Eclipse':'Eclipse'}</div>` : ''}
                             ${interAspects.map(asp => {
                                 const p1 = getPlanetInitial(asp.planet1);
@@ -5230,12 +5234,12 @@ function generateSolarWeeks(sign) {
                             }).join('')}
                             ${retrogrades.map(r => {
                                 const planetInit = getPlanetInitial(r.planet);
-                                return `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${dayDate.toDateString()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.7em;" title="${r.planet} ${r.isStart ? 'inicia retrogradación' : 'vuelve directo'}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
+                                return `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${dayDate.toDateString()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.7em;text-align:right;" title="${r.planet} ${r.isStart ? 'inicia retrogradación' : 'vuelve directo'}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
                             }).join('')}
                             ${signChanges.map(sc => {
                                 const planetInit = getPlanetInitial(sc.planet);
                                 const signInit = sc.toSign.substring(0, 3);
-                                return `<div onclick="event.stopPropagation(); showSignChangeModal('${sc.planet}', '${sc.symbol}', '${sc.toSign}', '${sc.meaning}', '${dayDate.getTime()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.7em;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
+                                return `<div onclick="event.stopPropagation(); showSignChangeModal('${sc.planet}', '${sc.symbol}', '${sc.toSign}', '${sc.meaning}', '${dayDate.getTime()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.7em;text-align:right;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
                             }).join('')}
                             ${stellium ? `<div onclick="event.stopPropagation(); showStelliumModal('${stellium.sign}', '${stellium.planets.join('|')}', ${stellium.count}, '${dayDate.getTime()}')" style="color: ${stellium.count === 3 ? '#FFD700' : stellium.count === 4 ? '#f39c12' : '#e74c3c'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.1em;" title="Stellium en ${stellium.sign}">★</div>` : ''}
                             ${majorAspect ? `<div onclick="event.stopPropagation(); showMajorAspectModal('${majorAspect.type}', '${majorAspect.planets.join('|')}', '${majorAspect.meaning}', '${majorAspect.impact}', '${dayDate.getTime()}')" style="color: ${majorAspect.type === 'T-Square' ? '#ff6b6b' : majorAspect.type === 'Kite' ? '#9b59b6' : '#4ecdc4'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.5em;" title="${majorAspect.type}">${majorAspect.type === 'T-Square' ? '⊥' : majorAspect.type === 'Kite' ? '🪁' : '▭'}</div>` : ''}
@@ -6318,21 +6322,21 @@ function renderCalendar() {
                         <!-- Derecha: Símbolos astronómicos -->
                         ${(eclipse || retrogrades.length > 0 || signChanges.length > 0 || interAspects.length > 0 || stellium || majorAspect || astronomicalEvent || moonEvent) ? `
                         <div style="display: flex; flex-direction: column; gap: 2px; font-size: 1.2em; flex-shrink: 0; margin-left: auto;">
-                            ${astronomicalEvent ? `<div style="color: #e8c84a; font-weight: bold; line-height: 1; font-size: 0.9em; text-align: center; cursor: default;" title="${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>` : ''}
-                            ${eclipse ? `<div onclick="event.stopPropagation(); showEclipseModal('${eclipse.type}', '${eclipse.name}', '${day.date.getTime()}')" style="cursor: pointer; line-height: 1.2; font-size:0.7em; font-weight:bold; color:#FFD700;" title="${eclipse.name}">${eclipse.type === 'solar' ? '☀️' : '🌒'} Eclipse</div>` : ''}
+                            ${astronomicalEvent ? `<div style="color: #e8c84a; font-weight: bold; line-height: 1; font-size: 0.9em; text-align: right; cursor: default;" title="${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>` : ''}
+                            ${eclipse ? `<div onclick="event.stopPropagation(); showEclipseModal('${eclipse.type}', '${eclipse.name}', '${day.date.getTime()}')" style="cursor: pointer; line-height: 1.2; font-size:0.7em; font-weight:bold; color:#FFD700; text-align:right;" title="${eclipse.name}">${eclipse.type === 'solar' ? '☀️' : '🌒'} Eclipse</div>` : ''}
                             ${interAspects.map(asp => {
                                 const p1 = getPlanetInitial(asp.planet1);
                                 const p2 = getPlanetInitial(asp.planet2);
-                                return `<div onclick="window.handleInterAspectClick(${day.date.getTime()}, ${day.lunarDay})" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.75em;white-space:nowrap;" title="${asp.planet1} ${asp.symbol} ${asp.planet2}">${p1} ${asp.symbol} ${p2}</div>`;
+                                return `<div onclick="window.handleInterAspectClick(${day.date.getTime()}, ${day.lunarDay})" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.75em;white-space:nowrap;text-align:right;" title="${asp.planet1} ${asp.symbol} ${asp.planet2}">${p1} ${asp.symbol} ${p2}</div>`;
                             }).join('')}
                             ${retrogrades.map(r => {
                                 const planetInit = getPlanetInitial(r.planet);
-                                return `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${day.date.toDateString()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.85em;white-space:nowrap;" title="${r.planet} ${r.isStart ? 'inicia retrogradación' : 'vuelve directo'}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
+                                return `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${day.date.toDateString()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.85em;white-space:nowrap;text-align:right;" title="${r.planet} ${r.isStart ? 'inicia retrogradación' : 'vuelve directo'}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
                             }).join('')}
                             ${signChanges.map(sc => {
                                 const planetInit = getPlanetInitial(sc.planet);
                                 const signInit = sc.toSign.substring(0, 3);
-                                return `<div onclick="event.stopPropagation(); showSignChangeModal('${sc.planet}', '${sc.symbol}', '${sc.toSign}', '${sc.meaning}', '${day.date.getTime()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.85em;white-space:nowrap;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
+                                return `<div onclick="event.stopPropagation(); showSignChangeModal('${sc.planet}', '${sc.symbol}', '${sc.toSign}', '${sc.meaning}', '${day.date.getTime()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.85em;white-space:nowrap;text-align:right;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
                             }).join('')}
                             ${stellium ? `<div onclick="event.stopPropagation(); showStelliumModal('${stellium.sign}', '${stellium.planets.join('|')}', ${stellium.count}, '${day.date.getTime()}')" style="color: ${stellium.count === 3 ? '#FFD700' : stellium.count === 4 ? '#f39c12' : '#e74c3c'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.1em;" title="Stellium en ${stellium.sign}">★</div>` : ''}
                             ${majorAspect ? `<div onclick="event.stopPropagation(); showMajorAspectModal('${majorAspect.type}', '${majorAspect.planets.join('|')}', '${majorAspect.meaning}', '${majorAspect.impact}', '${day.date.getTime()}')" style="color: ${majorAspect.type === 'T-Square' ? '#ff6b6b' : majorAspect.type === 'Kite' ? '#9b59b6' : '#4ecdc4'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.5em;" title="${majorAspect.type}">${majorAspect.type === 'T-Square' ? '⊥' : majorAspect.type === 'Kite' ? '🪁' : '▭'}</div>` : ''}
@@ -6467,6 +6471,55 @@ setTimeout(() => {
     updateNotificationButton();
     updateNotifBadge();
 }, 100);
+
+// Log today's aspects and events to notification history on load (once per day)
+setTimeout(() => {
+    try {
+        const todayKey = new Date().toISOString().slice(0,10); // "2026-03-20"
+        const lastLogDay = localStorage.getItem('lastNotifLogDay');
+        if (lastLogDay === todayKey) return; // Already logged today
+
+        const today = new Date(); today.setHours(0,0,0,0);
+
+        // Log moon event if today is new/full moon
+        const moonEv = getMoonEventForDate(today);
+        if (moonEv) {
+            logNotificationEvent(`${moonEv.type==='full'?'🌕':'🌑'} ${moonEv.label}`, 'aspect');
+        }
+
+        // Log astronomical event
+        const astroEv = isAstronomicalEvent(today);
+        if (astroEv) {
+            logNotificationEvent(`${astroEv[currentLang==='es'?'es':'en']}`, 'aspect');
+        }
+
+        // Log sign changes
+        const scs = getSignChanges(today);
+        scs.forEach(sc => {
+            logNotificationEvent(`${tp(sc.planet)} → ${ts(sc.toSign)}`, 'aspect');
+        });
+
+        // Log inter-planetary aspects
+        const ias = getInterPlanetaryAspects(today);
+        ias.slice(0,3).forEach(asp => {
+            logNotificationEvent(`${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)}`, 'aspect');
+        });
+
+        // Log retrogrades
+        const rets = getRetrogrades(today);
+        rets.forEach(r => {
+            logNotificationEvent(`${tp(r.planet)} ${r.isStart?(currentLang==='es'?'inicia retrogradación':'starts retrograde'):(currentLang==='es'?'directo':'direct')}`, 'aspect');
+        });
+
+        // Log today's user events
+        const todayEvents = getEventsForDate(today);
+        todayEvents.forEach(evt => {
+            logNotificationEvent(`📅 ${evt.title}${evt.time?' '+evt.time:''}`, 'event');
+        });
+
+        localStorage.setItem('lastNotifLogDay', todayKey);
+    } catch(e) { console.warn('Notif log error:', e); }
+}, 500);
 
 // Check security context and warn if insecure
 setTimeout(() => {
