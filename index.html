@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v124';
+        var REQUIRED_VER = 'v125';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -50,6 +50,9 @@
                 }
             }
         } catch(e) {}
+
+        // ALWAYS clear iOS app badge on page load (earliest possible moment)
+        if (navigator.clearAppBadge) { navigator.clearAppBadge().catch(function(){}); }
     })();
     </script>
 
@@ -9880,7 +9883,7 @@ function openNotifHistoryModal() {
             }
         });
         html += '</div>';
-        html += '<button onclick="if(confirm(currentLang===\'es\'?\'¿Borrar historial?\':\'Clear history?\')){localStorage.removeItem(\'notifHistory\');updateNotifBadge();openNotifHistoryModal();}"'
+        html += '<button onclick="if(confirm(currentLang===\'es\'?\'¿Borrar historial?\':\'Clear history?\')){localStorage.removeItem(\'notifHistory\');updateNotifBadge();if(\'clearAppBadge\' in navigator){navigator.clearAppBadge().catch(function(){});}openNotifHistoryModal();}"'
             + ' style="margin-top:12px;width:100%;padding:8px;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);border-radius:6px;color:#ff6b6b;font-size:0.75em;cursor:pointer;">'
             + '🗑️ '+(currentLang==='es'?'Borrar historial':'Clear history')
             + '</button>';
@@ -10370,7 +10373,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with force-update mechanism
-const APP_VERSION = 'v124';
+const APP_VERSION = 'v125';
 if ('serviceWorker' in navigator) {
     // Force update: check for new SW on every page load
     navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
