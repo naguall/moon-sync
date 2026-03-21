@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v106';
+        var REQUIRED_VER = 'v112';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -3243,32 +3243,19 @@ function openAspectsModal(date, lunarDay, dayData) {
         `;
     }
     
-    // 1. Aspectos Luna-Planeta
-    if (dayData.aspects && dayData.aspects.length > 0) {
-        htmlContent += dayData.aspects.map(aspect => `
-            <div class="aspect-detail ${aspect.class}">
-                <div class="aspect-planets">
-                    ${tp('Luna')} ${aspect.symbol} ${tp(aspect.planetName)} (${ts(aspect.planetSign.split(' ')[1])})
-                </div>
-                <div class="aspect-description">
-                    ${aspect.description}
-                </div>
-            </div>
-        `).join('');
-    }
-    
-    // 2. Aspectos entre Planetas (NUEVO)
+    // 1. Aspectos entre Planetas (INTERPLANETARIOS PRIMERO)
     if (interAspects.length > 0) {
+        htmlContent += `<div style="font-size:0.68em;color:#c9a840;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;padding-bottom:3px;border-bottom:1px solid rgba(201,168,64,0.15);">${currentLang==='es'?'Aspectos Interplanetarios':'Interplanetary Aspects'}</div>`;
         htmlContent += interAspects.map(asp => {
-            const timeStr = asp.time ? `<span style="color: #f0e68c; font-weight: bold;">${asp.time}</span> - ` : '';
-            const degreeStr = asp.degree ? `<span style="color: #a8b2d1; font-size: 0.85em;">(${asp.degree})</span>` : '';
-            const badge = asp.isGenerational ? '<span style="background: #9b59b6; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin-left: 5px;">GENERACIONAL</span>' : 
+            const degreeStr = asp.degrees ? `<span style="color: #a8b2d1; font-size: 0.85em;">(${asp.degrees})</span>` : '';
+            const signsStr = asp.signs ? `<span style="color: rgba(255,255,255,0.4); font-size: 0.82em;"> — ${asp.signs}</span>` : '';
+            const badge = asp.isGenerational ? '<span style="background: #9b59b6; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin-left: 5px;">GENERACIONAL</span>' :
                          asp.isImportant ? '<span style="background: #4ecdc4; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin-left: 5px;">IMPORTANTE</span>' : '';
-            
+
             return `
             <div class="aspect-detail" style="border-left-color: ${asp.color}; background: rgba(0,0,0,0.2);">
                 <div class="aspect-planets">
-                    ${timeStr}${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)} ${degreeStr}${badge}
+                    ${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)} ${degreeStr}${signsStr}${badge}${asp.time ? `<span style="color: #f0e68c; font-weight: bold; float:right;">${asp.time}</span>` : ''}
                 </div>
                 <div class="aspect-description">
                     ${translateMeaning(asp.meaning)}
@@ -3276,8 +3263,8 @@ function openAspectsModal(date, lunarDay, dayData) {
             </div>
         `}).join('');
     }
-    
-    // 3. Cambios de Signo
+
+    // 2. Cambios de Signo (PLANETARIOS antes que lunares)
     if (signChanges.length > 0) {
         htmlContent += signChanges.map(change => {
             const timeStr = change.time ? `<span style="color: #f0e68c; font-weight: bold;">${change.time}</span> - ` : '';
@@ -3292,8 +3279,8 @@ function openAspectsModal(date, lunarDay, dayData) {
             </div>
         `}).join('');
     }
-    
-    // 4. Retrogradaciones
+
+    // 3. Retrogradaciones (PLANETARIOS antes que lunares)
     if (retrogrades.length > 0) {
         htmlContent += retrogrades.map(retro => `
             <div class="aspect-detail" style="border-left-color: #ff6b6b;">
@@ -3302,6 +3289,21 @@ function openAspectsModal(date, lunarDay, dayData) {
                 </div>
                 <div class="aspect-description">
                     ${translateMeaning(retro.meaning)}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 4. Aspectos Luna-Planeta (ÚLTIMOS - después de todos los planetarios)
+    if (dayData.aspects && dayData.aspects.length > 0) {
+        htmlContent += `<div style="font-size:0.68em;color:#7ec8ff;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px;padding-bottom:3px;border-bottom:1px solid rgba(126,200,255,0.15);">${currentLang==='es'?'Aspectos Lunares':'Lunar Aspects'}</div>`;
+        htmlContent += dayData.aspects.map(aspect => `
+            <div class="aspect-detail ${aspect.class}">
+                <div class="aspect-planets">
+                    ${tp('Luna')} ${aspect.symbol} ${tp(aspect.planetName)} (${ts(aspect.planetSign.split(' ')[1])})
+                </div>
+                <div class="aspect-description">
+                    ${aspect.description}
                 </div>
             </div>
         `).join('');
@@ -3426,16 +3428,17 @@ function openInterAspectsOnlyModal(date, lunarDay, interAspects) {
     let htmlContent = interAspects.map(asp => {
         const timeStr = asp.time ? `<span style="color: #f0e68c; font-weight: bold;">${asp.time}</span> - ` : '';
         const degreeStr = asp.degrees ? `<span style="color: #a8b2d1; font-size: 0.85em;">(${asp.degrees})</span>` : '';
+        const signsStr = asp.signs ? `<span style="color: rgba(255,255,255,0.4); font-size: 0.82em;"> — ${asp.signs}</span>` : '';
         const majorLabel = currentLang === 'es' ? 'MAYOR' : 'MAJOR';
         const importantLabel = currentLang === 'es' ? 'IMPORTANTE' : 'IMPORTANT';
-        const badge = asp.isMajor ? `<span style="background: #9b59b6; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin-left: 5px;">${majorLabel}</span>` : 
+        const badge = asp.isMajor ? `<span style="background: #9b59b6; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin-left: 5px;">${majorLabel}</span>` :
                      asp.isImportant ? `<span style="background: #4ecdc4; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin-left: 5px;">${importantLabel}</span>` : '';
         const defaultMeaning = currentLang === 'es' ? 'Aspecto interplanetario significativo.' : 'Significant interplanetary aspect.';
-        
+
         return `
         <div class="aspect-detail" style="border-left-color: ${asp.color}; background: rgba(0,0,0,0.2);">
             <div class="aspect-planets">
-                ${timeStr}${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)} ${degreeStr}${badge}
+                ${timeStr}${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)} ${degreeStr}${signsStr}${badge}
             </div>
             <div class="aspect-description" style="font-size: 0.95em; line-height: 1.4;">
                 ${asp.meaning ? translateMeaning(asp.meaning) : defaultMeaning}
@@ -8641,7 +8644,7 @@ setTimeout(() => {
 // Log today's aspects and events to notification history on load (once per day)
 setTimeout(() => {
     try {
-        const todayKey = getDateKey(new Date()); // local date "2026-03-20"
+        const todayKey = getDateKey(new Date());
         const lastLogDay = localStorage.getItem('lastNotifLogDay');
         if (lastLogDay === todayKey) return; // Already logged today
 
@@ -8650,37 +8653,58 @@ setTimeout(() => {
         // Log moon event if today is new/full moon
         const moonEv = getMoonEventForDate(today);
         if (moonEv) {
-            logNotificationEvent(`${moonEv.type==='full'?'🌕':'🌑'} ${moonEv.label}`, 'aspect');
+            logNotificationEvent(`${moonEv.type==='full'?'🌕':'🌑'} ${moonEv.label}`, 'aspect', {
+                perfectionTime: moonEv.time || '',
+                detail: moonEv.label
+            });
         }
 
         // Log astronomical event
         const astroEv = isAstronomicalEvent(today);
         if (astroEv) {
-            logNotificationEvent(`${astroEv[currentLang==='es'?'es':'en']}`, 'aspect');
+            logNotificationEvent(currentLang==='es' ? astroEv.es : astroEv.en, 'aspect', {
+                detail: currentLang==='es' ? astroEv.es : astroEv.en
+            });
         }
 
         // Log sign changes
         const scs = getSignChanges(today);
         scs.forEach(sc => {
-            logNotificationEvent(`${tp(sc.planet)} → ${ts(sc.toSign)}`, 'aspect');
+            logNotificationEvent(`${tp(sc.planet)} → ${ts(sc.toSign)}`, 'aspect', {
+                detail: sc.meaning || '',
+                actionType: 'signChange',
+                actionData: JSON.stringify({planet: sc.planet, toSign: sc.toSign})
+            });
         });
 
         // Log inter-planetary aspects
         const ias = getInterPlanetaryAspects(today);
-        ias.slice(0,3).forEach(asp => {
-            logNotificationEvent(`${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)}`, 'aspect');
+        ias.forEach(asp => {
+            logNotificationEvent(`${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)}`, 'aspect', {
+                perfectionTime: asp.time || '',
+                detail: asp.meaning || '',
+                actionType: 'interAspect',
+                actionData: JSON.stringify({planet1: asp.planet1, planet2: asp.planet2, symbol: asp.symbol, aspect: asp.aspect, degrees: asp.degrees, signs: asp.signs, time: asp.time, meaning: asp.meaning})
+            });
         });
 
         // Log retrogrades
         const rets = getRetrogrades(today);
         rets.forEach(r => {
-            logNotificationEvent(`${tp(r.planet)} ${r.isStart?(currentLang==='es'?'inicia retrogradación':'starts retrograde'):(currentLang==='es'?'directo':'direct')}`, 'aspect');
+            logNotificationEvent(`${tp(r.planet)} ${r.isStart?(currentLang==='es'?'inicia retrogradación':'starts retrograde'):(currentLang==='es'?'directo':'direct')}`, 'aspect', {
+                detail: r.meaning || '',
+                actionType: 'retrograde'
+            });
         });
 
         // Log today's user events
         const todayEvents = getEventsForDate(today);
         todayEvents.forEach(evt => {
-            logNotificationEvent(`📅 ${evt.title}${evt.time?' '+evt.time:''}`, 'event');
+            logNotificationEvent(`${evt.title}${evt.time?' — '+evt.time:''}`, 'event', {
+                perfectionTime: evt.time || '',
+                actionType: 'userEvent',
+                actionData: JSON.stringify({title: evt.title, time: evt.time})
+            });
         });
 
         localStorage.setItem('lastNotifLogDay', todayKey);
@@ -9024,10 +9048,12 @@ function openMoonVerMas(timestamp) {
 
         const aspectsHTML = hasAspects ? `
             ${eclipse ? `<div style="padding:4px 6px;margin-bottom:2px;border-radius:4px;background:rgba(255,215,0,0.10);border-left:2px solid #FFD700;font-size:0.80em;"><span style="color:#FFD700;font-weight:700;">${eclipse.type==='solar'?'☀️':'🌒'} ${eclipse.name}</span></div>` : ''}
-            ${interAspects.map(a=>`<div style="padding:3px 6px;margin-bottom:2px;border-radius:4px;background:rgba(0,0,0,0.18);border-left:2px solid ${a.color};font-size:0.80em;"><span style="color:${a.color};font-weight:700;">${a.symbol}</span> <span style="color:#e8eaf6;">${tp(a.planet1)} – ${tp(a.planet2)}</span>${a.time?`<span style="color:#c9a840;float:right;font-size:0.85em;">${a.time}</span>`:''}</div>`).join('')}
-            ${dayAspects.map(a=>{const c=a.class==='conjunction'?'#ff6b6b':a.class==='sextile'?'#4ecdc4':a.class==='square'?'#ff9f43':a.class==='trine'?'#7c4dff':'#ee5a6f';return`<div style="padding:3px 6px;margin-bottom:2px;border-radius:4px;background:rgba(0,0,0,0.18);border-left:2px solid ${c};font-size:0.80em;"><span style="color:#e8eaf6;">☽ </span><span style="color:${c};font-weight:700;">${a.symbol}</span><span style="color:#e8eaf6;"> ${tp(a.planetName)}</span>${a.degree?`<span style="color:rgba(255,255,255,0.35);font-size:0.82em;margin-left:2px;">${a.degree}°</span>`:""}</div>`;}).join('')}
+            ${interAspects.length ? `<div style="font-size:0.62em;color:#c9a840;font-weight:600;text-transform:uppercase;margin:3px 0 2px;letter-spacing:0.5px;">${currentLang==='es'?'Interplanetarios':'Interplanetary'}</div>` : ''}
+            ${interAspects.map(a=>`<div style="padding:3px 6px;margin-bottom:2px;border-radius:4px;background:rgba(0,0,0,0.18);border-left:2px solid ${a.color};font-size:0.80em;"><span style="color:${a.color};font-weight:700;">${a.symbol}</span> <span style="color:#e8eaf6;">${tp(a.planet1)} – ${tp(a.planet2)}</span>${a.degrees?`<span style="color:rgba(255,255,255,0.35);font-size:0.82em;"> (${a.degrees})</span>`:''}${a.signs?`<span style="color:rgba(255,255,255,0.3);font-size:0.78em;"> ${a.signs}</span>`:''}${a.time?`<span style="color:#c9a840;float:right;font-size:0.85em;">${a.time}</span>`:''}</div>`).join('')}
             ${signChanges.map(c=>`<div style="padding:3px 6px;margin-bottom:2px;border-radius:4px;background:rgba(0,0,0,0.18);border-left:2px solid ${c.color};font-size:0.80em;"><span style="color:${c.color};">→</span> <span style="color:#e8eaf6;">${tp(c.planet)}: ${ts(c.toSign)}</span></div>`).join('')}
             ${retrogrades.map(r=>`<div style="padding:3px 6px;margin-bottom:2px;border-radius:4px;background:rgba(0,0,0,0.18);border-left:2px solid #ff6b6b;font-size:0.80em;"><span style="color:#ff6b6b;">℞</span> <span style="color:#e8eaf6;">${tp(r.planet)} ${r.isStart?(currentLang==='es'?'℞ Retrograda':'℞ Retrograde'):(currentLang==='es'?'→ Directo':'→ Direct')}</span></div>`).join('')}
+            ${dayAspects.length ? `<div style="font-size:0.62em;color:#7ec8ff;font-weight:600;text-transform:uppercase;margin:4px 0 2px;letter-spacing:0.5px;">${currentLang==='es'?'Lunares':'Lunar'}</div>` : ''}
+            ${dayAspects.map(a=>{const c=a.class==='conjunction'?'#ff6b6b':a.class==='sextile'?'#4ecdc4':a.class==='square'?'#ff9f43':a.class==='trine'?'#7c4dff':'#ee5a6f';return`<div style="padding:3px 6px;margin-bottom:2px;border-radius:4px;background:rgba(0,0,0,0.18);border-left:2px solid ${c};font-size:0.80em;"><span style="color:#e8eaf6;">☽ </span><span style="color:${c};font-weight:700;">${a.symbol}</span><span style="color:#e8eaf6;"> ${tp(a.planetName)}</span>${a.degree?`<span style="color:rgba(255,255,255,0.35);font-size:0.82em;margin-left:2px;">${a.degree}°</span>`:""}</div>`;}).join('')}
         ` : `<div style="color:rgba(255,255,255,0.25);font-style:italic;font-size:0.80em;padding:6px 0;">Sin aspectos</div>`;
 
         // ── Agenda ──
@@ -9305,16 +9331,21 @@ async function handleNotifToggle(enable) {
 }
 
 // Notification history system
-function logNotificationEvent(message, type) {
+function logNotificationEvent(message, type, extra) {
     const history = JSON.parse(localStorage.getItem('notifHistory') || '[]');
     const now = new Date();
-    history.unshift({
+    const entry = {
         message: message,
         type: type || 'info',
         timestamp: now.toISOString(),
-        localDate: getDateKey(now), // LOCAL date key for filtering (avoids UTC mismatch)
+        localDate: getDateKey(now),
         seen: false
-    });
+    };
+    // Merge extra data (perfectionTime, detail, actionType, actionData)
+    if (extra && typeof extra === 'object') {
+        Object.keys(extra).forEach(k => { entry[k] = extra[k]; });
+    }
+    history.unshift(entry);
     // Keep only last 50
     if (history.length > 50) history.length = 50;
     localStorage.setItem('notifHistory', JSON.stringify(history));
@@ -9372,34 +9403,129 @@ clearOldNotifications();
     setTimeout(() => { clearOldNotifications(); scheduleMidnightClear(); }, ms);
 })();
 
+// Handle click on a notification item — show detail
+// Build detail HTML for an inter-planetary aspect
+function buildAspectDetailHtml(data, borderColor) {
+    return '<div style="padding:14px;background:rgba(5,7,30,0.95);border:1px solid '+borderColor+';border-radius:10px;">'
+        + '<div style="text-align:center;margin-bottom:12px;">'
+        + '<div style="font-size:1.5em;letter-spacing:3px;">'+tp(data.planet1)+' '+data.symbol+' '+tp(data.planet2)+'</div>'
+        + '<div style="font-size:0.8em;color:rgba(255,255,255,0.45);margin-top:4px;">'+(data.aspect||'')+'</div>'
+        + '</div>'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">'
+        + '<div style="text-align:center;padding:8px 4px;background:rgba(74,158,255,0.06);border-radius:6px;">'
+        + '<div style="font-size:0.58em;color:rgba(255,255,255,0.4);">'+(currentLang==='es'?'Perfección':'Perfection')+'</div>'
+        + '<div style="font-size:1em;font-weight:bold;color:#7ec8ff;">'+(data.time||'—')+'</div></div>'
+        + '<div style="text-align:center;padding:8px 4px;background:rgba(74,158,255,0.06);border-radius:6px;">'
+        + '<div style="font-size:0.58em;color:rgba(255,255,255,0.4);">'+(currentLang==='es'?'Grados':'Degrees')+'</div>'
+        + '<div style="font-size:1em;font-weight:bold;color:#7ec8ff;">'+(data.degrees||'—')+'</div></div>'
+        + '<div style="text-align:center;padding:8px 4px;background:rgba(74,158,255,0.06);border-radius:6px;">'
+        + '<div style="font-size:0.58em;color:rgba(255,255,255,0.4);">'+(currentLang==='es'?'Signos':'Signs')+'</div>'
+        + '<div style="font-size:0.85em;font-weight:bold;color:#7ec8ff;">'+(data.signs||'—')+'</div></div>'
+        + '</div>'
+        + (data.meaning ? '<div style="font-size:0.78em;color:rgba(255,255,255,0.55);line-height:1.5;padding:10px;background:rgba(255,255,255,0.02);border-radius:6px;border-left:2px solid '+borderColor+';">'+data.meaning+'</div>' : '')
+        + '</div>';
+}
+
+function handleNotifItemClick(index) {
+    const history = JSON.parse(localStorage.getItem('notifHistory') || '[]');
+    const todayStr = getDateKey(new Date());
+    const todayHistory = history.filter(h => {
+        const d = h.localDate || (h.timestamp ? h.timestamp.slice(0,10) : '');
+        return d === todayStr;
+    });
+    const item = todayHistory[index];
+    if (!item) return;
+
+    let detailHtml = '';
+    const borderColor = item.type==='event'?'rgba(201,168,64,0.3)':'rgba(74,158,255,0.3)';
+
+    if (item.actionType === 'interAspect' && item.actionData) {
+        try {
+            const data = JSON.parse(item.actionData);
+            detailHtml = buildAspectDetailHtml(data, borderColor);
+        } catch(e) { detailHtml = '<div style="padding:10px;color:rgba(255,255,255,0.5);">'+item.message+'</div>'; }
+    } else if (item.type === 'aspect' && !item.actionData) {
+        // Fallback: look up today's aspects live if no actionData stored
+        const today = new Date(); today.setHours(0,0,0,0);
+        const ias = getInterPlanetaryAspects(today);
+        // Try to match by message content
+        let matched = null;
+        for (let i = 0; i < ias.length; i++) {
+            const a = ias[i];
+            if (item.message && item.message.indexOf(a.symbol) !== -1 &&
+                (item.message.indexOf(a.planet1) !== -1 || item.message.indexOf(tp(a.planet1)) !== -1)) {
+                matched = a; break;
+            }
+        }
+        if (matched) {
+            detailHtml = buildAspectDetailHtml(matched, borderColor);
+        } else {
+            // Try sign changes
+            const scs = getSignChanges(today);
+            let matchedSc = null;
+            for (let i = 0; i < scs.length; i++) {
+                if (item.message && item.message.indexOf('→') !== -1) { matchedSc = scs[i]; break; }
+            }
+            if (matchedSc && matchedSc.meaning) {
+                detailHtml = '<div style="padding:14px;background:rgba(5,7,30,0.95);border:1px solid '+borderColor+';border-radius:10px;">'
+                    + '<div style="text-align:center;font-size:1.2em;margin-bottom:10px;">'+item.message+'</div>'
+                    + '<div style="font-size:0.78em;color:rgba(255,255,255,0.55);line-height:1.5;">'+matchedSc.meaning+'</div>'
+                    + '</div>';
+            } else {
+                detailHtml = '<div style="padding:14px;text-align:center;font-size:1em;color:#e8eaf6;">'+item.message+'</div>';
+            }
+        }
+    } else if (item.actionType === 'signChange') {
+        detailHtml = '<div style="padding:14px;background:rgba(5,7,30,0.95);border:1px solid '+borderColor+';border-radius:10px;">'
+            + '<div style="text-align:center;font-size:1.2em;margin-bottom:10px;">'+item.message+'</div>'
+            + (item.detail ? '<div style="font-size:0.78em;color:rgba(255,255,255,0.55);line-height:1.5;">'+item.detail+'</div>' : '')
+            + '</div>';
+    } else if (item.actionType === 'userEvent' && item.actionData) {
+        try {
+            const data = JSON.parse(item.actionData);
+            detailHtml = '<div style="padding:14px;background:rgba(5,7,30,0.95);border:1px solid '+borderColor+';border-radius:10px;">'
+                + '<div style="text-align:center;margin-bottom:8px;">'
+                + '<div style="font-size:1.1em;font-weight:bold;color:#e8c84a;">'+data.title+'</div>'
+                + (data.time ? '<div style="font-size:0.9em;color:rgba(255,255,255,0.5);margin-top:4px;">'+data.time+'</div>' : '')
+                + '</div></div>';
+        } catch(e) { detailHtml = '<div style="padding:10px;">'+item.message+'</div>'; }
+    } else if (item.detail) {
+        detailHtml = '<div style="padding:14px;background:rgba(5,7,30,0.95);border:1px solid '+borderColor+';border-radius:10px;">'
+            + '<div style="text-align:center;font-size:1.1em;margin-bottom:8px;">'+item.message+'</div>'
+            + '<div style="font-size:0.78em;color:rgba(255,255,255,0.55);line-height:1.5;">'+item.detail+'</div>'
+            + '</div>';
+    } else {
+        detailHtml = '<div style="padding:14px;text-align:center;font-size:1em;color:#e8eaf6;">'+item.message+'</div>';
+    }
+
+    // Show detail in the notif modal body
+    const body = document.getElementById('notifHistoryBody');
+    if (!body) return;
+    body.innerHTML = '<div style="margin-bottom:12px;">'
+        + '<button onclick="openNotifHistoryModal()" style="background:none;border:none;color:#7ec8ff;font-size:0.8em;cursor:pointer;padding:4px 0;">← '+(currentLang==='es'?'Volver':'Back')+'</button>'
+        + '</div>' + detailHtml;
+}
+window.handleNotifItemClick = handleNotifItemClick;
+
 function openNotifHistoryModal() {
     const modal = document.getElementById('notifHistoryModal');
     const body = document.getElementById('notifHistoryBody');
     const titleEl = document.getElementById('notifHistoryTitle');
     if (!modal || !body) return;
 
-    // Mark all as seen when user opens the history
+    // Mark all as seen + clear badge immediately
     markAllNotifSeen();
-
-    // Clear PWA app icon badge
+    const badge = document.getElementById('notifBadge');
+    if (badge) badge.style.display = 'none';
     if ('clearAppBadge' in navigator) { navigator.clearAppBadge().catch(()=>{}); }
 
-    titleEl.textContent = currentLang==='es'?'🔔 Historial de Notificaciones':'🔔 Notification History';
+    titleEl.textContent = currentLang==='es'?'🔔 Notificaciones de Hoy':'🔔 Today\'s Notifications';
 
     const history = JSON.parse(localStorage.getItem('notifHistory') || '[]');
-    const notifEnabled = localStorage.getItem('notificationsEnabled') !== 'false' && ('Notification' in window) && Notification.permission === 'granted';
 
-    let html = `
-        <!-- Status bar -->
-        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:12px;background:rgba(${notifEnabled?'78,205,196':'255,107,107'},0.08);border:1px solid rgba(${notifEnabled?'78,205,196':'255,107,107'},0.25);border-radius:8px;">
-            <span style="font-size:1.2em;">${notifEnabled?'🔔':'🔕'}</span>
-            <span style="font-size:0.85em;font-weight:600;color:${notifEnabled?'#4ecdc4':'#ff6b6b'};">
-                ${notifEnabled?(currentLang==='es'?'Notificaciones activas':'Notifications active'):(currentLang==='es'?'Notificaciones desactivadas':'Notifications disabled')}
-            </span>
-        </div>
-    `;
+    let html = '';
 
-    // Filter: only show today's notifications (LOCAL date, not UTC)
+    // Filter: only today's notifications (LOCAL date)
     const todayStr = getDateKey(new Date());
     const todayHistory = history.filter(h => {
         const entryDate = h.localDate || (h.timestamp ? h.timestamp.slice(0,10) : '');
@@ -9407,32 +9533,84 @@ function openNotifHistoryModal() {
     });
 
     if (todayHistory.length === 0) {
-        html += `<div style="text-align:center;padding:30px 10px;color:rgba(255,255,255,0.35);font-size:0.85em;">
-            ${currentLang==='es'?'No hay notificaciones para hoy':'No notifications for today'}
-        </div>`;
+        html += '<div style="text-align:center;padding:30px 10px;color:rgba(255,255,255,0.35);font-size:0.85em;">'
+            + (currentLang==='es'?'No hay notificaciones para hoy':'No notifications for today')
+            + '</div>';
     } else {
-        html += `<div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:8px;text-align:center;">
-            ${currentLang==='es'?'Mostrando solo notificaciones de hoy':'Showing only notifications from today'}
-        </div>`;
-        html += `<div style="max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">`;
-        todayHistory.forEach(item => {
-            const d = new Date(item.timestamp);
-            const timeStr = d.toLocaleTimeString(currentLang==='es'?'es':'en', {hour:'2-digit',minute:'2-digit'});
-            const typeIcon = item.type==='system'?'⚙️':item.type==='event'?'📅':item.type==='aspect'?'🪐':'🔔';
+        html += '<div style="max-height:450px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">';
+        todayHistory.forEach((item) => {
             const borderColor = item.type==='system'?'rgba(78,205,196,0.3)':item.type==='event'?'rgba(201,168,64,0.3)':'rgba(74,158,255,0.3)';
-            html += `<div style="padding:8px 10px;background:rgba(255,255,255,0.03);border-left:3px solid ${borderColor};border-radius:4px;display:flex;align-items:center;gap:8px;">
-                <span style="font-size:0.9em;">${typeIcon}</span>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-size:0.8em;color:#e8eaf6;">${item.message}</div>
-                    <div style="font-size:0.68em;color:rgba(255,255,255,0.35);">${timeStr}</div>
-                </div>
-            </div>`;
+
+            // Get full data from actionData or live lookup
+            let data = null;
+            if (item.actionData) {
+                try { data = JSON.parse(item.actionData); } catch(e) {}
+            }
+            if (!data && item.type === 'aspect') {
+                try {
+                    const today = new Date(); today.setHours(0,0,0,0);
+                    const ias = getInterPlanetaryAspects(today);
+                    for (let i = 0; i < ias.length; i++) {
+                        if (item.message && item.message.indexOf(ias[i].symbol) !== -1 &&
+                            (item.message.indexOf(ias[i].planet1) !== -1 || item.message.indexOf(tp(ias[i].planet1)) !== -1)) {
+                            data = ias[i]; break;
+                        }
+                    }
+                    if (!data) {
+                        const scs = getSignChanges(today);
+                        for (let i = 0; i < scs.length; i++) {
+                            if (item.message && item.message.indexOf('→') !== -1 && item.message.indexOf(tp(scs[i].planet)) !== -1) {
+                                data = scs[i]; break;
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // Render full inline card
+            if (item.actionType === 'interAspect' || (item.type === 'aspect' && data && data.planet1)) {
+                const d = data || {};
+                const time = d.time || item.perfectionTime || '';
+                const degrees = d.degrees || '';
+                const signs = d.signs || '';
+                const meaning = d.meaning || item.detail || '';
+                html += '<div style="padding:10px 12px;background:rgba(5,7,30,0.9);border-left:3px solid '+borderColor+';border-radius:8px;">'
+                    + '<div style="font-size:0.88em;color:#e8eaf6;font-weight:600;">'
+                    + (time ? '<span style="color:#f0e68c;">'+time+'</span> — ' : '')
+                    + tp(d.planet1||'') + ' ' + (d.symbol||'') + ' ' + tp(d.planet2||'')
+                    + (degrees ? ' <span style="color:rgba(255,255,255,0.4);font-size:0.85em;">('+degrees+')</span>' : '')
+                    + (signs ? ' <span style="color:rgba(255,255,255,0.3);font-size:0.8em;">'+signs+'</span>' : '')
+                    + '</div>'
+                    + (meaning ? '<div style="font-size:0.75em;color:rgba(255,255,255,0.5);line-height:1.45;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);">'+meaning+'</div>' : '')
+                    + '</div>';
+            } else if (item.actionType === 'signChange' || (item.type === 'aspect' && data && data.toSign)) {
+                const d = data || {};
+                const meaning = d.meaning || item.detail || '';
+                html += '<div style="padding:10px 12px;background:rgba(5,7,30,0.9);border-left:3px solid '+borderColor+';border-radius:8px;">'
+                    + '<div style="font-size:0.88em;color:#e8eaf6;font-weight:600;">'+item.message+'</div>'
+                    + (meaning ? '<div style="font-size:0.75em;color:rgba(255,255,255,0.5);line-height:1.45;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);">'+meaning+'</div>' : '')
+                    + '</div>';
+            } else if (item.actionType === 'userEvent') {
+                const d = data || {};
+                html += '<div style="padding:10px 12px;background:rgba(5,7,30,0.9);border-left:3px solid '+borderColor+';border-radius:8px;">'
+                    + '<div style="font-size:0.88em;color:#e8c84a;font-weight:600;">'
+                    + (d.time ? '<span style="color:#f0e68c;">'+d.time+'</span> — ' : '')
+                    + (d.title || item.message)
+                    + '</div></div>';
+            } else {
+                // Generic (moon events, retrogrades, system, etc.)
+                const meaning = item.detail || '';
+                html += '<div style="padding:10px 12px;background:rgba(5,7,30,0.9);border-left:3px solid '+borderColor+';border-radius:8px;">'
+                    + '<div style="font-size:0.88em;color:#e8eaf6;">'+item.message+'</div>'
+                    + (meaning ? '<div style="font-size:0.75em;color:rgba(255,255,255,0.5);line-height:1.45;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);">'+meaning+'</div>' : '')
+                    + '</div>';
+            }
         });
-        html += `</div>`;
-        html += `<button onclick="if(confirm(currentLang==='es'?'¿Borrar historial?':'Clear history?')){localStorage.removeItem('notifHistory');updateNotifBadge();openNotifHistoryModal();}"
-            style="margin-top:12px;width:100%;padding:8px;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);border-radius:6px;color:#ff6b6b;font-size:0.75em;cursor:pointer;">
-            🗑️ ${currentLang==='es'?'Borrar historial':'Clear history'}
-        </button>`;
+        html += '</div>';
+        html += '<button onclick="if(confirm(currentLang===\'es\'?\'¿Borrar historial?\':\'Clear history?\')){localStorage.removeItem(\'notifHistory\');updateNotifBadge();openNotifHistoryModal();}"'
+            + ' style="margin-top:12px;width:100%;padding:8px;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);border-radius:6px;color:#ff6b6b;font-size:0.75em;cursor:pointer;">'
+            + '🗑️ '+(currentLang==='es'?'Borrar historial':'Clear history')
+            + '</button>';
     }
 
     body.innerHTML = html;
@@ -9919,7 +10097,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with force-update mechanism
-const APP_VERSION = 'v106';
+const APP_VERSION = 'v111';
 if ('serviceWorker' in navigator) {
     // Force update: check for new SW on every page load
     navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
