@@ -3283,7 +3283,7 @@ function saveJournals() {
 // GOOGLE CALENDAR SYNC
 // ==============================================
 
-const GCAL_CLIENT_ID = localStorage.getItem('gcalClientId') || '';
+const GCAL_CLIENT_ID = '615080090784-dclmeamdenaohp13pf2r51hav6727u9e.apps.googleusercontent.com';
 const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 let gcalTokenClient = null;
 let gcalAccessToken = localStorage.getItem('gcalAccessToken') || '';
@@ -10313,36 +10313,14 @@ function openPreferencesModal() {
                     </div>
                 ` : `
                     <div style="font-size:0.75em;color:rgba(255,255,255,0.4);margin-bottom:8px;">${t('gcalDisconnected')}</div>
-                    <div style="margin-bottom:8px;">
-                        <div style="font-size:0.7em;color:rgba(255,255,255,0.35);margin-bottom:6px;">
-                            ${currentLang==='es'?'Ingresa tu Google OAuth Client ID:':'Enter your Google OAuth Client ID:'}
-                        </div>
-                        <div style="display:flex;gap:8px;align-items:center;">
-                            <input type="text" id="prefGcalClientId" value="${localStorage.getItem('gcalClientId') || ''}" placeholder="${currentLang==='es'?'Tu Client ID...apps.googleusercontent.com':'Your Client ID...apps.googleusercontent.com'}"
-                                style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(66,133,244,0.3);border-radius:8px;color:white;font-size:0.78em;outline:none;" />
-                            <button onclick="var k=document.getElementById('prefGcalClientId').value.trim();if(k){localStorage.setItem('gcalClientId',k);initGoogleCalendar();}this.textContent='✓';setTimeout(()=>{this.textContent='OK';},1500);"
-                                style="padding:8px 14px;background:rgba(66,133,244,0.2);border:1px solid rgba(66,133,244,0.4);border-radius:8px;color:#4285f4;font-size:0.8em;font-weight:700;cursor:pointer;">
-                                OK
-                            </button>
-                        </div>
-                    </div>
-                    ${localStorage.getItem('gcalClientId') ? `
                     <button onclick="gcalSignIn()" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(66,133,244,0.2),rgba(66,133,244,0.08));border:1px solid rgba(66,133,244,0.45);border-radius:8px;color:#4285f4;font-size:0.85em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
                         <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                         ${t('gcalConnect')}
                     </button>
-                    ` : ''}
-                `}
-                <details style="margin-top:6px;">
-                    <summary style="cursor:pointer;font-size:0.68em;color:rgba(255,255,255,0.3);outline:none;">
-                        ${currentLang==='es'?'▸ ¿Cómo obtener el Client ID?':'▸ How to get the Client ID?'}
-                    </summary>
-                    <div style="margin-top:6px;font-size:0.68em;color:rgba(255,255,255,0.35);line-height:1.5;">
-                        ${currentLang==='es'
-                        ?'1. Ve a <a href="https://console.cloud.google.com" target="_blank" style="color:#4285f4;">console.cloud.google.com</a><br>2. Crea un proyecto<br>3. Habilita "Google Calendar API"<br>4. Crea credenciales → OAuth Client ID → Web App<br>5. Agrega origin: https://bearman-ux.github.io<br>6. Copia el Client ID aquí'
-                        :'1. Go to <a href="https://console.cloud.google.com" target="_blank" style="color:#4285f4;">console.cloud.google.com</a><br>2. Create a project<br>3. Enable "Google Calendar API"<br>4. Create credentials → OAuth Client ID → Web App<br>5. Add origin: https://bearman-ux.github.io<br>6. Paste the Client ID here'}
+                    <div style="font-size:0.65em;color:rgba(255,255,255,0.25);margin-top:6px;text-align:center;">
+                        ${currentLang==='es'?'Se conecta con tu cuenta de Google para ver y crear eventos':'Connects with your Google account to view and create events'}
                     </div>
-                </details>
+                `}
             </div>
         </div>
 
