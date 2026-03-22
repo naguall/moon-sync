@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v159';
+        var REQUIRED_VER = 'v160';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -760,7 +760,7 @@
     </div>
 
     <!-- Modal de Opciones del Día -->
-    <div id="dayOptionsModal" class="modal">
+    <div id="dayOptionsModal" class="modal" onclick="if(event.target===this)closeDayOptionsModal()"
         <div class="modal-content" style="max-width: 400px;">
             <h2>Opciones del Día</h2>
             <p id="dayOptionsDate" style="text-align: center; margin-bottom: 20px;"></p>
@@ -1298,30 +1298,63 @@ function getPlanetPosition(planet, date) {
         return lon;
     }
 
-    // Chiron — use precomputed ephemeris points + interpolation for 2020-2030
+    // Chiron — compute from orbital elements (Keplerian orbit)
+    // Chiron orbital elements (JPL/MPC). Perihelion: Feb 14, 1996.
+    // Accuracy: ~2-3° (sufficient for natal astrology; perturbations from Saturn not modeled)
     if (planet === 'chiron') {
-        // Chiron key positions (geocentric ecliptic longitude, from ephemeris)
-        // Chiron entered Aries April 2018, stays through 2027
-        const chironEphem = [
-            {jd:2459215.5, lon:5.0},   // Jan 1, 2021: 5° Aries
-            {jd:2459580.5, lon:12.5},   // Jan 1, 2022: 12.5° Aries
-            {jd:2459945.5, lon:14.0},   // Jan 1, 2023: 14° Aries
-            {jd:2460310.5, lon:17.0},   // Jan 1, 2024: 17° Aries
-            {jd:2460676.5, lon:21.5},   // Jan 1, 2025: 21.5° Aries
-            {jd:2461041.5, lon:24.5},   // Jan 1, 2026: 24.5° Aries
-            {jd:2461406.5, lon:28.0},   // Jan 1, 2027: 28° Aries
-            {jd:2461771.5, lon:32.0},   // Jan 1, 2028: 2° Taurus
-        ];
-        // Linear interpolation
-        for (let i = 0; i < chironEphem.length - 1; i++) {
-            if (jd >= chironEphem[i].jd && jd < chironEphem[i+1].jd) {
-                const frac = (jd - chironEphem[i].jd) / (chironEphem[i+1].jd - chironEphem[i].jd);
-                return chironEphem[i].lon + frac * (chironEphem[i+1].lon - chironEphem[i].lon);
-            }
+        const ch_perihelionJD = 2450128.5; // Feb 14, 1996 (M=0 at this date)
+        const ch_a = 13.6481;       // semi-major axis (AU)
+        const ch_e = 0.37911;       // eccentricity
+        const ch_i = 6.931;         // inclination (degrees)
+        const ch_node = 209.363;    // longitude of ascending node (degrees)
+        const ch_w = 339.557;       // argument of perihelion (degrees)
+        const ch_n = 0.01942;       // mean motion (degrees/day)
+
+        // Mean anomaly at target JD (M=0 at perihelion)
+        let chM = ((ch_n * (jd - ch_perihelionJD)) % 360 + 360) % 360;
+        const chMr = chM * dr;
+
+        // Solve Kepler's equation (iterate for high eccentricity)
+        let chE = chMr + ch_e * Math.sin(chMr) * (1 + ch_e * Math.cos(chMr));
+        for (let iter = 0; iter < 25; iter++) {
+            const dE = (chE - ch_e * Math.sin(chE) - chMr) / (1 - ch_e * Math.cos(chE));
+            chE -= dE;
+            if (Math.abs(dE) < 1e-12) break;
         }
-        // Fallback: approximate mean motion ~1.4°/year from last known
-        const lastPt = chironEphem[chironEphem.length-1];
-        return lastPt.lon + 1.4 * (jd - lastPt.jd) / 365.25;
+
+        // Position in orbital plane
+        const chXv = ch_a * (Math.cos(chE) - ch_e);
+        const chYv = ch_a * Math.sqrt(1 - ch_e * ch_e) * Math.sin(chE);
+        const chV = Math.atan2(chYv, chXv); // true anomaly
+        const chR = Math.sqrt(chXv * chXv + chYv * chYv);
+
+        // Heliocentric ecliptic rectangular coordinates
+        const chIr = ch_i * dr;
+        const chNr = ch_node * dr;
+        const chWr = ch_w * dr;
+        const chVW = chV + chWr;
+
+        const xh = chR * (Math.cos(chNr) * Math.cos(chVW) - Math.sin(chNr) * Math.sin(chVW) * Math.cos(chIr));
+        const yh = chR * (Math.sin(chNr) * Math.cos(chVW) + Math.cos(chNr) * Math.sin(chVW) * Math.cos(chIr));
+        // zh not needed for ecliptic longitude
+
+        // Sun's geocentric position (same as main planet handler below)
+        const sunEl = getOrbitalElements('sun');
+        const sunE = solveKepler(sunEl.M, sunEl.e);
+        const sunXv = Math.cos(sunE) - sunEl.e;
+        const sunYv = Math.sqrt(1 - sunEl.e * sunEl.e) * Math.sin(sunE);
+        const sunV = Math.atan2(sunYv, sunXv);
+        const sunR = Math.sqrt(sunXv * sunXv + sunYv * sunYv);
+        const sunLon = sunV + sunEl.w * dr;
+        const xs = sunR * Math.cos(sunLon);
+        const ys = sunR * Math.sin(sunLon);
+
+        // Geocentric ecliptic longitude
+        const xg = xh + xs;
+        const yg = yh + ys;
+        let chLon = Math.atan2(yg, xg) / dr;
+        if (chLon < 0) chLon += 360;
+        return chLon;
     }
 
     // ── Main planets: full heliocentric→geocentric with perturbations ──
@@ -4493,50 +4526,67 @@ function closeAspectsModal() {
 
 // Manejar click en día - mostrar opciones
 function handleDayClick(element) {
-    const dateTime = parseInt(element.dataset.date);
-    const lunarDay = parseInt(element.dataset.lunarDay);
-    const hasAspects = element.dataset.hasAspects === 'true';
-    const dayData = JSON.parse(element.dataset.dayData);
-    
-    const date = new Date(dateTime);
-    const signChanges = getSignChanges(date);
-    const retrogrades = getRetrogrades(date);
-    const interAspects = getInterPlanetaryAspects(date);
-    const eclipse = getEclipseInfo(date);
-    const moonEvent = getMoonEventForDate(date);
-    const aspectsCount = dayData.aspects ? dayData.aspects.length : 0;
-    const allEvents = aspectsCount + signChanges.length + retrogrades.length + interAspects.length + (eclipse ? 1 : 0) + (moonEvent ? 1 : 0);
-    
-    // Translate and update modal
-    const modal = document.getElementById('dayOptionsModal');
-    const aspectsBtn = document.getElementById('aspectsOptionBtn');
-    
-    modal.querySelector('h2').textContent = t('dayOptions');
-    modal.querySelector('button[onclick="selectDayOption(\'agenda\')"]').innerHTML = t('agenda');
-    aspectsBtn.innerHTML = `${t('aspects')} (<span id="aspectsCount">${allEvents}</span>)`;
-    modal.querySelector('button[onclick="selectDayOption(\'diario\')"]').innerHTML = t('diary');
-    modal.querySelector('button[onclick="closeDayOptionsModal()"]').innerHTML = `❌ ${t('cancel')}`;
-    
-    // Update astro button
-    const astroBtn = document.getElementById('astroOptionBtn');
-    if (astroBtn) {
-        astroBtn.innerHTML = currentLang === 'es' ? '🌊🌙 Info Lunar' : '🌊🌙 Lunar Info';
+    try {
+        // Force-close any stale modal first (fixes Samsung Android bug where
+        // modal overlay blocks subsequent taps if previous close was incomplete)
+        const existingModal = document.getElementById('dayOptionsModal');
+        if (existingModal) existingModal.classList.remove('show');
+
+        const dateTime = parseInt(element.dataset.date);
+        const lunarDay = parseInt(element.dataset.lunarDay);
+        const hasAspects = element.dataset.hasAspects === 'true';
+        const dayData = JSON.parse(element.dataset.dayData || '{}');
+
+        const date = new Date(dateTime);
+        if (isNaN(date.getTime())) return;
+
+        const signChanges = getSignChanges(date);
+        const retrogrades = getRetrogrades(date);
+        const interAspects = getInterPlanetaryAspects(date);
+        const eclipse = getEclipseInfo(date);
+        const moonEvent = getMoonEventForDate(date);
+        const aspectsCount = dayData.aspects ? dayData.aspects.length : 0;
+        const allEvents = aspectsCount + signChanges.length + retrogrades.length + interAspects.length + (eclipse ? 1 : 0) + (moonEvent ? 1 : 0);
+
+        // Translate and update modal
+        const modal = document.getElementById('dayOptionsModal');
+        const aspectsBtn = document.getElementById('aspectsOptionBtn');
+
+        modal.querySelector('h2').textContent = t('dayOptions');
+        modal.querySelector('button[onclick="selectDayOption(\'agenda\')"]').innerHTML = t('agenda');
+        aspectsBtn.innerHTML = `${t('aspects')} (<span id="aspectsCount">${allEvents}</span>)`;
+        modal.querySelector('button[onclick="selectDayOption(\'diario\')"]').innerHTML = t('diary');
+        modal.querySelector('button[onclick="closeDayOptionsModal()"]').innerHTML = `❌ ${t('cancel')}`;
+
+        // Update astro button
+        const astroBtn = document.getElementById('astroOptionBtn');
+        if (astroBtn) {
+            astroBtn.innerHTML = currentLang === 'es' ? '🌊🌙 Info Lunar' : '🌊🌙 Lunar Info';
+        }
+
+        // IMPORTANTE: Mostrar botón de aspectos SIEMPRE (incluso si es 0)
+        aspectsBtn.style.display = 'block';
+        aspectsBtn.style.visibility = 'visible';
+        aspectsBtn.style.opacity = '1';
+
+        // Mostrar modal de opciones
+        document.getElementById('dayOptionsDate').textContent = calendarMode === 'lunar' ? `🌙 ${formatLongDate(date)} - ${t('day')} ${currentLang === 'es' ? 'Lunar' : ''} ${lunarDay}` : calendarMode === 'solar' ? `☉ ${formatLongDate(date)}` : `📅 ${formatLongDate(date)}`;
+
+        // Guardar datos para uso posterior
+        window.selectedDayDate = date;
+        window.selectedDayLunarDay = lunarDay;
+        window.selectedDayData = dayData;
+
+        // Small delay before showing ensures DOM is ready after previous close
+        // (fixes Samsung Android where rapid close→open can fail)
+        requestAnimationFrame(function() {
+            document.getElementById('dayOptionsModal').classList.add('show');
+        });
+    } catch(e) {
+        console.error('handleDayClick error:', e);
+        // Ensure modal is cleaned up even on error
+        try { document.getElementById('dayOptionsModal').classList.remove('show'); } catch(x) {}
     }
-    
-    // IMPORTANTE: Mostrar botón de aspectos SIEMPRE (incluso si es 0)
-    aspectsBtn.style.display = 'block';
-    aspectsBtn.style.visibility = 'visible';
-    aspectsBtn.style.opacity = '1';
-    
-    // Mostrar modal de opciones
-    document.getElementById('dayOptionsDate').textContent = calendarMode === 'lunar' ? `🌙 ${formatLongDate(date)} - ${t('day')} ${currentLang === 'es' ? 'Lunar' : ''} ${lunarDay}` : calendarMode === 'solar' ? `☉ ${formatLongDate(date)}` : `📅 ${formatLongDate(date)}`;
-    
-    // Guardar datos para uso posterior
-    window.selectedDayDate = date;
-    window.selectedDayLunarDay = lunarDay;
-    window.selectedDayData = dayData;
-    
-    document.getElementById('dayOptionsModal').classList.add('show');
 }
 
 function handleInterAspectClick(timestamp, lunarDay) {
@@ -4629,8 +4679,26 @@ function selectDayOption(option) {
 }
 
 function closeDayOptionsModal() {
-    document.getElementById('dayOptionsModal').classList.remove('show');
+    const m = document.getElementById('dayOptionsModal');
+    if (m) m.classList.remove('show');
 }
+
+// Close any visible modal when Android back button is pressed
+// This prevents the invisible-overlay bug on Samsung Android
+(function() {
+    window.addEventListener('popstate', function() {
+        var modals = document.querySelectorAll('.modal.show');
+        if (modals.length > 0) {
+            modals.forEach(function(m) { m.classList.remove('show'); });
+            // Push state back so back button keeps working
+            history.pushState(null, '', location.href);
+        }
+    });
+    // Push initial state so popstate fires on first back press
+    if (history.state === null) {
+        history.pushState(null, '', location.href);
+    }
+})();
 
 // ==============================================
 // MODAL DE ASTRONOMÍA (MAREAS, DISTANCIA, DECLINACIÓN)
@@ -8036,45 +8104,51 @@ function getTimezoneFromCoords(lat, lon, countryCode) {
 
 function getBirthUTCTime(dateStr, timeStr, lat, lon, countryCode) {
     // dateStr = 'YYYY-MM-DD', timeStr = 'HH:MM'
+    // Returns a Date object representing the birth moment in UTC
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const [h, min] = timeStr.split(':').map(Number);
+
     const ianaTimezone = getTimezoneFromCoords(lat, lon, countryCode);
 
-    // Try historical correction first
-    const historicalOffset = ianaTimezone ? getHistoricalUTCOffset(ianaTimezone, dateStr) : null;
-
-    if (historicalOffset !== null) {
-        // Use historical correction
-        const [y, m, d] = dateStr.split('-').map(Number);
-        const [h, min] = timeStr.split(':').map(Number);
-        const utcDate = new Date(Date.UTC(y, m - 1, d, h - historicalOffset, min));
-        return utcDate;
+    // 1) Try historical timezone table (most reliable for pre-1976 dates)
+    if (ianaTimezone) {
+        const historicalOffset = getHistoricalUTCOffset(ianaTimezone, dateStr);
+        if (historicalOffset !== null) {
+            return new Date(Date.UTC(y, m - 1, d, h - historicalOffset, min));
+        }
     }
 
-    // Modern date: use Intl for timezone resolution
-    try {
-        const [y, m, d] = dateStr.split('-').map(Number);
-        const [h, min] = timeStr.split(':').map(Number);
-        if (ianaTimezone) {
-            // Create date in specific timezone
-            const localStr = `${dateStr}T${timeStr}:00`;
+    // 2) Try Intl API for modern dates (post-1976)
+    if (ianaTimezone) {
+        try {
+            // Binary search for the UTC offset: find UTC time whose local representation matches input
             const formatter = new Intl.DateTimeFormat('en-US', {
                 timeZone: ianaTimezone,
                 year: 'numeric', month: '2-digit', day: '2-digit',
-                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+                hour: '2-digit', minute: '2-digit', hour12: false
             });
-            // Approximate: create UTC and adjust
-            const approxUTC = new Date(Date.UTC(y, m - 1, d, h, min));
-            const parts = formatter.formatToParts(approxUTC);
+            // Start with a rough estimate using longitude-based offset
+            const roughOffset = Math.round(lon / 15);
+            const guessUTC = new Date(Date.UTC(y, m - 1, d, h - roughOffset, min));
+            const parts = formatter.formatToParts(guessUTC);
             const getP = (t) => parseInt(parts.find(p => p.type === t)?.value || '0');
             const localH = getP('hour');
-            const diff = localH - h;
-            return new Date(approxUTC.getTime() + diff * 3600000);
-        }
-        return new Date(Date.UTC(y, m - 1, d, h, min));
-    } catch(e) {
-        const [y, m, d] = dateStr.split('-').map(Number);
-        const [h, min] = timeStr.split(':').map(Number);
-        return new Date(Date.UTC(y, m - 1, d, h, min));
+            const localMin = getP('minute');
+            // How far off are we? (local time shown vs desired local time)
+            const shownMinutes = localH * 60 + localMin;
+            const wantedMinutes = h * 60 + min;
+            let correction = (shownMinutes - wantedMinutes) * 60000; // ms
+            // Handle day boundary wrap
+            if (correction > 12 * 3600000) correction -= 24 * 3600000;
+            if (correction < -12 * 3600000) correction += 24 * 3600000;
+            return new Date(guessUTC.getTime() - correction);
+        } catch(e) { /* fall through */ }
     }
+
+    // 3) Fallback: estimate UTC offset from longitude (±1h accuracy)
+    // longitude / 15 gives approximate timezone offset in hours
+    const lonOffset = Math.round(lon / 15);
+    return new Date(Date.UTC(y, m - 1, d, h - lonOffset, min));
 }
 
 // --- Natal Chart Calculation ---
@@ -8594,7 +8668,7 @@ function renderPersonalCalendar() {
         natalChart = profileChart ? JSON.parse(profileChart) : JSON.parse(localStorage.getItem('natalChart'));
     } catch(e) { natalChart = null; }
     // Force recalculation if chart was computed by an older engine version
-    const NATAL_ENGINE_VER = 'v159';
+    const NATAL_ENGINE_VER = 'v160';
     if (!natalChart || natalChart._engineVer !== NATAL_ENGINE_VER) {
         natalChart = calculateNatalChart(birthUTC);
         natalChart._engineVer = NATAL_ENGINE_VER;
@@ -13451,7 +13525,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with force-update mechanism
-const APP_VERSION = 'v159';
+const APP_VERSION = 'v160';
 if ('serviceWorker' in navigator) {
     // Force update: check for new SW on every page load
     navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
