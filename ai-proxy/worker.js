@@ -5,6 +5,7 @@
 
 const ALLOWED_ORIGINS = [
   'https://bearman-ux.github.io',
+  'https://naguall.github.io',
   'http://localhost',
   'http://localhost:8080',
   'http://127.0.0.1'
