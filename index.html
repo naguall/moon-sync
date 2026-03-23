@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v163';
+        var REQUIRED_VER = 'v164';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -1069,12 +1069,11 @@ function getFullMoonName(date) {
 
 // Calcular Julian Day
 function getJulianDay(date) {
-    // CRITICAL: Must use UTC methods, not local time methods!
-    // Using getHours() instead of getUTCHours() caused a timezone-dependent
-    // error (e.g. 6 hours off in Costa Rica UTC-6) in all natal chart calculations.
+    // Uses UTC to be timezone-independent.
+    // The JDN algorithm yields noon of a given date, so hours are offset by -12.
     const year = date.getUTCFullYear();
     const month = date.getUTCMonth() + 1;
-    const day = date.getUTCDate() + date.getUTCHours() / 24 + date.getUTCMinutes() / 1440 + date.getUTCSeconds() / 86400;
+    const day = date.getUTCDate() + (date.getUTCHours() - 12) / 24 + date.getUTCMinutes() / 1440 + date.getUTCSeconds() / 86400;
 
     let a = Math.floor((14 - month) / 12);
     let y = year + 4800 - a;
@@ -8675,7 +8674,7 @@ function renderPersonalCalendar() {
         natalChart = profileChart ? JSON.parse(profileChart) : JSON.parse(localStorage.getItem('natalChart'));
     } catch(e) { natalChart = null; }
     // Force recalculation if chart was computed by an older engine version
-    const NATAL_ENGINE_VER = 'v163';
+    const NATAL_ENGINE_VER = 'v164';
     if (!natalChart || natalChart._engineVer !== NATAL_ENGINE_VER) {
         natalChart = calculateNatalChart(birthUTC);
         natalChart._engineVer = NATAL_ENGINE_VER;
@@ -13555,7 +13554,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with force-update mechanism
-const APP_VERSION = 'v163';
+const APP_VERSION = 'v164';
 if ('serviceWorker' in navigator) {
     // Force update: check for new SW on every page load
     navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
