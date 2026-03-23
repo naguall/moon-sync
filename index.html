@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v161';
+        var REQUIRED_VER = 'v162';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -252,8 +252,6 @@
             border-radius: 7px; font-size: 0.75em;
             transition: all 0.2s; cursor: pointer; padding: 6px;
             position: relative; overflow: visible;
-            -webkit-tap-highlight-color: rgba(74,158,255,0.2);
-            touch-action: manipulation;
         }
         .day-cell:hover {
             background: rgba(12,16,58,0.98);
@@ -4529,10 +4527,12 @@ function closeAspectsModal() {
 // Manejar click en día - mostrar opciones
 function handleDayClick(element) {
     try {
-        // Force-close any stale modal first (fixes Samsung Android bug where
-        // modal overlay blocks subsequent taps if previous close was incomplete)
-        const existingModal = document.getElementById('dayOptionsModal');
-        if (existingModal) existingModal.classList.remove('show');
+        // SAMSUNG FIX: Close ALL open modals first — a stuck sub-modal
+        // (aspects, events, diary, astro) creates an invisible full-screen
+        // overlay that blocks all subsequent taps
+        document.querySelectorAll('.modal.show').forEach(function(m) {
+            m.classList.remove('show');
+        });
 
         const dateTime = parseInt(element.dataset.date);
         const lunarDay = parseInt(element.dataset.lunarDay);
@@ -4579,15 +4579,15 @@ function handleDayClick(element) {
         window.selectedDayLunarDay = lunarDay;
         window.selectedDayData = dayData;
 
-        // Small delay before showing ensures DOM is ready after previous close
-        // (fixes Samsung Android where rapid close→open can fail)
-        requestAnimationFrame(function() {
-            document.getElementById('dayOptionsModal').classList.add('show');
-        });
+        // Show modal directly (no requestAnimationFrame — rAF can collapse
+        // with a same-frame remove on Samsung Android)
+        modal.classList.add('show');
     } catch(e) {
         console.error('handleDayClick error:', e);
-        // Ensure modal is cleaned up even on error
-        try { document.getElementById('dayOptionsModal').classList.remove('show'); } catch(x) {}
+        // Ensure all modals are cleaned up even on error
+        document.querySelectorAll('.modal.show').forEach(function(m) {
+            m.classList.remove('show');
+        });
     }
 }
 
@@ -8281,6 +8281,7 @@ function calculateTransitsToNatal(transitDate, natalChart) {
                         symbol: aspect.symbol,
                         color: aspect.color,
                         class: aspect.class,
+                        orb: aspectDiff.toFixed(1),
                         exactness: effectiveOrb - aspectDiff,
                         applying: diff < aspect.angle // simplified
                     });
@@ -8312,6 +8313,7 @@ function calculateTransitsToNatal(transitDate, natalChart) {
                             symbol: aspect.symbol,
                             color: aspect.color,
                             class: aspect.class,
+                            orb: Math.abs(diff - aspect.angle).toFixed(1),
                             exactness: aspect.orb - Math.abs(diff - aspect.angle),
                             applying: false
                         });
@@ -8670,7 +8672,7 @@ function renderPersonalCalendar() {
         natalChart = profileChart ? JSON.parse(profileChart) : JSON.parse(localStorage.getItem('natalChart'));
     } catch(e) { natalChart = null; }
     // Force recalculation if chart was computed by an older engine version
-    const NATAL_ENGINE_VER = 'v161';
+    const NATAL_ENGINE_VER = 'v162';
     if (!natalChart || natalChart._engineVer !== NATAL_ENGINE_VER) {
         natalChart = calculateNatalChart(birthUTC);
         natalChart._engineVer = NATAL_ENGINE_VER;
@@ -8900,7 +8902,7 @@ function copyNatalChartForAI() {
     });
 
     if (natalChart.houses) {
-        text += `\nASC: ${natalChart.houses.ascFormatted} (${natalChart.houses.asc.toFixed(2)}°)\n`;
+        text += `\nASC: ${natalChart.houses.ascFormatted} (${natalChart.houses.ascendant.toFixed(2)}°)\n`;
         text += `MC: ${natalChart.houses.mcFormatted} (${natalChart.houses.mc.toFixed(2)}°)\n`;
         text += `\n--- CÚSPIDES DE CASAS (Equal) ---\n`;
         natalChart.houses.cusps.forEach((c, i) => {
@@ -9186,8 +9188,10 @@ function generateFullInterpretation(natalChart, natal, transitDate) {
     // ASC
     if (natalChart.houses) {
         text += `<div class="interp-section"><h4>⬆ ${L?'Ascendente':'Ascendant'}: ${natalChart.houses.ascFormatted}</h4>`;
-        const ascKey = getSignKey(natalChart.houses.asc);
-        text += `<p>${L ? 'Tu ascendente define tu máscara social y tu apariencia ante el mundo. Con ascendente en ' + signNames.es[signKeys.indexOf(ascKey)] + ', proyectas una imagen ' : 'Your ascendant defines your social mask. With ' + signNames.en[signKeys.indexOf(ascKey)] + ' rising, you project an image '}`;
+        const ascKey = getSignKey(natalChart.houses.ascendant);
+        const ascSignIdx = signKeys.indexOf(ascKey);
+        const ascSignName = ascSignIdx >= 0 ? (L ? signNames.es[ascSignIdx] : signNames.en[ascSignIdx]) : (L ? 'desconocido' : 'unknown');
+        text += `<p>${L ? 'Tu ascendente define tu máscara social y tu apariencia ante el mundo. Con ascendente en ' + ascSignName + ', proyectas una imagen ' : 'Your ascendant defines your social mask. With ' + ascSignName + ' rising, you project an image '}`;
         const ascTraits = { aries:{es:'enérgica, directa y valiente',en:'energetic, direct and brave'}, taurus:{es:'estable, sensual y confiable',en:'stable, sensual and reliable'}, gemini:{es:'curiosa, comunicativa y cambiante',en:'curious, communicative and changeable'}, cancer:{es:'protectora, empática y maternal',en:'protective, empathic and maternal'}, leo:{es:'magnética, orgullosa y dramática',en:'magnetic, proud and dramatic'}, virgo:{es:'ordenada, analítica y servicial',en:'orderly, analytical and helpful'}, libra:{es:'elegante, diplomática y encantadora',en:'elegant, diplomatic and charming'}, scorpio:{es:'intensa, magnética y misteriosa',en:'intense, magnetic and mysterious'}, sagittarius:{es:'aventurera, optimista y filosófica',en:'adventurous, optimistic and philosophical'}, capricorn:{es:'seria, madura y ambiciosa',en:'serious, mature and ambitious'}, aquarius:{es:'única, independiente y futurista',en:'unique, independent and futuristic'}, pisces:{es:'soñadora, empática y etérea',en:'dreamy, empathic and ethereal'}};
         text += `${ascTraits[ascKey]?.[lang] || ''}.</p></div>`;
     }
@@ -9258,7 +9262,7 @@ function answerNatalQuestion(question, natalChart, natal) {
     // Ascendant questions
     if (q.includes('ascend') || q.includes('asc') || q.includes('rising')) {
         if (natalChart.houses) {
-            const ascKey = getSignKey(natalChart.houses.asc);
+            const ascKey = getSignKey(natalChart.houses.ascendant);
             return `<h4>⬆ ${L?'Ascendente':'Ascendant'}: ${natalChart.houses.ascFormatted}</h4>
             <p>${L ? 'Tu ascendente es la máscara que presentas al mundo, tu primera impresión y tu cuerpo físico.' : 'Your ascendant is the mask you present to the world, your first impression and physical body.'}</p>`;
         }
@@ -12298,29 +12302,25 @@ window.deleteEventByIndex = deleteEvent;
 window.handleInterAspectClick = handleInterAspectClick;
 window.handleDayClick = handleDayClick;
 
-// ── Samsung Android fix: touch event delegation for day cells ──
-// On Samsung Galaxy S22 Ultra (Android 14), onclick on div elements becomes
-// unreliable after modal show/hide cycles. Touch event delegation bypasses this.
+// ── Samsung Android fix: detect stuck modals and clean up ──
+// On Samsung Galaxy S22 Ultra (Android 14), modals can get stuck open
+// after interaction, blocking all subsequent clicks. This watchdog
+// detects orphaned modal overlays and removes them.
 (function() {
-    function findDayCell(el) {
-        // Walk up to 5 levels to find the .day-cell parent
-        for (var i = 0; i < 5 && el; i++) {
-            if (el.classList && el.classList.contains('day-cell')) return el;
-            el = el.parentElement;
-        }
-        return null;
-    }
-    // Use touchend (not touchstart) to allow scrolling without triggering
-    document.addEventListener('touchend', function(e) {
-        // Ignore if a modal is currently shown (user is tapping modal, not calendar)
-        var modals = document.querySelectorAll('.modal.show');
-        if (modals.length > 0) return;
-        var cell = findDayCell(e.target);
-        if (cell && cell.dataset && cell.dataset.date) {
-            e.preventDefault();
-            handleDayClick(cell);
-        }
-    }, { passive: false });
+    // When user touches the screen and NO modal should be visible,
+    // force-close any that are still marked .show (stuck overlays)
+    document.addEventListener('click', function(e) {
+        // Only run if the click target is NOT inside a modal
+        if (e.target.closest && e.target.closest('.modal')) return;
+        // Check for stuck modals that might be blocking
+        var stuckModals = document.querySelectorAll('.modal.show');
+        stuckModals.forEach(function(m) {
+            // If a modal is .show but the user managed to click outside it,
+            // that means it's in a broken state — force close it
+            console.log('Closing stuck modal:', m.id);
+            m.classList.remove('show');
+        });
+    }, true); // capture phase to run before other handlers
 })();
 window.toggleEventComplete = toggleEventComplete;
 window.switchToLunarMode = switchToLunarMode;
@@ -13552,7 +13552,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with force-update mechanism
-const APP_VERSION = 'v161';
+const APP_VERSION = 'v162';
 if ('serviceWorker' in navigator) {
     // Force update: check for new SW on every page load
     navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
