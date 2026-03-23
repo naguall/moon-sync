@@ -5081,6 +5081,17 @@ function showNatalDetail(type, data) {
     const L = currentLang === 'es';
     let html = '';
 
+    // Planet names — available to ALL branches (planet, house, aspect, transit)
+    const planetNamesLocal = {
+        'sun': L ? 'Sol' : 'Sun', 'moon': L ? 'Luna' : 'Moon',
+        'mercury': L ? 'Mercurio' : 'Mercury', 'venus': 'Venus',
+        'mars': L ? 'Marte' : 'Mars', 'jupiter': L ? 'Júpiter' : 'Jupiter',
+        'saturn': L ? 'Saturno' : 'Saturn', 'uranus': L ? 'Urano' : 'Uranus',
+        'neptune': L ? 'Neptuno' : 'Neptune', 'pluto': L ? 'Plutón' : 'Pluto',
+        'chiron': L ? 'Quirón' : 'Chiron', 'northnode': L ? 'Nodo Norte' : 'North Node',
+        'lilith': 'Lilith', 'ASC': 'ASC', 'MC': 'MC'
+    };
+
     // Get interpretation data from deep analysis functions
     const sunSign = {
         'Aries':L?'Tu esencia vital arde con fuego cardinal. Eres un iniciador nato, con una necesidad profunda de afirmar tu individualidad. Tu ego se fortalece a través de la acción directa y el coraje. Tienes una personalidad magnética que inspira a otros a actuar. El desafío kármico es aprender paciencia y considerar a los demás antes de lanzarte.':'Your vital essence burns with cardinal fire. You are a natural initiator with a deep need to assert your individuality. Your ego strengthens through direct action and courage. You have a magnetic personality that inspires others to act. The karmic challenge is learning patience and considering others before charging ahead.',
@@ -5294,21 +5305,6 @@ function showNatalDetail(type, data) {
 
     if (type === 'planet' && globalNatalChart && globalNatalChart.planets) {
         const planetData = globalNatalChart.planets[data];
-        const planetNamesLocal = {
-            'sun': L ? 'Sol' : 'Sun',
-            'moon': L ? 'Luna' : 'Moon',
-            'mercury': L ? 'Mercurio' : 'Mercury',
-            'venus': 'Venus',
-            'mars': L ? 'Marte' : 'Mars',
-            'jupiter': L ? 'Júpiter' : 'Jupiter',
-            'saturn': L ? 'Saturno' : 'Saturn',
-            'uranus': L ? 'Urano' : 'Uranus',
-            'neptune': L ? 'Neptuno' : 'Neptune',
-            'pluto': L ? 'Plutón' : 'Pluto',
-            'chiron': L ? 'Quirón' : 'Chiron',
-            'northnode': L ? 'Nodo Norte' : 'North Node',
-            'lilith': L ? 'Lilith' : 'Lilith'
-        };
 
         const houseNum = globalNatalChart.houses ? getHouseForLongitude(planetData.longitude, globalNatalChart.houses.cusps) : '-';
         titleEl.textContent = (planetNamesLocal[data] || data) + ' ' + (planetSymbols[data] || '');
@@ -5357,6 +5353,28 @@ function showNatalDetail(type, data) {
         html += '<p style="line-height:1.6;font-size:0.9em;">' + (houseDeep[houseNum] || (L ? 'Casa ' + houseNum : 'House ' + houseNum)) + '</p>';
         html += '</div>';
 
+        // Sign on cusp interpretation
+        var signOnCusp = {
+            'Aries':L?'Con Aries en esta cúspide, abordas este área de vida con iniciativa, valentía y energía directa. Eres pionero aquí, actúas primero y piensas después. Necesitas independencia en estos temas.':'With Aries on this cusp, you approach this life area with initiative, courage and direct energy. You are a pioneer here, acting first and thinking later. You need independence in these matters.',
+            'Tauro':L?'Con Tauro en esta cúspide, buscas estabilidad, seguridad y placer en este área. Tu enfoque es paciente y persistente. Valoras lo tangible y construyes lentamente pero con solidez.':'With Taurus on this cusp, you seek stability, security and pleasure in this area. Your approach is patient and persistent. You value the tangible and build slowly but solidly.',
+            'Géminis':L?'Con Géminis en esta cúspide, abordas este área con curiosidad mental y versatilidad. Comunicación y aprendizaje son claves aquí. Necesitas variedad e intercambio intelectual.':'With Gemini on this cusp, you approach this area with mental curiosity and versatility. Communication and learning are key here. You need variety and intellectual exchange.',
+            'Cáncer':L?'Con Cáncer en esta cúspide, tu enfoque es emocional, protector e intuitivo. Buscas seguridad emocional aquí. Cuidas y nutres todo lo relacionado con estos temas.':'With Cancer on this cusp, your approach is emotional, protective and intuitive. You seek emotional security here. You care for and nurture everything related to these matters.',
+            'Leo':L?'Con Leo en esta cúspide, brillas con creatividad y generosidad en este área. Buscas reconocimiento y expresión personal. Tu liderazgo natural se manifiesta aquí.':'With Leo on this cusp, you shine with creativity and generosity in this area. You seek recognition and personal expression. Your natural leadership manifests here.',
+            'Virgo':L?'Con Virgo en esta cúspide, tu enfoque es analítico, práctico y perfeccionista. Buscas mejorar y servir en este área. Atención al detalle y eficiencia son tu marca.':'With Virgo on this cusp, your approach is analytical, practical and perfectionist. You seek to improve and serve in this area. Attention to detail and efficiency are your mark.',
+            'Libra':L?'Con Libra en esta cúspide, buscas equilibrio, armonía y justicia en este área. Las relaciones y la estética son importantes aquí. Tu enfoque es diplomático y cooperativo.':'With Libra on this cusp, you seek balance, harmony and justice in this area. Relationships and aesthetics are important here. Your approach is diplomatic and cooperative.',
+            'Escorpio':L?'Con Escorpio en esta cúspide, tu enfoque es intenso, profundo y transformador. Buscas la verdad oculta en este área. Poder, regeneración y pasión marcan estos temas.':'With Scorpio on this cusp, your approach is intense, deep and transformative. You seek hidden truth in this area. Power, regeneration and passion mark these matters.',
+            'Sagitario':L?'Con Sagitario en esta cúspide, buscas expansión, aventura y significado en este área. Tu enfoque es optimista y filosófico. Necesitas libertad y crecimiento aquí.':'With Sagittarius on this cusp, you seek expansion, adventure and meaning in this area. Your approach is optimistic and philosophical. You need freedom and growth here.',
+            'Capricornio':L?'Con Capricornio en esta cúspide, tu enfoque es ambicioso, estructurado y disciplinado. Buscas logros duraderos aquí. Responsabilidad y madurez marcan este área.':'With Capricorn on this cusp, your approach is ambitious, structured and disciplined. You seek lasting achievements here. Responsibility and maturity mark this area.',
+            'Acuario':L?'Con Acuario en esta cúspide, tu enfoque es innovador, independiente y humanitario. Buscas originalidad y libertad en este área. Rompes esquemas convencionales aquí.':'With Aquarius on this cusp, your approach is innovative, independent and humanitarian. You seek originality and freedom in this area. You break conventional patterns here.',
+            'Piscis':L?'Con Piscis en esta cúspide, tu enfoque es intuitivo, compasivo y espiritual. Buscas trascendencia y conexión mística en este área. Sensibilidad y creatividad fluyen aquí.':'With Pisces on this cusp, your approach is intuitive, compassionate and spiritual. You seek transcendence and mystical connection in this area. Sensitivity and creativity flow here.'
+        };
+        if (signOnCusp[info.sign]) {
+            html += '<div style="margin-bottom:15px;">';
+            html += '<h4 style="color:#c9a840;margin-bottom:8px;">' + (L ? '♈ ' + info.sign + ' en la Cúspide' : '♈ ' + info.sign + ' on the Cusp') + '</h4>';
+            html += '<p style="line-height:1.6;font-size:0.9em;">' + signOnCusp[info.sign] + '</p>';
+            html += '</div>';
+        }
+
         // Show planets in this house
         let planetsInHouse = [];
         Object.entries(globalNatalChart.planets).forEach(function(entry) {
@@ -5395,10 +5413,79 @@ function showNatalDetail(type, data) {
             html += '<div style="font-size:0.9em;"><strong>' + (L ? 'Planetas:' : 'Planets:') + '</strong> ' + (planetSymbols[aspect.planet1] || '') + ' ' + planet1Name + ' — ' + (planetSymbols[aspect.planet2] || '') + ' ' + planet2Name + '</div>';
             html += '</div>';
 
-            html += '<div>';
+            // Generic aspect meaning
+            html += '<div style="margin-bottom:15px;">';
             html += '<h4 style="color:' + aspect.aspect.color + ';margin-bottom:8px;">' + (L ? '✦ Significado del Aspecto' : '✦ Aspect Meaning') + '</h4>';
             html += '<p style="line-height:1.6;font-size:0.9em;">' + (aspectMeanings[aspect.aspect.name] || (L ? 'Interpretación no disponible' : 'Interpretation not available')) + '</p>';
             html += '</div>';
+
+            // Specific planet-pair interpretation
+            var pairInterp = {
+                'sun-moon':L?'Sol-Luna: la relación entre tu identidad consciente y tu mundo emocional. Define cómo tu voluntad y tus sentimientos se integran o entran en conflicto. Es la base de tu personalidad completa.':'Sun-Moon: the relationship between your conscious identity and emotional world. Defines how your will and feelings integrate or conflict. The foundation of your complete personality.',
+                'sun-mercury':L?'Sol-Mercurio: conexión entre tu identidad y tu mente. Define tu estilo de pensamiento y comunicación personal. Tu intelecto al servicio de tu propósito vital.':'Sun-Mercury: connection between identity and mind. Defines your thinking style and personal communication. Your intellect serving your vital purpose.',
+                'sun-venus':L?'Sol-Venus: relación entre tu ser esencial y tus valores, amor y estética. Define cómo atraes y qué valoras. Tu capacidad de dar y recibir amor.':'Sun-Venus: relationship between your essential self and values, love and aesthetics. Defines how you attract and what you value. Your capacity for giving and receiving love.',
+                'sun-mars':L?'Sol-Marte: tu voluntad y tu acción. Define tu energía vital, ambición y capacidad de lucha. Cómo persigues tus objetivos y te defiendes.':'Sun-Mars: your will and action. Defines your vital energy, ambition and fighting capacity. How you pursue goals and defend yourself.',
+                'sun-jupiter':L?'Sol-Júpiter: expansión de tu identidad. Optimismo, fe y crecimiento personal. Tu capacidad de ver el panorama general y generar abundancia.':'Sun-Jupiter: expansion of your identity. Optimism, faith and personal growth. Your ability to see the big picture and generate abundance.',
+                'sun-saturn':L?'Sol-Saturno: tu identidad frente a la disciplina y los límites. Define tu madurez, responsabilidad y relación con la autoridad. Logros ganados con esfuerzo.':'Sun-Saturn: your identity facing discipline and limits. Defines maturity, responsibility and relationship with authority. Achievements earned through effort.',
+                'sun-uranus':L?'Sol-Urano: tu individualidad radical. Define tu originalidad, rebeldía e innovación. Necesidad de libertad y autenticidad absoluta.':'Sun-Uranus: your radical individuality. Defines originality, rebellion and innovation. Need for freedom and absolute authenticity.',
+                'sun-neptune':L?'Sol-Neptuno: tu identidad espiritual y creativa. Sensibilidad artística, intuición y conexión mística. Riesgo de confusión pero don para la inspiración.':'Sun-Neptune: your spiritual and creative identity. Artistic sensitivity, intuition and mystical connection. Risk of confusion but gift for inspiration.',
+                'sun-pluto':L?'Sol-Plutón: poder transformador intenso. Tu identidad pasa por muertes y renacimientos. Magnetismo, control y capacidad de regeneración profunda.':'Sun-Pluto: intense transformative power. Your identity passes through deaths and rebirths. Magnetism, control and deep regeneration capacity.',
+                'moon-mercury':L?'Luna-Mercurio: conexión emocional-mental. Piensas con el corazón o racionalizas sentimientos. Comunicación emotiva. Memoria ligada a emociones.':'Moon-Mercury: emotional-mental connection. You think with the heart or rationalize feelings. Emotive communication. Memory linked to emotions.',
+                'moon-venus':L?'Luna-Venus: armonía emocional y afectiva. Amor dulce y necesidad de belleza. Sensibilidad artística innata. Relaciones nutridas por ternura.':'Moon-Venus: emotional and affective harmony. Sweet love and need for beauty. Innate artistic sensitivity. Relationships nurtured by tenderness.',
+                'moon-mars':L?'Luna-Mars: emociones intensas y reactivas. Pasión emocional que impulsa a la acción. Valentía sentimental pero riesgo de impulsividad.':'Moon-Mars: intense and reactive emotions. Emotional passion driving action. Sentimental courage but risk of impulsiveness.',
+                'moon-jupiter':L?'Luna-Júpiter: generosidad emocional y optimismo sentimental. Fe en la vida y capacidad de nutrir. Expansión a través del cuidado.':'Moon-Jupiter: emotional generosity and sentimental optimism. Faith in life and nurturing capacity. Expansion through care.',
+                'moon-saturn':L?'Luna-Saturno: emociones contenidas y madurez emocional. Responsabilidad afectiva. Miedos emocionales que se superan con el tiempo. Fortaleza interior.':'Moon-Saturn: contained emotions and emotional maturity. Affective responsibility. Emotional fears overcome with time. Inner strength.',
+                'moon-uranus':L?'Luna-Urano: emociones impredecibles y necesidad de libertad emocional. Intuición eléctrica. Cambios emocionales súbitos. Originalidad en la vida íntima.':'Moon-Uranus: unpredictable emotions and need for emotional freedom. Electric intuition. Sudden emotional changes. Originality in intimate life.',
+                'moon-neptune':L?'Luna-Neptuno: sensibilidad psíquica extraordinaria. Emociones oceánicas y permeables. Intuición mística. Riesgo de confusión emocional pero don artístico.':'Moon-Neptune: extraordinary psychic sensitivity. Oceanic and permeable emotions. Mystical intuition. Risk of emotional confusion but artistic gift.',
+                'moon-pluto':L?'Luna-Plutón: emociones intensas y transformadoras. Psique poderosa que siente todo profundamente. Capacidad de regeneración emocional. Relaciones kármicas.':'Moon-Pluto: intense transformative emotions. Powerful psyche feeling everything deeply. Emotional regeneration capacity. Karmic relationships.',
+                'mercury-venus':L?'Mercurio-Venus: mente artística y comunicación encantadora. Talento para escribir, cantar o la diplomacia. Pensamiento estético.':'Mercury-Venus: artistic mind and charming communication. Talent for writing, singing or diplomacy. Aesthetic thinking.',
+                'mercury-mars':L?'Mercurio-Marte: mente aguda y combativa. Comunicación directa y a veces cortante. Pensamiento rápido y estratégico. Debates y polémica.':'Mercury-Mars: sharp, combative mind. Direct and sometimes cutting communication. Quick strategic thinking. Debates and controversy.',
+                'mercury-jupiter':L?'Mercurio-Júpiter: mente expansiva y filosófica. Comunicación inspiradora. Facilidad para idiomas y enseñanza. Pensamiento global.':'Mercury-Jupiter: expansive philosophical mind. Inspiring communication. Facility for languages and teaching. Global thinking.',
+                'mercury-saturn':L?'Mercurio-Saturno: mente disciplinada y profunda. Pensamiento estructurado. Comunicación seria y autorizada. Logros intelectuales duraderos.':'Mercury-Saturn: disciplined deep mind. Structured thinking. Serious authoritative communication. Lasting intellectual achievements.',
+                'venus-mars':L?'Venus-Marte: pasión amorosa intensa. Atracción magnética entre lo femenino y masculino interior. Creatividad fogosa. Sexualidad vibrante.':'Venus-Mars: intense love passion. Magnetic attraction between inner feminine and masculine. Fiery creativity. Vibrant sexuality.',
+                'venus-jupiter':L?'Venus-Júpiter: amor expansivo y generoso. Suerte en relaciones y finanzas. Gusto por el lujo y la abundancia. Optimismo afectivo.':'Venus-Jupiter: expansive generous love. Luck in relationships and finances. Taste for luxury and abundance. Affective optimism.',
+                'venus-saturn':L?'Venus-Saturno: amor maduro y comprometido. Relaciones con estructura y lealtad. Dificultad para expresar afecto pero duración y fidelidad.':'Venus-Saturn: mature committed love. Relationships with structure and loyalty. Difficulty expressing affection but duration and fidelity.',
+                'mars-jupiter':L?'Marte-Júpiter: energía expansiva y acción afortunada. Entusiasmo contagioso. Éxito en deportes y empresas. Valentía con buena estrella.':'Mars-Jupiter: expansive energy and fortunate action. Contagious enthusiasm. Success in sports and enterprise. Courage with good fortune.',
+                'mars-saturn':L?'Marte-Saturno: acción disciplinada y resistencia. Fuerza controlada. Ambición con estrategia. Logros difíciles pero permanentes.':'Mars-Saturn: disciplined action and endurance. Controlled strength. Ambition with strategy. Difficult but permanent achievements.',
+                'jupiter-saturn':L?'Júpiter-Saturno: expansión con estructura. Equilibrio entre optimismo y realismo. Crecimiento sostenible. Sabiduría práctica.':'Jupiter-Saturn: expansion with structure. Balance between optimism and realism. Sustainable growth. Practical wisdom.',
+                'sun-chiron':L?'Sol-Quirón: tu identidad marcada por una herida profunda que se transforma en don de sanación. El dolor te convierte en maestro y curador.':'Sun-Chiron: your identity marked by a deep wound transforming into a healing gift. Pain turns you into teacher and healer.',
+                'moon-chiron':L?'Luna-Quirón: herida emocional profunda con capacidad de sanar a otros emocionalmente. Sensibilidad que transforma el sufrimiento en compasión.':'Moon-Chiron: deep emotional wound with capacity to heal others emotionally. Sensitivity transforming suffering into compassion.',
+                'venus-pluto':L?'Venus-Plutón: amor intenso y transformador. Atracción magnética irresistible. Relaciones profundas que cambian la vida. Pasión que regenera.':'Venus-Pluto: intense transformative love. Irresistible magnetic attraction. Deep life-changing relationships. Passion that regenerates.',
+                'mars-pluto':L?'Marte-Plutón: poder de acción extraordinario. Voluntad de hierro. Capacidad de transformar cualquier situación. Fuerza regenerativa intensa.':'Mars-Pluto: extraordinary action power. Iron will. Capacity to transform any situation. Intense regenerative force.'
+            };
+
+            // Try both key orders
+            var key1 = aspect.planet1 + '-' + aspect.planet2;
+            var key2 = aspect.planet2 + '-' + aspect.planet1;
+            var pairText = pairInterp[key1] || pairInterp[key2] || '';
+
+            if (pairText) {
+                html += '<div style="margin-bottom:15px;">';
+                html += '<h4 style="color:#c9a840;margin-bottom:8px;">' + (L ? '🪐 Interpretación Específica' : '🪐 Specific Interpretation') + '</h4>';
+                html += '<p style="line-height:1.6;font-size:0.9em;">' + pairText + '</p>';
+                html += '</div>';
+            }
+
+            // Effect of this aspect type on this pair
+            var aspectEffect = '';
+            var aName = aspect.aspect.name;
+            if (aName === 'Conjunction') {
+                aspectEffect = L ? 'En conjunción, estas energías se fusionan y amplifican mutuamente. El efecto es poderoso y concentrado.' : 'In conjunction, these energies merge and mutually amplify. The effect is powerful and concentrated.';
+            } else if (aName === 'Opposition') {
+                aspectEffect = L ? 'En oposición, estas energías crean tensión que demanda equilibrio. La consciencia surge del contraste entre ambas fuerzas.' : 'In opposition, these energies create tension demanding balance. Awareness arises from the contrast between both forces.';
+            } else if (aName === 'Trine') {
+                aspectEffect = L ? 'En trígono, estas energías fluyen armoniosamente. Talento natural que se expresa con facilidad y gracia.' : 'In trine, these energies flow harmoniously. Natural talent expressing with ease and grace.';
+            } else if (aName === 'Square') {
+                aspectEffect = L ? 'En cuadratura, estas energías generan fricción creativa. El desafío impulsa crecimiento y desarrollo de carácter.' : 'In square, these energies generate creative friction. The challenge drives growth and character development.';
+            } else if (aName === 'Sextile') {
+                aspectEffect = L ? 'En sextil, estas energías cooperan cuando las activas conscientemente. Oportunidad que requiere tu participación.' : 'In sextile, these energies cooperate when you consciously activate them. Opportunity requiring your participation.';
+            }
+            if (aspectEffect) {
+                html += '<div>';
+                html += '<h4 style="color:' + aspect.aspect.color + ';margin-bottom:8px;">' + (L ? '⚡ Efecto del ' + aName : '⚡ Effect of ' + aName) + '</h4>';
+                html += '<p style="line-height:1.6;font-size:0.9em;">' + aspectEffect + '</p>';
+                html += '</div>';
+            }
         }
 
     } else if (type === 'transit') {
@@ -9876,44 +9963,84 @@ function drawNatalPieCharts() {
 }
 
 function drawPieChart(canvasId, data) {
+    // Replace canvas with SVG donut chart for crisp rendering on all screens
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
-    var ctx = canvas.getContext('2d');
-    var w = canvas.width, h = canvas.height;
-    var cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 10;
     var total = 0;
     data.forEach(function(d) { total += d.value; });
     if (total === 0) return;
-    ctx.clearRect(0, 0, w, h);
-    var startAngle = -Math.PI / 2;
-    data.forEach(function(d) {
-        var sliceAngle = (d.value / total) * 2 * Math.PI;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, r, startAngle, startAngle + sliceAngle);
-        ctx.closePath();
-        ctx.fillStyle = d.color;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+
+    var size = 220;
+    var cx = size / 2, cy = size / 2;
+    var outerR = 100, innerR = 45; // Donut shape
+    var svg = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" xmlns="http://www.w3.org/2000/svg">';
+
+    // Background glow
+    svg += '<defs>';
+    data.forEach(function(d, i) {
+        svg += '<linearGradient id="grad' + canvasId + i + '" x1="0%" y1="0%" x2="100%" y2="100%">';
+        svg += '<stop offset="0%" style="stop-color:' + d.color + ';stop-opacity:1"/>';
+        svg += '<stop offset="100%" style="stop-color:' + d.color + ';stop-opacity:0.7"/>';
+        svg += '</linearGradient>';
+    });
+    svg += '<filter id="glow' + canvasId + '"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+    svg += '</defs>';
+
+    var startAngle = -90; // Start from top
+    data.forEach(function(d, i) {
+        var sliceAngle = (d.value / total) * 360;
+        if (sliceAngle === 0) return;
+
+        var startRad = startAngle * Math.PI / 180;
+        var endRad = (startAngle + sliceAngle) * Math.PI / 180;
+        var largeArc = sliceAngle > 180 ? 1 : 0;
+
+        var x1o = cx + outerR * Math.cos(startRad);
+        var y1o = cy + outerR * Math.sin(startRad);
+        var x2o = cx + outerR * Math.cos(endRad);
+        var y2o = cy + outerR * Math.sin(endRad);
+        var x1i = cx + innerR * Math.cos(endRad);
+        var y1i = cy + innerR * Math.sin(endRad);
+        var x2i = cx + innerR * Math.cos(startRad);
+        var y2i = cy + innerR * Math.sin(startRad);
+
+        var path = 'M ' + x1o + ' ' + y1o +
+            ' A ' + outerR + ' ' + outerR + ' 0 ' + largeArc + ' 1 ' + x2o + ' ' + y2o +
+            ' L ' + x1i + ' ' + y1i +
+            ' A ' + innerR + ' ' + innerR + ' 0 ' + largeArc + ' 0 ' + x2i + ' ' + y2i +
+            ' Z';
+
+        svg += '<path d="' + path + '" fill="url(#grad' + canvasId + i + ')" stroke="rgba(0,0,0,0.25)" stroke-width="1.5" filter="url(#glow' + canvasId + ')"/>';
+
         // Label
-        if (d.value > 0) {
-            var midAngle = startAngle + sliceAngle / 2;
-            var lx = cx + (r * 0.65) * Math.cos(midAngle);
-            var ly = cy + (r * 0.65) * Math.sin(midAngle);
-            var pct = ((d.value / total) * 100).toFixed(1) + '%';
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 13px system-ui';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.shadowColor = 'rgba(0,0,0,0.7)';
-            ctx.shadowBlur = 4;
-            ctx.fillText(pct, lx, ly);
-            ctx.shadowBlur = 0;
+        var midAngle = (startAngle + sliceAngle / 2) * Math.PI / 180;
+        var labelR = (outerR + innerR) / 2;
+        var lx = cx + labelR * Math.cos(midAngle);
+        var ly = cy + labelR * Math.sin(midAngle);
+        var pct = ((d.value / total) * 100).toFixed(1) + '%';
+
+        svg += '<text x="' + lx + '" y="' + (ly + 1) + '" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="13" font-weight="700" font-family="system-ui,sans-serif" style="text-shadow:0 1px 3px rgba(0,0,0,0.8);">' + pct + '</text>';
+
+        // Label name (below percentage for larger slices)
+        if (sliceAngle > 50) {
+            var nlx = cx + labelR * Math.cos(midAngle);
+            var nly = cy + labelR * Math.sin(midAngle) + 14;
+            svg += '<text x="' + nlx + '" y="' + nly + '" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.7)" font-size="9" font-weight="500" font-family="system-ui,sans-serif">' + d.label + '</text>';
         }
+
         startAngle += sliceAngle;
     });
+
+    // Center circle with subtle gradient
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + innerR + '" fill="rgba(15,10,35,0.95)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>';
+
+    svg += '</svg>';
+
+    // Replace canvas with SVG
+    var container = document.createElement('div');
+    container.innerHTML = svg;
+    container.style.maxWidth = size + 'px';
+    canvas.parentNode.replaceChild(container, canvas);
 }
 
 // ===== NATAL WHEEL CHART =====
@@ -10735,7 +10862,7 @@ function renderPersonalCalendar() {
         natalChart = profileChart ? JSON.parse(profileChart) : JSON.parse(localStorage.getItem('natalChart'));
     } catch(e) { natalChart = null; }
     // Force recalculation if chart was computed by an older engine version
-    const NATAL_ENGINE_VER = 'v166b';
+    const NATAL_ENGINE_VER = 'v167';
     if (!natalChart || natalChart._engineVer !== NATAL_ENGINE_VER) {
         natalChart = calculateNatalChart(birthUTC);
         natalChart._engineVer = NATAL_ENGINE_VER;
