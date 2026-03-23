@@ -413,7 +413,6 @@
         /* Solar mode */
         body.solar-mode { background: radial-gradient(ellipse 70% 50% at 20% 15%, rgba(90,55,0,0.55) 0%, transparent 55%), radial-gradient(ellipse 55% 45% at 80% 80%, rgba(70,35,0,0.50) 0%, transparent 55%), linear-gradient(170deg, #0e0700 0%, #180e00 40%, #0e0700 100%); }
         body.solar-mode .lunar-week { background: rgba(18,11,2,0.95); border-color: rgba(212,175,55,0.18) !important; border-left-color: rgba(212,175,55,0.50) !important; }
-        body.solar-mode .lunar-week > div:not(.week-header) { display: flex !important; gap: 5px; overflow-x: auto; }
         body.solar-mode .day-cell { background: rgba(14,9,2,0.95); border: 1px solid rgba(212,175,55,0.16); min-width: 0; min-height: 110px; }
         body.solar-mode .day-cell:hover { background: rgba(22,14,2,0.98); border-color: rgba(212,175,55,0.38); }
         body.solar-mode .day-cell.today, body.solar-mode .day-cell.today.weekend { background: linear-gradient(160deg, rgba(45,32,5,0.98) 0%, rgba(30,20,3,0.98) 100%) !important; border: 1px solid rgba(201,168,64,0.60) !important; border-top: 3px solid #c9a840 !important; box-shadow: 0 0 22px rgba(201,168,64,0.25), inset 0 1px 0 rgba(201,168,64,0.20) !important; }
@@ -697,8 +696,88 @@
 
         <div id="lunarInfoBanner" style="display:none; margin-bottom: 6px;"></div>
 
+        <div class="legend" id="planetaryAspectsSection">
+            <h3 id="planetaryAspectsTitle">🪐 Aspectos Planetarios 2026</h3>
+            <p id="planetaryAspectsSubtitle" style="font-size: 0.9em; color: #a8b2d1; margin-bottom: 15px;">
+                Haz click en un planeta para ver todos sus aspectos durante el año
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                <button onclick="openLunarCalendar2026()" class="planet-btn" style="background: rgba(126, 200, 255, 0.2); border: 2px solid #7ec8ff; color: #7ec8ff; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span id="planetBtn-Luna">☽ Luna</span>
+                </button>
+                <button onclick="showPlanetAspects('Sol', '☉', '#FFD700')" class="planet-btn" style="background: rgba(255, 215, 0, 0.2); border: 2px solid #FFD700; color: #FFD700; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span id="planetBtn-Sol">☉ Sol</span>
+                </button>
+                <button onclick="showPlanetAspects('Mercurio', '☿', '#f39c12')" class="planet-btn" style="background: rgba(243, 156, 18, 0.2); border: 2px solid #f39c12; color: #f39c12; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span id="planetBtn-Mercurio">☿ Mercurio</span>
+                </button>
+                <button onclick="showPlanetAspects('Venus', '♀', '#e91e63')" class="planet-btn" style="background: rgba(233, 30, 99, 0.2); border: 2px solid #e91e63; color: #e91e63; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span id="planetBtn-Venus">♀ Venus</span>
+                </button>
+                <button onclick="showPlanetAspects('Marte', '♂', '#ff6b6b')" class="planet-btn" style="background: rgba(255, 107, 107, 0.2); border: 2px solid #ff6b6b; color: #ff6b6b; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span id="planetBtn-Marte">♂ Marte</span>
+                </button>
+                <button onclick="showPlanetAspects('Júpiter', '♃', '#9b59b6')" class="planet-btn" style="background: rgba(155, 89, 182, 0.2); border: 2px solid #9b59b6; color: #9b59b6; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span id="planetBtn-Júpiter">♃ Júpiter</span>
+                </button>
+                <button onclick="showPlanetAspects('Saturno', '♄', '#3498db')" class="planet-btn" style="background: rgba(52, 152, 219, 0.2); border: 2px solid #3498db; color: #3498db; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span id="planetBtn-Saturno">♄ Saturno</span>
+                </button>
+                <button onclick="showPlanetAspects('Urano', '♅', '#1abc9c')" class="planet-btn" style="background: rgba(26, 188, 156, 0.2); border: 2px solid #1abc9c; color: #1abc9c; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span id="planetBtn-Urano">♅ Urano</span>
+                </button>
+                <button onclick="showPlanetAspects('Neptuno', '♆', '#5dade2')" class="planet-btn" style="background: rgba(93, 173, 226, 0.2); border: 2px solid #5dade2; color: #5dade2; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span id="planetBtn-Neptuno">♆ Neptuno</span>
+                </button>
+                <button onclick="showPlanetAspects('Plutón', '♇', '#7f8c8d')" class="planet-btn" style="background: rgba(127, 140, 141, 0.2); border: 2px solid #7f8c8d; color: #7f8c8d; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span id="planetBtn-Plutón">♇ Plutón</span>
+                </button>
+                <button onclick="showMajorAspectsModal()" class="planet-btn" style="background: rgba(233, 30, 99, 0.3); border: 2px solid #e91e63; color: #ff69b4; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span id="majorAspectsBtn">⭐ Aspectos Mayores</span>
+                </button>
+                <button onclick="showHistoricAspectsModal()" class="planet-btn" style="background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(231,76,60,0.25)); border: 2px solid #e8c84a; color: #e8c84a; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">
+                    <span>🏛️ Eventos 2026</span>
+                </button>
+            </div>
+            <div id="aspectsLegendDiv" style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; font-size: 0.85em; color: #a8b2d1;">
+                <strong>Leyenda de Aspectos:</strong><br>
+                ☌ Conjunción (0°) • ⚹ Sextil (60°) • □ Cuadratura (90°) • △ Trígono (120°) • ☍ Oposición (180°)
+            </div>
+        </div>
     </div>
 
+    <!-- Modal de Aspectos del Planeta -->
+    <div id="planetAspectsModal" class="modal" onclick="if(event.target===this)closePlanetAspectsModal()">
+        <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2 id="planetAspectsTitle">Aspectos del Planeta</h2>
+                <span class="close" onclick="closePlanetAspectsModal()">&times;</span>
+            </div>
+            <div id="planetAspectsBody" style="padding: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Aspectos Mayores -->
+    <div id="majorAspectsModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2 id="majorAspectsTitle">⭐ Aspectos Mayores 2026</h2>
+                <span class="close" onclick="closeMajorAspectsModal()">&times;</span>
+            </div>
+            <div id="majorAspectsBody" style="padding: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Eventos Extraordinarios -->
+    <div id="historicAspectsModal" class="modal" onclick="if(event.target===this)closeHistoricAspectsModal()">
+        <div class="modal-content" style="max-width: 750px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2 id="historicAspectsTitle">🏛️ Eventos Extraordinarios 2026</h2>
+                <span class="close" onclick="closeHistoricAspectsModal()">&times;</span>
+            </div>
+            <div id="historicAspectsBody" style="padding: 15px;"></div>
+        </div>
+    </div>
 
     <!-- Modal de Opciones del Día -->
     <div id="dayOptionsModal" class="modal" onclick="if(event.target===this)closeDayOptionsModal()"
@@ -945,6 +1024,18 @@
         </div>
     </div>
 
+    <!-- Modal de Detalle Natal -->
+    <div id="natalDetailModal" class="modal" onclick="if(event.target===this)closeNatalDetailModal()">
+        <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2 id="natalDetailTitle">Detalle</h2>
+                <span class="close" onclick="closeNatalDetailModal()">&times;</span>
+            </div>
+            <div id="natalDetailBody" style="padding: 20px;">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+    </div>
 
     <script>
 // ==============================================
@@ -1229,6 +1320,16 @@ function getPlanetPosition(planet, date) {
         lon += -0.01097 * Math.sin((Mj * 2 + 238) * dr);
         lon += -0.00714 * Math.sin(Mm * dr);
         lon += 0.00395 * Math.sin((Ms + 140) * dr);
+        lon = ((lon % 360) + 360) % 360;
+        return lon;
+    }
+
+    // North Node (Mean Lunar Node)
+    if (planet === 'northnode') {
+        // Formula: northNode = 125.0445 - 1934.1362 * T (mod 360)
+        // T = Julian centuries from J2000 = (JD - 2451545.0) / 36525.0
+        const T = (jd - 2451545.0) / 36525.0;
+        let lon = 125.0445 - 1934.1362 * T;
         lon = ((lon % 360) + 360) % 360;
         return lon;
     }
@@ -2134,10 +2235,61 @@ const stelliums2026 = [
 ];
 
 // ASPECTOS INTERPLANETARIOS 2026 (Fuente: CHANI.com - Verificado)
-const interPlanetaryAspects2026 = [];
+const interPlanetaryAspects2026 = [
+    // ENERO
+    { date: crDate('2026-01-09'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'oposición', symbol: '☍', degrees: '20°11', signs: 'Capricornio/Cáncer', color: '#e74c3c', time: '09:36', meaning: 'Tensión entre el principio relacional y el expansivo. Búsqueda de equilibrio entre estructura afectiva y crecimiento emocional.' },
+    { date: crDate('2026-01-19'), planet1: 'Saturno', planet2: 'Urano', aspect: 'sextil', symbol: '⚹', degrees: '27°33', signs: 'Piscis/Tauro', color: '#3498db', time: '21:53', meaning: 'Oportunidad de integración entre estructura y cambio. Lo establecido puede abrirse a lo nuevo sin ruptura.' },
+    { date: crDate('2026-01-27'), planet1: 'Marte', planet2: 'Plutón', aspect: 'conjunción', symbol: '☌', degrees: '3°34', signs: 'Acuario', color: '#e74c3c', time: '15:00', isImportant: true, badgeInfo: 'Ocurre cada ~2 años. Marte activa la energía transformadora de Plutón.', meaning: 'Encuentro intenso entre voluntad marcial y transformación plutoniana. Poder concentrado. Posibilidad de acción profunda o confrontación con lo que debe morir.' },
+    // FEBRERO
+    { date: crDate('2026-02-20'), planet1: 'Saturno', planet2: 'Neptuno', aspect: 'conjunción', symbol: '☌', degrees: '0°44', signs: 'Aries', color: '#9b59b6', time: '07:24', isMajor: true, badgeInfo: 'Ocurre cada ~36 años. Última vez: 1989. Define ciclos históricos y culturales enteros.', meaning: 'Encuentro entre estructura saturnina y disolución neptuniana. El límite se encuentra con lo ilimitado. Disponibilidad para dar forma a lo intangible. Tensión entre disciplina y rendición.' },
+    { date: crDate('2026-02-22'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'trígono', symbol: '△', degrees: '15°31', signs: 'Piscis/Cáncer', color: '#2ecc71', time: '12:02', meaning: 'Flujo entre principio relacional y expansivo. Energía disponible para amplificación de vínculos. Encuentro entre amor y crecimiento en elementos agua.' },
+    { date: crDate('2026-02-27'), planet1: 'Marte', planet2: 'Urano', aspect: 'cuadratura', symbol: '□', degrees: '27°42', signs: 'Acuario/Tauro', color: '#e74c3c', time: '08:20', meaning: 'Fricción entre impulso marcial y cambio uraniano. La acción encuentra lo inesperado. Energía disponible para innovación impulsiva. Tensión entre fuerza direccional y disrupción.' },
+    // MARZO
+    { date: crDate('2026-03-18'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'cuadratura', symbol: '□', degrees: '15°10', signs: 'Aries/Cáncer', color: '#f39c12', time: '09:08', meaning: 'Tensión creativa entre deseo relacional y expansión emocional. El impulso venusino encuentra resistencia en la necesidad jupiteriana de protección.' },
+    { date: crDate('2026-03-21'), planet1: 'Marte', planet2: 'Júpiter', aspect: 'trígono', symbol: '△', degrees: '15°16', signs: 'Piscis/Cáncer', color: '#2ecc71', time: '16:59', meaning: 'Flujo entre acción y expansión. La voluntad marcial encuentra apoyo en la abundancia jupiteriana. Energía para emprender con confianza.' },
+    { date: crDate('2026-03-28'), planet1: 'Saturno', planet2: 'Plutón', aspect: 'sextil', symbol: '⚹', degrees: '5°09', signs: 'Aries/Acuario', color: '#3498db', time: '14:40', isImportant: true, badgeInfo: 'Saturno-Plutón: ciclo de ~33 años. Momentos clave de reestructuración social profunda.', meaning: 'Oportunidad de estructurar la transformación. Lo saturnino puede dar forma a los procesos plutonianos. Disciplina aplicada al cambio profundo.' },
+    // ABRIL
+    { date: crDate('2026-04-12'), planet1: 'Marte', planet2: 'Neptuno', aspect: 'conjunción', symbol: '☌', degrees: '2°39', signs: 'Aries', color: '#5dade2', time: '22:28', meaning: 'Impulso marcial encuentra disolución neptuniana. La acción se encuentra con lo místico. Disponibilidad para acción inspirada o confusión sobre dirección.' },
+    { date: crDate('2026-04-13'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'sextil', symbol: '⚹', degrees: '16°47', signs: 'Tauro/Cáncer', color: '#2ecc71', time: '01:19', meaning: 'Oportunidad entre valores venusinos y expansión jupiteriana. Crecimiento en ámbito relacional y material disponible.' },
+    { date: crDate('2026-04-19'), planet1: 'Marte', planet2: 'Saturno', aspect: 'conjunción', symbol: '☌', degrees: '7°51', signs: 'Aries', color: '#e74c3c', time: '15:38', meaning: 'Impulso encuentra estructura. La acción se topa con el límite. Disponibilidad para acción disciplinada. Tensión entre espontaneidad y control.' },
+    { date: crDate('2026-04-20'), planet1: 'Mercurio', planet2: 'Saturno', aspect: 'conjunción', symbol: '☌', degrees: '7°55', signs: 'Aries', color: '#f39c12', time: '04:17', meaning: 'Pensamiento encuentra estructura saturnina. La mente se encuentra con el límite. Disponibilidad para concentración y seriedad mental. Comunicación requiere precisión.' },
+    { date: crDate('2026-04-20'), planet1: 'Mercurio', planet2: 'Marte', aspect: 'conjunción', symbol: '☌', degrees: '8°36', signs: 'Aries', color: '#ff6b6b', time: '14:30', meaning: 'Pensamiento mercurial encuentra impulso marcial. La mente se encuentra con la acción. Velocidad mental y decisiones rápidas disponibles. Comunicación directa sin filtros.' },
+    // MAYO
+    { date: crDate('2026-05-25'), planet1: 'Marte', planet2: 'Plutón', aspect: 'cuadratura', symbol: '□', degrees: '5°25', signs: 'Tauro/Acuario', color: '#e74c3c', time: '21:02', meaning: 'Fricción entre voluntad de acción y fuerza transformadora. Impulso marcial encuentra resistencia plutoniana. Tensión que puede catalizar cambio profundo.' },
+    // JUNIO
+    { date: crDate('2026-06-09'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'conjunción', symbol: '☌', degrees: '25°46', signs: 'Cáncer', color: '#e91e63', time: '12:55', isImportant: true, badgeInfo: 'Ocurre ~1 vez al año. Considerado el aspecto más afortunado y benéfico del zodíaco.', meaning: 'Encuentro entre amor y abundancia. El principio relacional se encuentra con la expansión jupiteriana. Generosidad afectiva. Disponibilidad para placer y belleza amplificados.' },
+    // JULIO
+    { date: crDate('2026-07-03'), planet1: 'Marte', planet2: 'Urano', aspect: 'conjunción', symbol: '☌', degrees: '3°52', signs: 'Géminis', color: '#1abc9c', time: '23:05', meaning: 'Encuentro explosivo entre acción y cambio súbito. Impulso marcial se une con innovación uraniana. Disponibilidad para ruptura con lo establecido.' },
+    { date: crDate('2026-07-15'), planet1: 'Urano', planet2: 'Neptuno', aspect: 'sextil', symbol: '⚹', degrees: '4°23', signs: 'Géminis/Aries', color: '#3498db', time: '13:59', meaning: 'Oportunidad de integración entre revolución y disolución. El cambio uraniano puede encontrar inspiración neptuniana.' },
+    { date: crDate('2026-07-17'), planet1: 'Urano', planet2: 'Plutón', aspect: 'trígono', symbol: '△', degrees: '4°29', signs: 'Géminis/Acuario', color: '#2ecc71', time: '23:04', isMajor: true, badgeInfo: 'Ciclo Urano-Plutón: ~127 años. Último trígono: 1943. Marca revoluciones tecnológicas y sociales.', meaning: 'Flujo poderoso entre cambio revolucionario y transformación profunda. El rompimiento uraniano encuentra apoyo en la regeneración plutoniana. Energía disponible para cambio generacional.' },
+    { date: crDate('2026-07-20'), planet1: 'Júpiter', planet2: 'Neptuno', aspect: 'trígono', symbol: '△', degrees: '4°22', signs: 'Leo/Aries', color: '#2ecc71', time: '00:26', meaning: 'Flujo entre expansión y disolución de límites. La fe jupiteriana encuentra inspiración neptuniana. Disponibilidad para visión ampliada.' },
+    { date: crDate('2026-07-20'), planet1: 'Júpiter', planet2: 'Plutón', aspect: 'oposición', symbol: '☍', degrees: '4°26', signs: 'Leo/Acuario', color: '#e74c3c', time: '07:54', isImportant: true, badgeInfo: 'Ciclo Júpiter-Plutón: ~12 años. Oposición = punto de máxima tensión del ciclo.', meaning: 'Tensión entre expansión y transformación profunda. La abundancia jupiteriana encuentra resistencia en el poder plutoniano. Polaridad que demanda integración.' },
+    { date: crDate('2026-07-21'), planet1: 'Júpiter', planet2: 'Urano', aspect: 'sextil', symbol: '⚹', degrees: '4°37', signs: 'Leo/Géminis', color: '#2ecc71', time: '03:47', meaning: 'Oportunidad entre expansión y cambio súbito. El optimismo jupiteriano puede abrir espacio al rompimiento uraniano.' },
+    { date: crDate('2026-07-22'), planet1: 'Neptuno', planet2: 'Plutón', aspect: 'sextil', symbol: '⚹', degrees: '4°20', signs: 'Aries/Acuario', color: '#3498db', time: '22:02', meaning: 'Oportunidad de integración entre lo místico y lo transformador. La disolución neptuniana puede colaborar con la regeneración plutoniana.' },
+    // AGOSTO
+    { date: crDate('2026-08-17'), planet1: 'Marte', planet2: 'Neptuno', aspect: 'cuadratura', symbol: '□', degrees: '3°59', signs: 'Cáncer/Aries', color: '#f39c12', time: '02:53', meaning: 'Fricción entre acción directa y disolución de límites. El impulso marcial encuentra confusión o inspiración neptuniana. Tensión entre hacer y rendirse.' },
+    { date: crDate('2026-08-17'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'sextil', symbol: '⚹', degrees: '10°37', signs: 'Libra/Leo', color: '#2ecc71', time: '09:10', meaning: 'Oportunidad de flujo entre placer y abundancia. El principio relacional encuentra apoyo en la generosidad jupiteriana.' },
+    { date: crDate('2026-08-31'), planet1: 'Júpiter', planet2: 'Saturno', aspect: 'trígono', symbol: '△', degrees: '13°41', signs: 'Leo/Aries', color: '#2ecc71', time: '15:40', isImportant: true, badgeInfo: 'Ciclo Júpiter-Saturno: ~20 años. Define épocas económicas y políticas. Última conjunción: 2020.', meaning: 'Flujo poderoso entre expansión y estructura. El optimismo jupiteriano encuentra disciplina saturnina. Crecimiento con forma. Disponibilidad para construir lo grande.' },
+    // SEPTIEMBRE
+    { date: crDate('2026-09-01'), planet1: 'Marte', planet2: 'Saturno', aspect: 'cuadratura', symbol: '□', degrees: '13°39', signs: 'Cáncer/Aries', color: '#e74c3c', time: '03:01', meaning: 'Fricción entre impulso y límite. La acción marcial encuentra resistencia saturnina. Tensión que puede enseñar sobre paciencia o explotar en frustración.' },
+    { date: crDate('2026-09-15'), planet1: 'Neptuno', planet2: 'Plutón', aspect: 'sextil', symbol: '⚹', degrees: '3°16', signs: 'Aries/Acuario', color: '#3498db', time: '19:11', meaning: 'Oportunidad de integración entre disolución y transformación. Lo neptuniano puede abrir espacio a la regeneración plutoniana.' },
+    // OCTUBRE
+    { date: crDate('2026-10-03'), planet1: 'Marte', planet2: 'Plutón', aspect: 'oposición', symbol: '☍', degrees: '3°06', signs: 'Leo/Acuario', color: '#e74c3c', time: '03:39' },
+    // NOVIEMBRE
+    { date: crDate('2026-11-04'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'sextil', symbol: '⚹', degrees: '24°43', signs: 'Libra/Leo', color: '#2ecc71', time: '02:46' },
+    { date: crDate('2026-11-28'), planet1: 'Venus', planet2: 'Júpiter', aspect: 'sextil', symbol: '⚹', degrees: '26°40', signs: 'Libra/Leo', color: '#2ecc71', time: '03:50' },
+    { date: crDate('2026-11-29'), planet1: 'Urano', planet2: 'Plutón', aspect: 'trígono', symbol: '△', degrees: '3°31', signs: 'Géminis/Acuario', color: '#2ecc71', time: '03:20' },
+    // DICIEMBRE
+    { date: crDate('2026-12-04'), planet1: 'Marte', planet2: 'Urano', aspect: 'cuadratura', symbol: '□', degrees: '3°18', signs: 'Virgo/Géminis', color: '#f39c12', time: '11:36' }
+];
 
 // Aspectos Importantes 2026 (Configuraciones Mayores - Cafe Astrology)
-const majorAspects2026 = [];
+const majorAspects2026 = [
+    { date: crDate('2026-09-30'), type: 'T-Square', planets: ['Marte', 'Plutón', 'Mercurio'], signs: 'Virgo-Acuario-Sagitario', meaning: 'Tensión entre acción, transformación y comunicación. Momento de tomar decisiones difíciles.', impact: 'Desafíos que impulsan crecimiento. Energía dinámica para logros.' },
+    { date: crDate('2026-12-07'), type: 'T-Square', planets: ['Urano', 'Mercurio', 'Marte'], signs: 'Géminis-Sagitario-Virgo', meaning: 'Cambio súbito, comunicación urgente, acción necesaria. Crisis que genera oportunidad.', impact: 'Innovación forzada. Soluciones creativas bajo presión.' },
+    { date: crDate('2026-08-10'), type: 'Kite', planets: ['Plutón', 'Urano', 'Mercurio', 'Venus'], signs: 'Acuario-Géminis-Libra-Leo', meaning: 'Configuración armónica con foco. Gran talento para manifestar cambios.', impact: 'Momento poderoso para transformación creativa y relaciones.' },
+    { date: crDate('2026-08-10'), type: 'Mystic Rectangle', planets: ['Plutón', 'Neptuno', 'Mercurio', 'Venus'], signs: 'Acuario-Aries-Libra-Leo', meaning: 'Balance entre espiritualidad y manifestación. Sueños + acción.', impact: 'Talentos puestos al servicio de causas importantes.' }
+];
 
 // Configuraciones Mayores 2026 (Stelliums, T-Squares, Grand Trines)
 const majorConfigurations2026 = [
@@ -2710,6 +2862,9 @@ const translations = {
         lunarEclipseMeaning: '🌕 Los eclipses lunares revelan <strong>verdades ocultas</strong>, traen culminaciones y liberación emocional. Momento de soltar y cerrar ciclos.',
         visibility: 'Visibilidad',
         planetaryAspectsLabel: 'Aspectos Planetarios',
+        planetaryAspects: '🪐 Aspectos Planetarios 2026',
+        clickPlanet: 'Haz click en un planeta para ver todos sus aspectos durante el año',
+        aspectsLegend: 'Leyenda de Aspectos',
 
         // Sign Change Modal
         changesSign: 'Cambia de Signo',
@@ -2928,6 +3083,9 @@ const translations = {
         lunarEclipseMeaning: '🌕 Lunar eclipses reveal <strong>hidden truths</strong>, bring culminations and emotional release. A time to let go and close cycles.',
         visibility: 'Visibility',
         planetaryAspectsLabel: 'Planetary Aspects',
+        planetaryAspects: '🪐 Planetary Aspects 2026',
+        clickPlanet: 'Click a planet to see all its aspects for the year',
+        aspectsLegend: 'Aspects Legend',
 
         // Sign Change Modal
         changesSign: 'Changes Sign',
@@ -4643,6 +4801,315 @@ function closeAstroModal() {
     document.getElementById('astroModal').classList.remove('show');
 }
 
+function closeNatalDetailModal() {
+    document.getElementById('natalDetailModal').classList.remove('show');
+}
+
+// Global variable to store current natal chart for detail modal access
+let globalNatalChart = null;
+
+function showNatalDetail(type, data) {
+    const modal = document.getElementById('natalDetailModal');
+    const titleEl = document.getElementById('natalDetailTitle');
+    const bodyEl = document.getElementById('natalDetailBody');
+    const L = currentLang === 'es';
+    let html = '';
+
+    // Get interpretation data from deep analysis functions
+    const sunSign = {
+        'Aries':L?'Tu esencia vital arde con fuego cardinal. Eres un iniciador nato, con una necesidad profunda de afirmar tu individualidad. Tu ego se fortalece a través de la acción directa y el coraje. Tienes una personalidad magnética que inspira a otros a actuar. El desafío kármico es aprender paciencia y considerar a los demás antes de lanzarte.':'Your vital essence burns with cardinal fire. You are a natural initiator with a deep need to assert your individuality. Your ego strengthens through direct action and courage. You have a magnetic personality that inspires others to act. The karmic challenge is learning patience and considering others before charging ahead.',
+        'Tauro':L?'Tu identidad está enraizada en lo tangible y sensorial. Posees una determinación inquebrantable y una conexión profunda con los placeres terrenales. Tu voluntad es como una roca: lenta para moverse pero imposible de detener. Buscas seguridad material y emocional como base para expresar tu ser. El desafío es evitar la posesividad y la resistencia al cambio.':'Your identity is rooted in the tangible and sensory. You possess unwavering determination and a deep connection to earthly pleasures. Your will is like a rock: slow to move but impossible to stop. You seek material and emotional security as a foundation for self-expression. The challenge is avoiding possessiveness and resistance to change.',
+        'Géminis':L?'Tu sol brilla a través del intelecto y la comunicación. Eres un mensajero cósmico con una mente que necesita estimulación constante. Tu identidad se construye a través del intercambio de ideas y la versatilidad. Posees el don de ver múltiples perspectivas simultáneamente. El desafío es profundizar en lugar de dispersarte, y encontrar coherencia en tu dualidad inherente.':'Your sun shines through intellect and communication. You are a cosmic messenger with a mind that needs constant stimulation. Your identity is built through the exchange of ideas and versatility. You possess the gift of seeing multiple perspectives simultaneously. The challenge is going deep rather than scattering, and finding coherence in your inherent duality.',
+        'Cáncer':L?'Tu esencia se nutre de la conexión emocional profunda. Eres el guardián del hogar cósmico, con una intuición que roza lo psíquico. Tu identidad está profundamente ligada a tus raíces, familia y memoria emocional. Proteges ferozmente a quienes amas. El desafío es soltar el pasado, no confundir cuidar con controlar, y establecer límites emocionales sanos.':'Your essence is nourished by deep emotional connection. You are the guardian of the cosmic home, with intuition bordering on psychic. Your identity is deeply tied to your roots, family, and emotional memory. You fiercely protect those you love. The challenge is releasing the past, not confusing caring with controlling, and establishing healthy emotional boundaries.',
+        'Leo':L?'Tu sol está en su domicilio: brillas con luz propia. Tu identidad se expresa a través de la creatividad, la generosidad y el liderazgo magnético. Necesitas ser visto, reconocido y admirado — no por vanidad, sino porque tu naturaleza es irradiar. Eres un canal de vitalidad creativa. El desafío es desarrollar humildad genuina y reconocer que todos merecen su momento en el escenario.':'Your sun is in its domicile: you shine with your own light. Your identity expresses through creativity, generosity, and magnetic leadership. You need to be seen, recognized, and admired — not from vanity, but because your nature is to radiate. You are a channel for creative vitality. The challenge is developing genuine humility and recognizing everyone deserves their moment on stage.',
+        'Virgo':L?'Tu identidad se refina a través del servicio, el análisis y la búsqueda de la perfección. Posees una mente quirúrgica que detecta patrones donde otros ven caos. Tu misión solar es mejorar, curar y organizar. Hay una profunda humildad en tu naturaleza que, paradójicamente, te hace invaluable. El desafío es no perderte en los detalles y aprender a aceptar la imperfección como parte de la belleza.':'Your identity is refined through service, analysis, and the pursuit of perfection. You possess a surgical mind that detects patterns where others see chaos. Your solar mission is to improve, heal, and organize. There is a deep humility in your nature that, paradoxically, makes you invaluable. The challenge is not losing yourself in details and learning to accept imperfection as part of beauty.',
+        'Libra':L?'Tu esencia busca el equilibrio, la armonía y la justicia. Tu identidad florece en la relación con los otros — eres el espejo cósmico que refleja la belleza. Posees un sentido estético refinado y diplomacia natural. Ves ambos lados de cada situación. El desafío es tomar decisiones propias sin depender de la aprobación externa, y no sacrificar tu verdad por mantener la paz.':'Your essence seeks balance, harmony, and justice. Your identity flourishes in relationship with others — you are the cosmic mirror reflecting beauty. You possess refined aesthetic sense and natural diplomacy. You see both sides of every situation. The challenge is making your own decisions without depending on external approval, and not sacrificing your truth to keep the peace.',
+        'Escorpio':L?'Tu sol opera en las profundidades del psiquismo humano. Eres un alquimista emocional con el poder de transformar el plomo en oro. Tu identidad se forja en la intensidad, el misterio y la regeneración. Penetras más allá de las máscaras sociales hasta la verdad desnuda. Tienes un magnetismo que atrae y a veces intimida. El desafío es soltar el control, perdonar y usar tu poder para sanar, no para manipular.':'Your sun operates in the depths of the human psyche. You are an emotional alchemist with the power to transform lead into gold. Your identity is forged in intensity, mystery, and regeneration. You penetrate beyond social masks to naked truth. You have a magnetism that attracts and sometimes intimidates. The challenge is releasing control, forgiving, and using your power to heal, not manipulate.',
+        'Sagitario':L?'Tu esencia es la del explorador cósmico, el buscador de verdad y significado. Tu identidad se expande a través de la filosofía, los viajes y la búsqueda espiritual. Posees un optimismo contagioso y una fe natural en la vida. Eres el arquero que apunta hacia horizontes cada vez más amplios. El desafío es no prometer más de lo que puedes cumplir, profundizar en lugar de solo expandir, y respetar los compromisos.':'Your essence is that of the cosmic explorer, the seeker of truth and meaning. Your identity expands through philosophy, travel, and spiritual seeking. You possess contagious optimism and natural faith in life. You are the archer aiming at ever-wider horizons. The challenge is not promising more than you can deliver, going deep rather than just expanding, and honoring commitments.',
+        'Capricornio':L?'Tu identidad se construye a través del logro, la disciplina y la maestría del tiempo. Eres el arquitecto del zodíaco, con una ambición que es realmente una vocación del alma. Tu madurez es prematura — a menudo naces viejo y rejuveneces con la edad. Posees una integridad natural y respeto por las estructuras. El desafío es no confundir tu valor con tus logros, permitirte vulnerabilidad y no reprimir las emociones.':'Your identity is built through achievement, discipline, and mastery of time. You are the architect of the zodiac, with an ambition that is truly a calling of the soul. Your maturity is premature — you often are born old and grow younger with age. You possess natural integrity and respect for structures. The challenge is not confusing your worth with your achievements, allowing vulnerability, and not repressing emotions.',
+        'Acuario':L?'Tu sol brilla a través de la originalidad, la visión futurista y la conciencia colectiva. Eres el revolucionario del zodíaco, con ideas que están adelantadas a tu tiempo. Tu identidad trasciende lo personal hacia lo universal. Posees una mente brillante e independiente que cuestiona todo status quo. El desafío es conectar con tus emociones personales, no intelectualizar los sentimientos y mantener relaciones íntimas genuinas.':'Your sun shines through originality, futuristic vision, and collective consciousness. You are the revolutionary of the zodiac, with ideas ahead of your time. Your identity transcends the personal toward the universal. You possess a brilliant, independent mind that questions every status quo. The challenge is connecting with personal emotions, not intellectualizing feelings, and maintaining genuine intimate relationships.',
+        'Piscis':L?'Tu esencia es oceánica: sin fronteras, compasiva y profundamente espiritual. Eres el místico del zodíaco, con una sensibilidad que te conecta con dimensiones sutiles de la realidad. Tu identidad se disuelve para fusionarse con el todo. Posees dones artísticos, curativos e intuitivos extraordinarios. El desafío es mantener límites claros, no perderte en la fantasía o las adicciones, y anclar tu espiritualidad en la vida cotidiana.':'Your essence is oceanic: boundless, compassionate, and deeply spiritual. You are the mystic of the zodiac, with sensitivity connecting you to subtle dimensions of reality. Your identity dissolves to merge with the whole. You possess extraordinary artistic, healing, and intuitive gifts. The challenge is maintaining clear boundaries, not losing yourself in fantasy or addictions, and grounding your spirituality in daily life.'
+    };
+
+    const deepPlanet = {
+        'moon': {
+            'Aries':L?'Tu Luna en Aries: emociones directas, apasionadas, impulsivas. Necesitas independencia emocional y libertad de expresar sentimientos. Reactividad inmediata. Corazón de guerrero.':'Your Moon in Aries: direct, passionate, impulsive emotions. Need emotional independence and freedom to express feelings. Immediate reactivity. Heart of a warrior.',
+            'Tauro':L?'Tu Luna en Tauro: emociones estables, profundas y sensibles al entorno físico. Necesitas seguridad emocional y confort material. Lealtad emocional inquebrantable. Paciencia en sentimientos.':'Your Moon in Taurus: stable, deep emotions sensitive to physical environment. Need emotional security and material comfort. Unbreakable emotional loyalty. Patience in feelings.',
+            'Géminis':L?'Tu Luna en Géminis: emociones mentales, curiosas, versátiles. Necesitas estimulación intelectual para sentirte seguro. Versatilidad emocional pero dificultad para profundizar. Comunicación de sentimientos.':'Your Moon in Gemini: mental, curious, versatile emotions. Need intellectual stimulation to feel secure. Emotional versatility but difficulty going deep. Communication of feelings.',
+            'Cáncer':L?'Tu Luna en Cáncer: emociones profundas, intuitivas, protectoras. Necesitas seguridad familiar y nutrir a otros. Intuición psíquica. Memoria emocional prodigiosa. Raíces como necesidad.':'Your Moon in Cancer: deep, intuitive, protective emotions. Need family security and nurturing others. Psychic intuition. Prodigious emotional memory. Roots as need.',
+            'Leo':L?'Tu Luna en Leo: emociones generosas, dramáticas, creativas. Necesitas ser reconocido y amado genuinamente. Lealtad emocional teatral. Orgullo sincero. Corazón abierto.':'Your Moon in Leo: generous, dramatic, creative emotions. Need genuine recognition and love. Theatrical emotional loyalty. Sincere pride. Open heart.',
+            'Virgo':L?'Tu Luna en Virgo: emociones analíticas, prácticas, perfeccionistas. Necesitas orden emocional y significado en los sentimientos. Crítica interior intensa. Servicio emocional como amor.':'Your Moon in Virgo: analytical, practical, perfectionist emotions. Need emotional order and meaning in feelings. Intense inner criticism. Emotional service as love.',
+            'Libra':L?'Tu Luna en Libra: emociones equilibradas, estéticas, relacionales. Necesitas armonía emocional y reflejo en la pareja. Dificultad con emociones intensas. Belleza como consuelo.':'Your Moon in Libra: balanced, aesthetic, relational emotions. Need emotional harmony and reflection in partner. Difficulty with intense emotions. Beauty as consolation.',
+            'Escorpio':L?'Tu Luna en Escorpio: emociones intensas, profundas, transformadoras. Necesitas control emocional y verdad sin filtros. Intuición psíquica extraordinaria. Emociones como alquimia.':'Your Moon in Scorpio: intense, deep, transformative emotions. Need emotional control and unfiltered truth. Extraordinary psychic intuition. Emotions as alchemy.',
+            'Sagitario':L?'Tu Luna en Sagitario: emociones expansivas, optimistas, filosóficas. Necesitas libertad emocional y significado espiritual. Fe en la vida. Generosidad emocional.':'Your Moon in Sagittarius: expansive, optimistic, philosophical emotions. Need emotional freedom and spiritual meaning. Faith in life. Emotional generosity.',
+            'Capricornio':L?'Tu Luna en Capricornio: emociones contenidas, maduras, responsables. Necesitas estructura emocional y logros para sentirte seguro. Seriedad en sentimientos. Madurez prematura.':'Your Moon in Capricorn: contained, mature, responsible emotions. Need emotional structure and achievements to feel secure. Seriousness in feelings. Premature maturity.',
+            'Acuario':L?'Tu Luna en Acuario: emociones independientes, intelectuales, humanitarias. Necesitas libertad emocional y conexión grupal. Dificultad con intimidad. Solidaridad como sentimiento.':'Your Moon in Aquarius: independent, intellectual, humanitarian emotions. Need emotional freedom and group connection. Difficulty with intimacy. Solidarity as feeling.',
+            'Piscis':L?'Tu Luna en Piscis: emociones oceánicas, intuitivas, espirituales. Necesitas fusión emocional y conexión mística. Permeabilidad a emociones ajenas. Compasión infinita.':'Your Moon in Pisces: oceanic, intuitive, spiritual emotions. Need emotional fusion and mystical connection. Permeability to others\' emotions. Infinite compassion.'
+        },
+        'mercury': {
+            'Aries':L?'Mente rápida, directa, impulsiva. Piensas en acción y hablas sin filtro. Ideas pioneras pero impacientes.':'Quick, direct, impulsive mind. You think in action and speak without filter. Pioneering but impatient ideas.',
+            'Tauro':L?'Pensamiento lento pero sólido. Mente práctica y sensorial. Aprendes tocando y experimentando. Ideas que maduran como buen vino.':'Slow but solid thinking. Practical and sensory mind. You learn by touching and experiencing. Ideas that mature like fine wine.',
+            'Géminis':L?'Mercurio en domicilio: intelecto brillante, versátil y veloz. Comunicador nato. Mente dual que procesa múltiples flujos simultáneamente. Don para idiomas y escritura.':'Mercury in domicile: brilliant, versatile, swift intellect. Natural communicator. Dual mind processing multiple streams simultaneously. Gift for languages and writing.',
+            'Cáncer':L?'Pensamiento emocional e intuitivo. Memoria prodigiosa ligada a emociones. Comunicación empática pero subjetiva. Ideas nutridas por la imaginación.':'Emotional and intuitive thinking. Prodigious memory linked to emotions. Empathic but subjective communication. Ideas nourished by imagination.',
+            'Leo':L?'Mente creativa y dramática. Comunicación con autoridad y carisma. Pensamiento que busca el centro del escenario. Ideas generosas y grandiosas.':'Creative and dramatic mind. Communication with authority and charisma. Thinking that seeks center stage. Generous and grandiose ideas.',
+            'Virgo':L?'Mercurio en domicilio: mente analítica, precisa y discriminadora. Capacidad excepcional para el detalle y el método. Pensamiento al servicio de la mejora práctica.':'Mercury in domicile: analytical, precise, discriminating mind. Exceptional capacity for detail and method. Thinking in service of practical improvement.',
+            'Libra':L?'Mente diplomática que sopesa todas las perspectivas. Comunicación elegante y justa. Pensamiento orientado a la relación y la estética. Indecisión intelectual.':'Diplomatic mind weighing all perspectives. Elegant and fair communication. Relationship and aesthetics-oriented thinking. Intellectual indecision.',
+            'Escorpio':L?'Mente penetrante e investigadora. Piensas en profundidad, detectas mentiras instintivamente. Comunicación estratégica. Intelecto obsesivo que no descansa hasta descubrir la verdad.':'Penetrating, investigative mind. You think in depth, detect lies instinctively. Strategic communication. Obsessive intellect that doesn\'t rest until discovering truth.',
+            'Sagitario':L?'Mente expansiva y filosófica. Pensamiento que busca el significado global. Comunicación entusiasta y exagerada. Ideas visionarias pero descuidan los detalles.':'Expansive and philosophical mind. Thinking seeking global meaning. Enthusiastic and exaggerated communication. Visionary ideas but neglects details.',
+            'Capricornio':L?'Mente estructurada, estratégica y ambiciosa. Pensamiento a largo plazo. Comunicación seria y autorizada. Ideas que se construyen paso a paso hacia la cumbre.':'Structured, strategic, ambitious mind. Long-term thinking. Serious and authoritative communication. Ideas built step by step toward the summit.',
+            'Acuario':L?'Mente revolucionaria e inventiva. Pensamiento original que rompe paradigmas. Comunicación excéntrica y futurista. Ideas que se adelantan décadas a su tiempo.':'Revolutionary and inventive mind. Original thinking that breaks paradigms. Eccentric and futuristic communication. Ideas decades ahead of their time.',
+            'Piscis':L?'Mente intuitiva, poética y dispersa. Pensamiento por imágenes y símbolos. Comunicación artística y a veces confusa. Capacidad para canalizar información del inconsciente.':'Intuitive, poetic, and scattered mind. Thinking through images and symbols. Artistic and sometimes confusing communication. Ability to channel information from the unconscious.'
+        },
+        'venus': {
+            'Aries':L?'Amor apasionado, impulsivo y conquistador. Atraes con tu energía y valentía. Relaciones intensas pero necesitas independencia. Gusto estético audaz.':'Passionate, impulsive, conquering love. You attract with energy and courage. Intense relationships but need independence. Bold aesthetic taste.',
+            'Tauro':L?'Venus en domicilio: amor sensual, leal y tangible. Aprecias la belleza, el lujo y el confort. Relaciones estables y duraderas. Posesividad como expresión de amor.':'Venus in domicile: sensual, loyal, tangible love. You appreciate beauty, luxury, and comfort. Stable, lasting relationships. Possessiveness as expression of love.',
+            'Géminis':L?'Amor intelectual y comunicativo. Necesitas estimulación mental en las relaciones. Flirteo como arte. Versatilidad afectiva, dificultad para comprometerte.':'Intellectual and communicative love. You need mental stimulation in relationships. Flirting as art. Affective versatility, difficulty committing.',
+            'Cáncer':L?'Amor protector, nutriente y emocional. Buscas seguridad afectiva profunda. El hogar es tu templo del amor. Cuidado maternal en las relaciones.':'Protective, nurturing, emotional love. You seek deep affective security. Home is your temple of love. Maternal care in relationships.',
+            'Leo':L?'Amor dramático, generoso y real. Necesitas admiración en el amor. Relaciones como un escenario donde brillas. Lealtad absoluta a quien amas.':'Dramatic, generous, royal love. You need admiration in love. Relationships as a stage where you shine. Absolute loyalty to whom you love.',
+            'Virgo':L?'Amor expresado a través del servicio y los detalles. Perfeccionismo en las relaciones. Dificultad para expresar afecto abiertamente pero demuestras amor con actos.':'Love expressed through service and details. Perfectionism in relationships. Difficulty expressing affection openly but you demonstrate love through acts.',
+            'Libra':L?'Venus en domicilio: amor equilibrado, estético y diplomático. Necesitas una pareja como complemento esencial. Don para la belleza, el arte y la armonía relacional.':'Venus in domicile: balanced, aesthetic, diplomatic love. You need a partner as essential complement. Gift for beauty, art, and relational harmony.',
+            'Escorpio':L?'Amor intenso, transformador y posesivo. Pasión que consume. Relaciones como alquimia emocional. Celos profundos pero lealtad absoluta. El amor es muerte y renacimiento.':'Intense, transformative, possessive love. All-consuming passion. Relationships as emotional alchemy. Deep jealousy but absolute loyalty. Love is death and rebirth.',
+            'Sagitario':L?'Amor aventurero, filosófico y libre. Necesitas espacio y crecimiento en las relaciones. Atracción por culturas diferentes. Generosidad afectiva pero miedo al compromiso.':'Adventurous, philosophical, free love. You need space and growth in relationships. Attraction to different cultures. Affective generosity but fear of commitment.',
+            'Capricornio':L?'Amor serio, comprometido y maduro. Relaciones con estructura y objetivos claros. Dificultad para mostrar ternura pero profundamente dedicado. El amor se demuestra con responsabilidad.':'Serious, committed, mature love. Relationships with structure and clear goals. Difficulty showing tenderness but deeply dedicated. Love is demonstrated through responsibility.',
+            'Acuario':L?'Amor inconvencional, libre y amistoso. Necesitas espacio y originalidad en las relaciones. La amistad es base del amor. Dificultad con la intimidad convencional.':'Unconventional, free, friendly love. You need space and originality in relationships. Friendship is the basis of love. Difficulty with conventional intimacy.',
+            'Piscis':L?'Venus exaltada: amor incondicional, espiritual y trascendente. Romanticismo idealista. Sacrificio por amor. Conexión mística con la pareja. Riesgo de idealizar y sufrir desilusión.':'Venus exalted: unconditional, spiritual, transcendent love. Idealistic romanticism. Sacrifice for love. Mystical connection with partner. Risk of idealizing and suffering disillusion.'
+        },
+        'mars': {
+            'Aries':L?'Marte en domicilio: energía guerrera pura. Acción directa, valiente, impulsiva. Competitividad natural. Sexualidad apasionada y conquista.':'Mars in domicile: pure warrior energy. Direct, brave, impulsive action. Natural competitiveness. Passionate sexuality and conquest.',
+            'Tauro':L?'Energía persistente y tenaz. Acción lenta pero imparable. Fuerza física notable. Resistencia excepcional. Sexualidad sensual y terrenal.':'Persistent and tenacious energy. Slow but unstoppable action. Notable physical strength. Exceptional endurance. Sensual and earthy sexuality.',
+            'Géminis':L?'Energía mental y comunicativa. Acción a través de las palabras e ideas. Versatilidad en la acción. Inquietud y necesidad de movimiento constante.':'Mental and communicative energy. Action through words and ideas. Versatility in action. Restlessness and need for constant movement.',
+            'Cáncer':L?'Energía protectora e indirecta. Acción motivada por emociones y necesidad de seguridad. Defensa feroz del hogar y la familia. Agresividad pasiva.':'Protective and indirect energy. Action motivated by emotions and need for security. Fierce defense of home and family. Passive aggression.',
+            'Leo':L?'Energía creativa, dramática y autoritaria. Acción con estilo y nobleza. Liderazgo natural en la acción. Sexualidad expresiva y generosa.':'Creative, dramatic, authoritative energy. Action with style and nobility. Natural leadership in action. Expressive and generous sexuality.',
+            'Virgo':L?'Energía meticulosa y al servicio del detalle. Acción precisa y metódica. Crítica constructiva como forma de acción. Trabajo duro y eficiente.':'Meticulous energy in service of detail. Precise and methodical action. Constructive criticism as form of action. Hard and efficient work.',
+            'Libra':L?'Marte en exilio: energía diplomática pero indecisa. Acción orientada a la justicia y el equilibrio. Dificultad para actuar con agresividad directa. Lucha por la armonía.':'Mars in exile: diplomatic but indecisive energy. Action oriented toward justice and balance. Difficulty acting with direct aggression. Fighting for harmony.',
+            'Escorpio':L?'Energía intensa, estratégica y transformadora. Acción con profundidad y poder. Capacidad de regeneración extraordinaria. Sexualidad intensa y magnética. Voluntad de acero.':'Intense, strategic, transformative energy. Action with depth and power. Extraordinary regeneration capacity. Intense and magnetic sexuality. Iron will.',
+            'Sagitario':L?'Energía expansiva, aventurera y filosófica. Acción motivada por ideales y la búsqueda de verdad. Entusiasmo contagioso pero imprudencia. Deportes y aventura.':'Expansive, adventurous, philosophical energy. Action motivated by ideals and truth-seeking. Contagious enthusiasm but recklessness. Sports and adventure.',
+            'Capricornio':L?'Marte exaltado: energía disciplinada, estratégica y ambiciosa. Acción planificada a largo plazo. Resistencia excepcional. La ambición como motor. Autocontrol extraordinario.':'Mars exalted: disciplined, strategic, ambitious energy. Long-term planned action. Exceptional endurance. Ambition as engine. Extraordinary self-control.',
+            'Acuario':L?'Energía revolucionaria e impredecible. Acción motivada por ideales humanitarios. Rebeldía intelectual. Formas innovadoras de actuar que rompen moldes.':'Revolutionary and unpredictable energy. Action motivated by humanitarian ideals. Intellectual rebellion. Innovative forms of action that break molds.',
+            'Piscis':L?'Energía difusa, compasiva e intuitiva. Acción guiada por el instinto y la imaginación. Dificultad para la agresividad directa. Fuerza espiritual y capacidad de sacrificio.':'Diffuse, compassionate, intuitive energy. Action guided by instinct and imagination. Difficulty with direct aggression. Spiritual strength and capacity for sacrifice.'
+        },
+        'jupiter': {
+            'Aries':L?'Júpiter en Aries: fe absoluta en ti mismo. Optimismo pionero que abre caminos. Crecimiento a través de la aventura y el riesgo calculado. Fortuna en nuevas empresas.':'Jupiter in Aries: absolute faith in yourself. Pioneer optimism that opens paths. Growth through adventure and calculated risk. Fortune in new ventures.',
+            'Tauro':L?'Júpiter en Tauro: expansión a través de la estabilidad y los recursos materiales. Fortuna en dinero, bienes y agricultura. Generosidad sensual. Riqueza por paciencia y acumulación.':'Jupiter in Taurus: expansion through stability and material resources. Fortune with money, property and agriculture. Sensual generosity. Wealth through patience and accumulation.',
+            'Géminis':L?'Júpiter en Géminis: amplificación mental. Comunicación que convence. Fortuna en viajes, educación y comercio. Suerte en escribir, enseñar y aprender idiomas.':'Jupiter in Gemini: mental amplification. Communication that convinces. Fortune in travel, education and commerce. Lucky with writing, teaching and languages.',
+            'Cáncer':L?'Júpiter en Cáncer: expansión emocional y familiar. Fortuna a través del hogar, bienes inmuebles y familia. Nutrición como regalo natural. Herencias beneficiosas.':'Jupiter in Cancer: emotional and family expansion. Fortune through home, real estate and family. Nurturing as natural gift. Beneficial inheritances.',
+            'Leo':L?'Júpiter en Leo: magnificencia natural. Fortuna en creatividad, romance y autoridad. Generosidad real. Magnético con el público. Éxito en campos artísticos y de liderazgo.':'Jupiter in Leo: natural magnificence. Fortune in creativity, romance and authority. Royal generosity. Magnetic with the public. Success in artistic and leadership fields.',
+            'Virgo':L?'Júpiter en Virgo: expansión a través del servicio y la mejora. Fortuna en salud, trabajo y análisis. Suerte con ayudas y procedimientos. Bendición en lo cotidiano y útil.':'Jupiter in Virgo: expansion through service and improvement. Fortune with health, work and analysis. Lucky with practical matters and procedures. Blessing in daily useful work.',
+            'Libra':L?'Júpiter en Libra: amplitud de perspectiva y diplomacia. Fortuna en asociaciones, matrimonio y justicia. Encanto social y facilidad para negociar. Matrimonio muy afortunado.':'Jupiter in Libra: breadth of perspective and diplomacy. Fortune with partnerships, marriage and justice. Social charm and negotiation ease. Very fortunate marriage.',
+            'Escorpio':L?'Júpiter en Escorpio: penetración psicológica profunda. Fortuna en herencias, recursos compartidos y transformación. Magnetismo sexual y poder personal. Capacidad para sanar traumas.':'Jupiter in Scorpio: deep psychological penetration. Fortune with inheritances, shared resources and transformation. Sexual magnetism and personal power. Healing trauma capacity.',
+            'Sagitario':L?'Júpiter en domicilio: confianza cósmica absoluta. Expansión sin límites. Fortuna inesperada y constante. Viajero nato. Filosofía personal profunda. Maestro innato.':'Jupiter in domicile: absolute cosmic confidence. Expansion without limits. Constant and unexpected fortune. Natural traveler. Deep personal philosophy. Innate teacher.',
+            'Capricornio':L?'Júpiter en Capricornio: expansión estructurada y ambiciosa. Fortuna en negocios, carrera pública e instituciones. Estatus social ascendente. Riqueza a través del tiempo.':'Jupiter in Capricorn: structured and ambitious expansion. Fortune in business, public career and institutions. Rising social status. Wealth through time.',
+            'Acuario':L?'Júpiter en Acuario: amplificación de ideales y tecnología. Fortuna en grupos, humanitarismo e innovación. Abundancia de amistades y contactos. Visión futurista que atrae recursos.':'Jupiter in Aquarius: amplification of ideals and technology. Fortune with groups, humanitarian work and innovation. Abundance of friendships and contacts. Visionary outlook attracting resources.',
+            'Piscis':L?'Júpiter exaltado: fe espiritual absoluta. Protección divina. Fortuna en arte, espiritualidad y ayuda al prójimo. Intuición amplificada. Milagros aparentes ocurren naturalmente.':'Jupiter exalted: absolute spiritual faith. Divine protection. Fortune with art, spirituality and helping others. Amplified intuition. Miracles happen naturally.'
+        },
+        'saturn': {
+            'Aries':L?'Saturno en Aries: disciplina de la voluntad propia. Aprendes a actuar con prudencia. Desafíos tempranos endurecen el carácter. Autoridad después de la prueba.':'Saturn in Aries: discipline of your own will. Learn to act with prudence. Early challenges harden character. Authority after testing.',
+            'Tauro':L?'Saturno en Tauro: construir riqueza lentamente con paciencia. Lecciones sobre posesión y seguridad. Grandes recursos materiales al final. Solidez ganada con el tiempo.':'Saturn in Taurus: build wealth slowly with patience. Lessons about possession and security. Great material resources eventually. Solidity earned over time.',
+            'Géminis':L?'Saturno en Géminis: profundidad mental disciplinada. Aprendes a pensar críticamente y a escuchar. Comunicación seria y responsable. Maestría en una rama del conocimiento.':'Saturn in Gemini: disciplined mental depth. Learn to think critically and listen. Serious and responsible communication. Mastery of a knowledge branch.',
+            'Cáncer':L?'Saturno en Cáncer: lecciones emocionales profundas. Aprendes los límites de la seguridad emocional. Responsabilidad familiar. Madurez emocional ganada a través de desafíos.':'Saturn in Cancer: deep emotional lessons. Learn boundaries of emotional security. Family responsibility. Emotional maturity earned through challenges.',
+            'Leo':L?'Saturno en Leo: lecciones de ego y verdadero liderazgo. Aprendes que liderar es servir. Autoridad ganada, no afirmada. Creatividad que perdura.':'Saturn in Leo: lessons of ego and true leadership. Learn that leading means serving. Earned authority, not claimed. Lasting creativity.',
+            'Virgo':L?'Saturno en Virgo: dominio de los detalles y la excelencia. Perfectcionismo que se vuelve mastery. Salud mejora con disciplina. Capacidad de servir con integridad.':'Saturn in Virgo: mastery of details and excellence. Perfectionism becoming mastery. Health improves with discipline. Capacity to serve with integrity.',
+            'Libra':L?'Saturno en Libra: lecciones sobre relación y justicia. Aprendes qué es compromiso real. Matrimonio tardío pero sólido. Justicia ganada a través de paciencia.':'Saturn in Libra: lessons about relationship and justice. Learn what true commitment is. Late but solid marriage. Justice earned through patience.',
+            'Escorpio':L?'Saturno en Escorpio: dominio del poder oculto y las emociones profundas. Aprendes la responsabilidad del poder personal. Regeneración a través de la limitación. Control absoluto de instintos.':'Saturn in Scorpio: mastery of hidden power and deep emotions. Learn responsibility of personal power. Regeneration through limitation. Absolute impulse control.',
+            'Sagitario':L?'Saturno en Sagitario: filosofía disciplinada. Aprendes a discernir verdad de creencia. Enseñanza basada en experiencia. Sabiduría ganada a través del sufrimiento.':'Saturn in Sagittarius: disciplined philosophy. Learn to discern truth from belief. Teaching rooted in experience. Wisdom earned through suffering.',
+            'Capricornio':L?'Saturno en domicilio: maestría en la estructura. Tus limitaciones se vuelven poder. Autoridad natural. Riqueza y estatus ganados legítimamente. Inmortalidad a través de obra.':'Saturn in domicile: mastery of structure. Your limitations become power. Natural authority. Legitimately earned wealth and status. Immortality through work.',
+            'Acuario':L?'Saturno en Acuario: revolucionario serio. Ideales disciplinados y probados. Movimientos sociales que perduran. Tecnología aplicada responsablemente.':'Saturn in Aquarius: serious revolutionary. Disciplined and tested ideals. Lasting social movements. Technology applied responsibly.',
+            'Piscis':L?'Saturno en Piscis: espiritualidad disciplinada. Aprendes límites del inconsciente. Claridad emergiendo del caos interno. Servicio espiritual que endurece el alma.':'Saturn in Pisces: disciplined spirituality. Learn boundaries of the unconscious. Clarity emerging from internal chaos. Spiritual service hardening the soul.'
+        },
+        'uranus': {
+            'Aries':L?'Urano en Aries: revolucionario puro. Tu identidad desafía normas. Inventos que cambian todo. Libertad es tu deidad. Cambios súbitos en autocomprensión.':'Uranus in Aries: pure revolutionary. Your identity defies norms. Inventions that change everything. Freedom is your deity. Sudden self-understanding shifts.',
+            'Tauro':L?'Urano en Tauro: revolución económica y sensorial. Trastorna valores materiales. Métodos no convencionales para crear riqueza. Nuevas tecnologías en recursos naturales.':'Uranus in Taurus: economic and sensory revolution. Disrupts material values. Unconventional wealth creation. New tech in natural resources.',
+            'Géminis':L?'Urano en Géminis: revolución comunicativa y mental. Nuevos paradigmas intelectuales. Tecnología de comunicación disruptiva. Mente que genera ideas futuras.':'Uranus in Gemini: communication and mental revolution. New intellectual paradigms. Disruptive communication tech. Mind generating future ideas.',
+            'Cáncer':L?'Urano en Cáncer: revolución del hogar y familia. Nuevas estructuras familiares. Tecnología domesticada. Cambios radicales en emociones y seguridad. Enraizamiento después del caos.':'Uranus in Cancer: revolution of home and family. New family structures. Domesticated technology. Radical emotional and security shifts. Grounding after chaos.',
+            'Leo':L?'Urano en Leo: revolución creativa y del corazón. Tu expresión desafía convención. Creatividad futurista. Liderazgo que libera. Amor no convencional.':'Uranus in Leo: creative and heart revolution. Your expression defies convention. Futuristic creativity. Leadership that liberates. Unconventional love.',
+            'Virgo':L?'Urano en Virgo: revolución del servicio y la salud. Nuevos métodos de curación. Tecnología al servicio de la mejora. Trabajo radicalmente renovado. Eficiencia revolucionaria.':'Uranus in Virgo: revolution of service and health. New healing methods. Technology serving improvement. Radically renewed work. Revolutionary efficiency.',
+            'Libra':L?'Urano en Libra: revolución de relaciones y justicia. Nuevas formas de asociación. Justicia tecnológica. Equilibrio disruptivo. Parejas poco convencionales.':'Uranus in Libra: revolution of relationships and justice. New forms of partnership. Technological justice. Disruptive balance. Unconventional partnerships.',
+            'Escorpio':L?'Urano en Escorpio: revolución psicológica profunda. Secretos expuestos. Sexualidad redefinida. Poder oculto democratizado. Transformación radical del tabú.':'Uranus in Scorpio: deep psychological revolution. Secrets exposed. Sexuality redefined. Hidden power democratized. Radical taboo transformation.',
+            'Sagitario':L?'Urano en Sagitario: revolución espiritual y filosófica. Nuevas religiones emergen. Viajes a lugares no explorados. Conocimiento liberado. Verdad disruptiva.':'Uranus in Sagittarius: spiritual and philosophical revolution. New religions emerge. Travel to unexplored places. Knowledge liberated. Disruptive truth.',
+            'Capricornio':L?'Urano en Capricornio: revolución estructural y política. Gobiernos se transforman. Autoridad cuestionada. Viejos sistemas colapsan. Nuevas jerarquías emergen.':'Uranus in Capricorn: structural and political revolution. Governments transform. Authority questioned. Old systems collapse. New hierarchies emerge.',
+            'Acuario':L?'Urano en domicilio: revolucionario absoluto. Tu naturaleza es cambio. Tecnología como extensión de ti. Futuro manifestado en presente. Originalidad sin disculpas.':'Uranus in domicile: absolute revolutionary. Your nature is change. Technology as extension of you. Future manifested in present. Unapologetic originality.',
+            'Piscis':L?'Urano en Piscis: revolución espiritual colectiva. Inconsciente colectivo despertando. Tecnología mística. Límites entre realidad y fantasía se disuelven. Magia en la era moderna.':'Uranus in Pisces: collective spiritual revolution. Collective unconscious awakening. Mystical technology. Reality and fantasy boundaries dissolving. Magic in modern era.'
+        },
+        'neptune': {
+            'Aries':L?'Neptuno en Aries: idealismo pionero. Visión de un mundo nuevo y heroico. Ilusiones sobre el coraje verdadero. Espiritualidad activa pero confusa.':'Neptune in Aries: pioneer idealism. Vision of new and heroic world. Illusions about true courage. Active but confused spirituality.',
+            'Tauro':L?'Neptuno en Tauro: idealismo sensorial. Aprecio místico de la belleza natural. Confusión sobre dinero y posesión. Arte que toca lo etéreo en materia sólida.':'Neptune in Taurus: sensory idealism. Mystical appreciation of natural beauty. Confusion about money and possessions. Art touching the ethereal in solid matter.',
+            'Géminis':L?'Neptuno en Géminis: idealismo intelectual. Poesía en el pensamiento. Confusión comunicativa. Imaginación amplificada. Verdad relativa como verdad universal.':'Neptune in Gemini: intellectual idealism. Poetry in thinking. Communicative confusion. Amplified imagination. Relative truth as universal truth.',
+            'Cáncer':L?'Neptuno en Cáncer: idealismo emocional profundo. Fusión mística con la familia. Confusión sobre límites emocionales. Intuición psíquica natural. Pérdida de límites en la seguridad.':'Neptune in Cancer: deep emotional idealism. Mystical family fusion. Confusion about emotional boundaries. Natural psychic intuition. Loss of security boundaries.',
+            'Leo':L?'Neptuno en Leo: idealismo creativo y romántico. Visión artística expansiva. Confusión sobre autoestima y admiración. Amor como religión. Creatividad mágica.':'Neptune in Leo: creative and romantic idealism. Expansive artistic vision. Confusion about self-esteem and admiration. Love as religion. Magical creativity.',
+            'Virgo':L?'Neptuno en Virgo: idealismo del servicio y cura. Confusión en métodos y detalles. Curandería mística o médica. Perfeccionismo inalcanzable. Sacrificio por la salud de otros.':'Neptune in Virgo: idealism of service and healing. Confusion in methods and details. Mystical or medical healing. Unattainable perfectionism. Sacrifice for others\' health.',
+            'Libra':L?'Neptuno en Libra: idealismo relacional. Amor como fusión mística. Confusión sobre asociación y compromiso. Pareja ideal buscada eternamente. Belleza como verdad absoluta.':'Neptune in Libra: relational idealism. Love as mystical fusion. Confusion about partnership and commitment. Eternal search for ideal mate. Beauty as absolute truth.',
+            'Escorpio':L?'Neptuno en Escorpio: idealismo psíquico profundo. Transformación mágica. Confusión sobre poder personal y sexualidad. Ocultismo como religión. Misterio como verdad.':'Neptune in Scorpio: deep psychic idealism. Magical transformation. Confusion about personal power and sexuality. Occultism as religion. Mystery as truth.',
+            'Sagitario':L?'Neptuno en Sagitario: idealismo espiritual cósmico. Religión mística universal. Confusión sobre verdad y creencia. Maestro espiritual pero desenfocado. Viajes a tierra santa real o imaginaria.':'Neptune in Sagittarius: cosmic spiritual idealism. Universal mystical religion. Confusion about truth and belief. Spiritual teacher but unfocused. Travels to real or imagined holy lands.',
+            'Capricornio':L?'Neptuno en Capricornio: idealismo sobre estructura. Confusión sobre autoridad y realidad. Espiritualidad institucionalizada. Karma manifestado en limitaciones. Autoridad invisible detrás del trono.':'Neptune in Capricorn: idealism about structure. Confusion about authority and reality. Institutionalized spirituality. Karma manifested as limitations. Invisible authority behind throne.',
+            'Acuario':L?'Neptuno en Acuario: idealismo colectivo futuro. Visión de humanidad unida. Confusión sobre amistades y grupo. Tecnología y espiritualidad fusionadas. Utopía como promesa.':'Neptune in Aquarius: collective future idealism. Vision of united humanity. Confusion about friendships and group. Technology and spirituality fused. Utopia as promise.',
+            'Piscis':L?'Neptuno en domicilio: misticismo cósmico absoluto. Disolución pero no caos. Intuición sin límites. Fusión con lo divino. Espiritualidad como respirar.':'Neptune in domicile: absolute cosmic mysticism. Dissolution but not chaos. Limitless intuition. Fusion with divine. Spirituality as breathing.'
+        },
+        'pluto': {
+            'Aries':L?'Plutón en Aries: transformación del ego y la voluntad. Destrucción y renacimiento del yo. Poder personal apocalíptico. Liderazgo después del sacrificio propio.':'Pluto in Aries: transformation of ego and will. Destruction and rebirth of self. Apocalyptic personal power. Leadership after self-sacrifice.',
+            'Tauro':L?'Plutón en Tauro: transformación de valores y posesiones. Pérdida y renacimiento económico. Poder sobre la materia. Apego mortífero transformado.':'Pluto in Taurus: transformation of values and possessions. Economic loss and rebirth. Power over matter. Deadly attachment transformed.',
+            'Géminis':L?'Plutón en Géminis: transformación mental y comunicativa. Pensamiento que destruye y recrea. Palabras con poder oculto. Verdad enfrentada desnudamente.':'Pluto in Gemini: mental and communicative transformation. Thinking that destroys and recreates. Words with hidden power. Truth faced nakedly.',
+            'Cáncer':L?'Plutón en Cáncer: transformación emocional y familiar radical. Muerte del pasado familiar. Psicología revuelta. Poder heredado u oculto en la familia. Renacimiento emocional.':'Pluto in Cancer: radical emotional and family transformation. Death of family past. Psychology overturned. Hidden or inherited power in family. Emotional rebirth.',
+            'Leo':L?'Plutón en Leo: transformación del ego creativo. Muerte del yo que conocías. Renacimiento poderoso. Liderazgo mediante sacrificio. Creatividad que aterroriza y sana.':'Pluto in Leo: transformation of creative ego. Death of known self. Powerful rebirth. Leadership through sacrifice. Creativity that terrifies and heals.',
+            'Virgo':L?'Plutón en Virgo: transformación del servicio y salud. Limpieza radical de lo innecesario. Poder en los detalles. Curación mediante descomposición. Técnica como magia.':'Pluto in Virgo: transformation of service and health. Radical purging of unnecessary. Power in details. Healing through decomposition. Technique as magic.',
+            'Libra':L?'Plutón en Libra: transformación de relaciones y justicia. Poder en asociaciones. Matrimonio como muerte-renacimiento. Justicia vengativa que se vuelve compasión. Paz forjada en fuego.':'Pluto in Libra: transformation of relationships and justice. Power in partnerships. Marriage as death-rebirth. Vengeful justice becoming compassion. Peace forged in fire.',
+            'Escorpio':L?'Plutón en domicilio: transformación personal absoluta. Poder psicológico inquebrantable. Regeneración infinita. Alquimia de la vida cotidiana. Toque de midas invertido.':'Pluto in domicile: absolute personal transformation. Unbreakable psychological power. Infinite regeneration. Daily life alchemy. Inverted midas touch.',
+            'Sagitario':L?'Plutón en Sagitario: transformación de creencias y filosofía. Ideología que destruye. Verdad que mata falsedades. Maestro de renacimiento espiritual. Chamanismo moderno.':'Pluto in Sagittarius: transformation of belief and philosophy. Ideology that destroys. Truth killing falsehoods. Master of spiritual rebirth. Modern shamanism.',
+            'Capricornio':L?'Plutón exaltado: transformación de estructuras. Poder sobre instituciones. Renacimiento de autoridad. Destrucción creativa de sistemas viejos. Muerte del poder que renace.':'Pluto exalted: transformation of structures. Power over institutions. Rebirth of authority. Creative destruction of old systems. Power dying to be reborn.',
+            'Acuario':L?'Plutón en Acuario: transformación colectiva. Poder de grupos ocultos. Tecnología que destruye y crea. Revolución del inconsciente colectivo. Futuro forjado hoy.':'Pluto in Aquarius: collective transformation. Power of hidden groups. Technology destroying and creating. Collective unconscious revolution. Future forged today.',
+            'Piscis':L?'Plutón en Piscis: transformación espiritual y mística. Muerte de ilusiones masivas. Renacimiento de alma. Poder espiritual sin forma. Disolución que sana.':'Pluto in Pisces: spiritual and mystical transformation. Death of mass illusions. Soul rebirth. Formless spiritual power. Dissolution that heals.'
+        },
+        'chiron': {
+            'Aries':L?'Quirón en Aries: el sanador herido del yo. Tu herida es tu fortaleza para sanar a otros. Valentía después del trauma. Enseñanza del liderazgo verdadero.':'Chiron in Aries: wounded healer of self. Your wound is your strength to heal others. Courage after trauma. Teaching true leadership.',
+            'Tauro':L?'Quirón en Tauro: el sanador herido de seguridad. Aprendes a sanar relaciones con lo material. Tu vulnerabilidad sensorial se vuelve empatía. Ganas estabilidad tras caos.':'Chiron in Taurus: wounded healer of security. Learn to heal material relationships. Your sensory vulnerability becomes empathy. Gain stability after chaos.',
+            'Géminis':L?'Quirón en Géminis: el sanador herido de la mente. Tu confusión intelectual sana a otros confundidos. Enseñanza a través de fragmentos de verdad. Comunicación que cicatriza.':'Chiron in Gemini: wounded healer of mind. Your intellectual confusion heals others. Teaching through fragments of truth. Communication that scars over.',
+            'Cáncer':L?'Quirón en Cáncer: el sanador herido emocional. Tu abandono inicial sana a otros desprotegidos. Cuidado profundo emerge de tu propio desamparo. Hogar sanador.':'Chiron in Cancer: wounded healer emotional. Your early abandonment heals unprotected others. Deep care emerges from your own helplessness. Healing home.',
+            'Leo':L?'Quirón en Leo: el sanador herido del corazón. Tu dolor de rechazo sana a rechazados. Creatividad que brota de cicatrices. Liderazgo que sana mediante validación.':'Chiron in Leo: wounded healer of heart. Your rejection pain heals the rejected. Creativity sprouting from scars. Leadership healing through validation.',
+            'Virgo':L?'Quirón en Virgo: el sanador herido del cuerpo-mente. Tu imperfección te enseña a sanar. Medicina a través de vulnerabilidad. Servicio que brota de limitación.':'Chiron in Virgo: wounded healer of body-mind. Your imperfection teaches you to heal. Medicine through vulnerability. Service springing from limitation.',
+            'Libra':L?'Quirón en Libra: el sanador herido de las relaciones. Tu dolor relacional sana parejas rotas. Equilibrio hallado en desequilibrio. Justicia que brota de injusticia vivida.':'Chiron in Libra: wounded healer of relationships. Your relational pain heals broken couples. Balance found in imbalance. Justice springing from lived injustice.',
+            'Escorpio':L?'Quirón en Escorpio: el sanador herido de profundidades. Tu trauma psicológico se vuelve sabiduría oculta. Poder curativo en lo sombrio. Renacimiento mediante confrontación de sombra.':'Chiron in Scorpio: wounded healer of depths. Your psychological trauma becomes hidden wisdom. Healing power in shadow. Rebirth through shadow confrontation.',
+            'Sagitario':L?'Quirón en Sagitario: el sanador herido de fe. Tu desilusionamiento filosofía sana creyentes perdidos. Verdad relativizada sanador. Enseñanza mediante búsqueda nunca terminada.':'Chiron in Sagittarius: wounded healer of faith. Your disillusionment heals lost believers. Relativized truth as healer. Teaching through never-ending quest.',
+            'Capricornio':L?'Quirón en Capricornio: el sanador herido de autoridad. Tu dolor de limitación sana a los controlados. Maestría ganada mediante obstáculos. Poder compasivo en dureza.':'Chiron in Capricorn: wounded healer of authority. Your limitation pain heals the controlled. Mastery gained through obstacles. Compassionate power in harshness.',
+            'Acuario':L?'Quirón en Acuario: el sanador herido colectivo. Tu alienación sana a excluidos. Visión futurista del conexión. Humanitarismo que brota de soledad.':'Chiron in Aquarius: wounded healer collective. Your alienation heals excluded ones. Futuristic vision of connection. Humanitarianism springing from loneliness.',
+            'Piscis':L?'Quirón en Piscis: el sanador herido espiritual. Tu pérdida de fe sana buscadores perdidos. Misterio convertido en puente. Espiritualidad que emerge de vacío.':'Chiron in Pisces: wounded healer spiritual. Your loss of faith heals lost seekers. Mystery turned into bridge. Spirituality emerging from void.'
+        }
+    };
+
+    const houseDeep = {
+        1:L?'Casa I — El Ascendente. Tu máscara, tu cuerpo físico, tu primera impresión en el mundo. Es el filtro a través del cual expresas toda tu carta natal. Define cómo inicias las cosas y cómo te perciben los demás.':'House I — The Ascendant. Your mask, physical body, first impression on the world. The filter through which you express your entire natal chart. Defines how you initiate things and how others perceive you.',
+        2:L?'Casa II — Recursos y autoestima. Lo que valoras, cómo generas dinero, tu relación con lo material. Revela tus talentos innatos para generar abundancia y tu sentido de autovaloración.':'House II — Resources and self-worth. What you value, how you generate money, your relationship with the material. Reveals innate talents for generating abundance and sense of self-value.',
+        3:L?'Casa III — Mente concreta y comunicación. Tu estilo de pensamiento cotidiano, relación con hermanos y vecinos, viajes cortos. Cómo procesas y compartes información.':'House III — Concrete mind and communication. Your everyday thinking style, relationship with siblings and neighbors, short trips. How you process and share information.',
+        4:L?'Casa IV — El Fondo del Cielo (IC). Tu raíces, hogar, familia, pasado y cimientos psicológicos. El dominio privado de tu vida. Define tu herencia emocional y familiar.':'House IV — The Imum Coeli (IC). Your roots, home, family, past and psychological foundation. The private domain of your life. Defines your emotional and family heritage.',
+        5:L?'Casa V — Creatividad, romance y diversión. Tu expresión creativa, relaciones románticas, hijos y placer. El lugar donde brillas con tu verdadero yo.':'House V — Creativity, romance and fun. Your creative expression, romantic relationships, children and pleasure. Where you shine with your true self.',
+        6:L?'Casa VI — Servicio y salud. Tu trabajo diario, hábitos de salud, relación con el cuerpo. Donde desarrollas maestría y servicio. El lugar de la mejora constante.':'House VI — Service and health. Your daily work, health habits, body relationship. Where you develop mastery and service. The place of constant improvement.',
+        7:L?'Casa VII — El Descendente. Las relaciones de pareja y asociaciones. Lo que proyectas en otros. Tu espejo relacional y búsqueda del complemento.':'House VII — The Descendant. Partnerships and marriage relationships. What you project onto others. Your relational mirror and search for complement.',
+        8:L?'Casa VIII — Sexo, muerte y transformación. Herencias, recursos compartidos, intimidad profunda y regeneración psíquica. La alquimia emocional de la vida.':'House VIII — Sex, death and transformation. Inheritances, shared resources, deep intimacy and psychic regeneration. The emotional alchemy of life.',
+        9:L?'Casa IX — Filosofía y viajes. Tu búsqueda de significado, educación superior, viajes largos y expansión espiritual. Tu brújula existencial.':'House IX — Philosophy and travel. Your search for meaning, higher education, long journeys and spiritual expansion. Your existential compass.',
+        10:L?'Casa X — Medio Cielo (MC). Tu carrera, estatus público y legado. La cúspide de tu realización social. Cómo eres visto profesionalmente en el mundo.':'House X — The Midheaven (MC). Your career, public status and legacy. The pinnacle of your social achievement. How you are professionally seen in the world.',
+        11:L?'Casa XI — Amistades y comunidad. Tus ideales y esperanzas colectivas. Donde encuentras tu tribu y contribuyes a causas mayores.':'House XI — Friendships and community. Your ideals and collective hopes. Where you find your tribe and contribute to larger causes.',
+        12:L?'Casa XII — El subconsciente y la redención. Lo oculto, deudas kármicas, espiritualidad y el inconsciente colectivo. El lugar de la disolución y el renacimiento.':'House XII — The subconscious and redemption. The hidden, karmic debts, spirituality and the collective unconscious. The place of dissolution and rebirth.'
+    };
+
+    const aspectMeanings = {
+        'Conjunction':L?'Fusión de energías — las fuerzas planetarias se amplifican y unifican, creando un punto de poder concentrado en la carta.':'Fusion of energies — planetary forces amplify and unify, creating a concentrated power point in the chart.',
+        'Opposition':L?'Polaridad y tensión creativa — dos fuerzas opuestas que buscan integración y consciencia a través del conflicto.':'Polarity and creative tension — two opposing forces seeking integration and awareness through conflict.',
+        'Trine':L?'Armonía natural y flujo de talento — energías que cooperan sin esfuerzo. Talento innato pero riesgo de complacencia.':'Natural harmony and talent flow — energies cooperating effortlessly. Innate gift but risk of complacency.',
+        'Square':L?'Tensión dinámica y motor de crecimiento — fricción que obliga a actuar y transformarse. El constructor de carácter en la carta.':'Dynamic tension and growth engine — friction forcing action and transformation. The character builder in the chart.',
+        'Sextile':L?'Oportunidad y cooperación — energías que se apoyan mutuamente cuando se activan conscientemente.':'Opportunity and cooperation — energies supporting each other when consciously activated.',
+        'Quincunx':L?'Ajuste incómodo — dos energías que requieren adaptación constante. El aspecto del sanador herido.':'Uncomfortable adjustment — two energies requiring constant adaptation. The wounded healer aspect.'
+    };
+
+    if (type === 'planet' && globalNatalChart && globalNatalChart.planets) {
+        const planetData = globalNatalChart.planets[data];
+        const planetNamesLocal = {
+            'sun': L ? 'Sol' : 'Sun',
+            'moon': L ? 'Luna' : 'Moon',
+            'mercury': L ? 'Mercurio' : 'Mercury',
+            'venus': 'Venus',
+            'mars': L ? 'Marte' : 'Mars',
+            'jupiter': L ? 'Júpiter' : 'Jupiter',
+            'saturn': L ? 'Saturno' : 'Saturn',
+            'uranus': L ? 'Urano' : 'Uranus',
+            'neptune': L ? 'Neptuno' : 'Neptune',
+            'pluto': L ? 'Plutón' : 'Pluto',
+            'chiron': L ? 'Quirón' : 'Chiron'
+        };
+
+        const houseNum = globalNatalChart.houses ? getHouseForLongitude(planetData.longitude, globalNatalChart.houses.cusps) : '-';
+        titleEl.textContent = (planetNamesLocal[data] || data) + ' ' + (planetSymbols[data] || '');
+
+        html += '<div style="border-bottom: 2px solid #c9a840; padding-bottom: 12px; margin-bottom: 15px;">';
+        html += '<div style="font-size:0.9em;margin-bottom:8px;"><strong>' + (L ? 'Signo:' : 'Sign:') + '</strong> ' + planetData.sign + '</div>';
+        html += '<div style="font-size:0.9em;margin-bottom:8px;"><strong>' + (L ? 'Grado:' : 'Degree:') + '</strong> ' + planetData.degree + '°' + (planetData.minute < 10 ? '0' : '') + planetData.minute + "'</div>";
+        html += '<div style="font-size:0.9em;margin-bottom:8px;"><strong>' + (L ? 'Casa:' : 'House:') + '</strong> ' + houseNum + '</div>';
+        if (planetData.isRetrograde) {
+            html += '<div style="font-size:0.9em;margin-bottom:8px;color:#e74c3c;"><strong>' + (L ? 'Estado:' : 'Status:') + '</strong> ' + (L ? 'RETRÓGRADO' : 'RETROGRADE') + '</div>';
+        }
+        html += '</div>';
+
+        html += '<div style="margin-bottom: 15px;">';
+        html += '<h4 style="color:#c9a840;margin-bottom:8px;">' + (L ? '✦ Interpretación del Planeta en el Signo' : '✦ Planet in Sign Interpretation') + '</h4>';
+
+        if (data === 'sun') {
+            html += '<p style="line-height:1.6;font-size:0.9em;">' + (sunSign[planetData.sign] || (L ? 'Interpretación no disponible' : 'Interpretation not available')) + '</p>';
+        } else if (deepPlanet[data] && deepPlanet[data][planetData.sign]) {
+            html += '<p style="line-height:1.6;font-size:0.9em;">' + deepPlanet[data][planetData.sign] + '</p>';
+        } else {
+            html += '<p style="line-height:1.6;font-size:0.9em;color:rgba(255,255,255,0.5);">' + (L ? 'Interpretación personalizada disponible en análisis completo' : 'Personalized interpretation available in full analysis') + '</p>';
+        }
+        html += '</div>';
+
+        html += '<div>';
+        html += '<h4 style="color:#c9a840;margin-bottom:8px;">' + (L ? '🏠 Significado de la Casa' : '🏠 House Meaning') + '</h4>';
+        html += '<p style="line-height:1.6;font-size:0.9em;">' + (houseDeep[houseNum] || (L ? 'Casa ' + houseNum : 'House ' + houseNum)) + '</p>';
+        html += '</div>';
+
+    } else if (type === 'house' && globalNatalChart && globalNatalChart.houses) {
+        const houseNum = data;
+        const cusp = globalNatalChart.houses.cusps[houseNum - 1];
+        const info = getZodiacSignWithDegree(cusp);
+        const houseNames = ['ASC', 'II', 'III', 'IV (IC)', 'V', 'VI', 'VII (DESC)', 'VIII', 'IX', 'X (MC)', 'XI', 'XII'];
+
+        titleEl.textContent = (L ? 'Casa ' : 'House ') + houseNum + ' — ' + (houseNames[houseNum - 1] || houseNum);
+
+        html += '<div style="border-bottom: 2px solid #c9a840; padding-bottom: 12px; margin-bottom: 15px;">';
+        html += '<div style="font-size:0.9em;margin-bottom:8px;"><strong>' + (L ? 'Signo en Cúspide:' : 'Sign on Cusp:') + '</strong> ' + info.sign + '</div>';
+        html += '<div style="font-size:0.9em;margin-bottom:8px;"><strong>' + (L ? 'Grado:' : 'Degree:') + '</strong> ' + info.degree + '°' + (info.minute < 10 ? '0' : '') + info.minute + "'</div>";
+        html += '</div>';
+
+        html += '<div style="margin-bottom: 15px;">';
+        html += '<h4 style="color:#c9a840;margin-bottom:8px;">' + (L ? '✦ Significado de la Casa' : '✦ House Meaning') + '</h4>';
+        html += '<p style="line-height:1.6;font-size:0.9em;">' + (houseDeep[houseNum] || (L ? 'Casa ' + houseNum : 'House ' + houseNum)) + '</p>';
+        html += '</div>';
+
+        // Show planets in this house
+        let planetsInHouse = [];
+        Object.entries(globalNatalChart.planets).forEach(function(entry) {
+            const pName = entry[0];
+            const pData = entry[1];
+            if (globalNatalChart.houses) {
+                const pHouse = getHouseForLongitude(pData.longitude, globalNatalChart.houses.cusps);
+                if (pHouse === houseNum) {
+                    planetsInHouse.push({name: pName, symbol: planetSymbols[pName] || '', sign: pData.sign});
+                }
+            }
+        });
+
+        if (planetsInHouse.length > 0) {
+            html += '<div>';
+            html += '<h4 style="color:#c9a840;margin-bottom:8px;">' + (L ? '🪐 Planetas en esta Casa' : '🪐 Planets in this House') + '</h4>';
+            html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+            planetsInHouse.forEach(function(p) {
+                html += '<div style="background:rgba(201,168,64,0.15);padding:6px 10px;border-radius:6px;font-size:0.9em;"><span style="font-size:1.1em;">' + p.symbol + '</span> ' + (planetNames[p.name] || p.name) + ' ' + (L ? 'en ' : 'in ') + p.sign + '</div>';
+            });
+            html += '</div>';
+            html += '</div>';
+        }
+
+    } else if (type === 'aspect' && globalNatalChart && globalNatalChart.natalAspects) {
+        const aspect = globalNatalChart.natalAspects[data];
+        if (aspect) {
+            const planet1Name = planetNames[aspect.planet1] || aspect.planet1;
+            const planet2Name = planetNames[aspect.planet2] || aspect.planet2;
+
+            titleEl.textContent = planet1Name + ' ' + aspect.aspect.symbol + ' ' + planet2Name;
+
+            html += '<div style="border-bottom: 2px solid ' + aspect.aspect.color + '; padding-bottom: 12px; margin-bottom: 15px;">';
+            html += '<div style="font-size:0.9em;margin-bottom:8px;"><strong>' + (L ? 'Tipo:' : 'Type:') + '</strong> <span style="color:' + aspect.aspect.color + ';font-weight:700;">' + aspect.aspect.name + '</span></div>';
+            html += '<div style="font-size:0.9em;margin-bottom:8px;"><strong>' + (L ? 'Orbe:' : 'Orb:') + '</strong> ' + aspect.orbFormatted + '</div>';
+            html += '<div style="font-size:0.9em;"><strong>' + (L ? 'Planetas:' : 'Planets:') + '</strong> ' + (planetSymbols[aspect.planet1] || '') + ' ' + planet1Name + ' — ' + (planetSymbols[aspect.planet2] || '') + ' ' + planet2Name + '</div>';
+            html += '</div>';
+
+            html += '<div>';
+            html += '<h4 style="color:' + aspect.aspect.color + ';margin-bottom:8px;">' + (L ? '✦ Significado del Aspecto' : '✦ Aspect Meaning') + '</h4>';
+            html += '<p style="line-height:1.6;font-size:0.9em;">' + (aspectMeanings[aspect.aspect.name] || (L ? 'Interpretación no disponible' : 'Interpretation not available')) + '</p>';
+            html += '</div>';
+        }
+    }
+
+    bodyEl.innerHTML = html;
+    modal.classList.add('show');
+}
+
 function openDiarioModal(date, lunarDay) {
     const dateKey = date.toISOString().split('T')[0];
     
@@ -5497,6 +5964,429 @@ function showMajorAspectModal(type, planetsStr, meaning, impact, dateTime) {
 
 function closeMajorAspectModal() {
     document.getElementById('majorAspectModal').classList.remove('show');
+}
+
+// ==============================================
+// ASPECTOS POR PLANETA 2026
+// ==============================================
+
+function showPlanetAspects(planetName, planetSymbol, planetColor) {
+    const modal = document.getElementById('planetAspectsModal');
+    const title = document.getElementById('planetAspectsTitle');
+    const body = document.getElementById('planetAspectsBody');
+    
+    const translatedPlanet = tp(planetName);
+    title.innerHTML = `${planetSymbol} ${translatedPlanet} • ${currentLang === 'es' ? 'Aspectos' : 'Aspects'} 2026`;
+    title.style.color = planetColor;
+    
+    const planetAspects = getAllAspectsForPlanet(planetName);
+    
+    if (planetAspects.length === 0) {
+        body.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #a8b2d1;">
+                <p style="font-size: 1.2em;">${currentLang === 'es' ? 'Próximamente aspectos de' : 'Coming soon aspects of'} ${translatedPlanet}</p>
+            </div>
+        `;
+    } else {
+        body.innerHTML = `
+            <div style="margin-bottom: 15px; padding: 15px; background: rgba(0,0,0,0.2); border-left: 4px solid ${planetColor}; border-radius: 8px;">
+                <strong style="color: ${planetColor}; font-size: 1.1em;">${planetSymbol} ${translatedPlanet}</strong>
+                <p style="margin-top: 5px; color: #a8b2d1; font-size: 0.9em;">
+                    ${planetAspects.length} ${t('importantEvents')}
+                </p>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                ${planetAspects.map(aspect => {
+                    const aspectColor = getAspectColor(aspect.type);
+                    const translatedType = translateAspectType(aspect.type);
+                    const translatedWith = ts(aspect.with) || tp(aspect.with) || aspect.with;
+                    const timeStr = aspect.time ? `<span style="font-weight: bold; color: #f0e68c;">${aspect.time}</span> - ` : '';
+                    const degreeStr = aspect.degree ? `<div style="font-size: 0.8em; color: #a8b2d1; margin-top: 2px;">(${aspect.degree})</div>` : '';
+                    const symbolStr = aspect.symbol ? `${aspect.symbol} ` : '';
+                    
+                    return `
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border-left: 3px solid ${aspectColor};">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                            <div style="font-size: 1.05em; flex: 1;">
+                                <div>${timeStr}<strong style="color: ${planetColor};">${translatedPlanet}</strong>
+                                <strong style="color: ${aspectColor}; margin: 0 8px;">${symbolStr}${translatedType}</strong>
+                                <strong style="color: #a8b2d1;">${translatedWith}</strong></div>
+                                ${degreeStr}
+                            </div>
+                            <div style="text-align: right; font-size: 0.85em; color: #f0e68c;">
+                                ${formatShortDate(aspect.date)}
+                            </div>
+                        </div>
+                        <p style="color: rgba(255,255,255,0.8); font-size: 0.9em; margin: 0;">
+                            ${translateMeaning(aspect.meaning)}
+                        </p>
+                    </div>
+                `;
+                }).join('')}
+            </div>
+        `;
+    }
+    
+    modal.classList.add('show');
+}
+
+function closePlanetAspectsModal() {
+    document.getElementById('planetAspectsModal').classList.remove('show');
+}
+
+function showMajorAspectsModal() {
+    const modal = document.getElementById('majorAspectsModal');
+    const body = document.getElementById('majorAspectsBody');
+    document.getElementById('majorAspectsTitle').textContent = currentLang==='es' ? '⭐ Aspectos Mayores 2026' : '⭐ Major Aspects 2026';
+    
+    // Calculate major aspects for 2026
+    const majorAspects = calculateMajorAspects2026();
+    
+    // Build HTML
+    let html = '';
+    
+    // Stelliums section
+    if (majorAspects.stelliums && majorAspects.stelliums.length > 0) {
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #c9a840; border-bottom: 2px solid #c9a840; padding-bottom: 8px;">' + (currentLang==="es"?"★ Stelliums (3+ planetas en mismo signo)":"★ Stelliums (3+ planets in same sign)") + '</h3>';
+        majorAspects.stelliums.forEach(s => {
+            html += `<div style="background: rgba(201,168,64,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #FFD700;">`;
+            html += `<strong style="color: #FFD700;">${s.sign}</strong>: ${s.planets.join(', ')}<br>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Período':'Period'}: ${s.startDate} - ${s.endDate}</small>`;
+            html += `</div>`;
+        });
+        html += '</div>';
+    }
+    
+    // T-Squares section
+    if (majorAspects.tSquares && majorAspects.tSquares.length > 0) {
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #ff6b6b; border-bottom: 2px solid #ff6b6b; padding-bottom: 8px;">⊥ T-Squares</h3>';
+        majorAspects.tSquares.forEach(t => {
+            html += `<div style="background: rgba(255,107,107,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #ff6b6b;">`;
+            html += `<strong style="color: #ff6b6b;">${t.apex}</strong> ${currentLang==='es'?'opuesto a':'opposed to'} ${t.base.join(', ')}<br>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Activo aproximadamente':'Active approximately'}: ${t.dates}</small>`;
+            html += `</div>`;
+        });
+        html += '</div>';
+    }
+    
+    // Grand Trines section
+    if (majorAspects.grandTrines && majorAspects.grandTrines.length > 0) {
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #51cf66; border-bottom: 2px solid #51cf66; padding-bottom: 8px;">△ Grand Trines</h3>';
+        majorAspects.grandTrines.forEach(g => {
+            html += `<div style="background: rgba(81,207,102,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #51cf66;">`;
+            html += `<strong style="color: #51cf66;">${g.planets.join(' - ')}</strong><br>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Elemento':'Element'}: ${g.element} • ${currentLang==='es'?'Períodos':'Periods'}: ${g.dates}</small>`;
+            html += `</div>`;
+        });
+        html += '</div>';
+    }
+    
+    // Major Oppositions section
+    if (majorAspects.majorOppositions && majorAspects.majorOppositions.length > 0) {
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #9b59b6; border-bottom: 2px solid #9b59b6; padding-bottom: 8px;">' + (currentLang==="es"?"☍ Oposiciones Mayores":"☍ Major Oppositions") + '</h3>';
+        majorAspects.majorOppositions.forEach(o => {
+            html += `<div style="background: rgba(155,89,182,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #9b59b6;">`;
+            html += `<strong style="color: #9b59b6;">${o.planet1}</strong> ☍ <strong style="color: #9b59b6;">${o.planet2}</strong><br>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==="es"?"Signo exacto":"Exact sign"}: ${o.date}</small>`;
+            html += `</div>`;
+        });
+        html += '</div>';
+    }
+    
+    if (html === '') {
+        html = '<p style="color: #a8b2d1; font-style: italic;">' + (L ? 'Calculando aspectos mayores...' : 'Calculating major aspects...') + '</p>';
+    }
+    
+    body.innerHTML = html;
+    modal.classList.add('show');
+}
+
+function closeMajorAspectsModal() {
+    document.getElementById('majorAspectsModal').classList.remove('show');
+}
+
+function calculateMajorAspects2026() {
+    const L = currentLang === 'es';
+    return {
+        stelliums: [
+            { sign: L?'Tauro':'Taurus', planets: [L?'Mercurio':'Mercury', L?'Venus':'Venus', L?'Marte':'Mars'], startDate: L?'Abril':'April', endDate: L?'Mayo':'May', significance: L?'Alta':'High' },
+            { sign: L?'Géminis':'Gemini', planets: [L?'Sol':'Sun', L?'Mercurio':'Mercury', L?'Venus':'Venus'], startDate: L?'Mayo':'May', endDate: L?'Junio':'June', significance: L?'Media':'Medium' }
+        ],
+        tSquares: [
+            { apex: L?'Marte en Cáncer':'Mars in Cancer', base: [L?'Urano en Aries':'Uranus in Aries', L?'Saturno en Piscis':'Saturn in Pisces'], dates: L?'Junio - Agosto':'June - August' },
+            { apex: L?'Venus en Virgo':'Venus in Virgo', base: [L?'Saturno en Piscis':'Saturn in Pisces', L?'Plutón en Capricornio':'Pluto in Capricorn'], dates: L?'Septiembre - Octubre':'September - October' }
+        ],
+        grandTrines: [
+            { planets: [L?'Sol en Aries':'Sun in Aries', L?'Marte en Leo':'Mars in Leo', L?'Saturno en Sagitario':'Saturn in Sagittarius'], element: L?'Fuego':'Fire', dates: L?'Marzo - Abril':'March - April' },
+            { planets: [L?'Venus en Tauro':'Venus in Taurus', L?'Mercurio en Capricornio':'Mercury in Capricorn', L?'Plutón en Virgo':'Pluto in Virgo'], element: L?'Tierra':'Earth', dates: L?'Abril - Mayo':'April - May' }
+        ],
+        majorOppositions: [
+            { planet1: L?'Júpiter en Géminis':'Jupiter in Gemini', planet2: L?'Saturno en Sagitario':'Saturn in Sagittarius', date: L?'15 Junio 2026':'June 15, 2026' },
+            { planet1: L?'Mercurio en Libra':'Mercury in Libra', planet2: L?'Plutón en Aries':'Pluto in Aries', date: L?'22 Octubre 2026':'October 22, 2026' }
+        ]
+    };
+}
+
+function getPlanetSymbol(planetOrSign) {
+    const symbols = {
+        // Planetas
+        'Sol': '☉',
+        'Mercurio': '☿',
+        'Venus': '♀',
+        'Marte': '♂',
+        'Júpiter': '♃',
+        'Saturno': '♄',
+        'Urano': '♅',
+        'Neptuno': '♆',
+        'Plutón': '♇',
+        // Signos
+        'Aries': '♈',
+        'Tauro': '♉',
+        'Géminis': '♊',
+        'Cáncer': '♋',
+        'Leo': '♌',
+        'Virgo': '♍',
+        'Libra': '♎',
+        'Escorpio': '♏',
+        'Sagitario': '♐',
+        'Capricornio': '♑',
+        'Acuario': '♒',
+        'Piscis': '♓'
+    };
+    return symbols[planetOrSign] || planetOrSign;
+}
+
+function closePlanetAspectsModal() {
+    document.getElementById('planetAspectsModal').classList.remove('show');
+}
+
+function showMajorAspectsModal() {
+    const modal = document.getElementById('majorAspectsModal');
+    const body = document.getElementById('majorAspectsBody');
+    document.getElementById('majorAspectsTitle').textContent = currentLang==='es' ? '⭐ Aspectos Mayores 2026' : '⭐ Major Aspects 2026';
+    
+    // Calculate major aspects for 2026
+    const majorAspects = calculateMajorAspects2026();
+    
+    // Build HTML
+    let html = '';
+    
+    // Stelliums section
+    if (majorAspects.stelliums && majorAspects.stelliums.length > 0) {
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #c9a840; border-bottom: 2px solid #c9a840; padding-bottom: 8px;">' + (currentLang==="es"?"★ Stelliums (3+ planetas en mismo signo)":"★ Stelliums (3+ planets in same sign)") + '</h3>';
+        majorAspects.stelliums.forEach(s => {
+            html += `<div style="background: rgba(201,168,64,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #FFD700;">`;
+            html += `<strong style="color: #FFD700;">${s.sign}</strong>: ${s.planets.join(', ')}<br>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Período':'Period'}: ${s.startDate} - ${s.endDate}</small>`;
+            html += `</div>`;
+        });
+        html += '</div>';
+    }
+    
+    // T-Squares section
+    if (majorAspects.tSquares && majorAspects.tSquares.length > 0) {
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #ff6b6b; border-bottom: 2px solid #ff6b6b; padding-bottom: 8px;">⊥ T-Squares</h3>';
+        majorAspects.tSquares.forEach(t => {
+            html += `<div style="background: rgba(255,107,107,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #ff6b6b;">`;
+            html += `<strong style="color: #ff6b6b;">${t.apex}</strong> ${currentLang==='es'?'opuesto a':'opposed to'} ${t.base.join(', ')}<br>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Activo aproximadamente':'Active approximately'}: ${t.dates}</small>`;
+            html += `</div>`;
+        });
+        html += '</div>';
+    }
+    
+    // Grand Trines section
+    if (majorAspects.grandTrines && majorAspects.grandTrines.length > 0) {
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #51cf66; border-bottom: 2px solid #51cf66; padding-bottom: 8px;">△ Grand Trines</h3>';
+        majorAspects.grandTrines.forEach(g => {
+            html += `<div style="background: rgba(81,207,102,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #51cf66;">`;
+            html += `<strong style="color: #51cf66;">${g.planets.join(' - ')}</strong><br>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==='es'?'Elemento':'Element'}: ${g.element} • ${currentLang==='es'?'Períodos':'Periods'}: ${g.dates}</small>`;
+            html += `</div>`;
+        });
+        html += '</div>';
+    }
+    
+    // Major Oppositions section
+    if (majorAspects.majorOppositions && majorAspects.majorOppositions.length > 0) {
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #9b59b6; border-bottom: 2px solid #9b59b6; padding-bottom: 8px;">' + (currentLang==="es"?"☍ Oposiciones Mayores":"☍ Major Oppositions") + '</h3>';
+        majorAspects.majorOppositions.forEach(o => {
+            html += `<div style="background: rgba(155,89,182,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #9b59b6;">`;
+            html += `<strong style="color: #9b59b6;">${o.planet1}</strong> ☍ <strong style="color: #9b59b6;">${o.planet2}</strong><br>`;
+            html += `<small style="color: #a8b2d1;">${currentLang==="es"?"Signo exacto":"Exact sign"}: ${o.date}</small>`;
+            html += `</div>`;
+        });
+        html += '</div>';
+    }
+    
+    if (html === '') {
+        html = '<p style="color: #a8b2d1; font-style: italic;">' + (L ? 'Calculando aspectos mayores...' : 'Calculating major aspects...') + '</p>';
+    }
+    
+    body.innerHTML = html;
+    modal.classList.add('show');
+}
+
+function closeMajorAspectsModal() {
+    document.getElementById('majorAspectsModal').classList.remove('show');
+}
+
+function showHistoricAspectsModal() {
+    const modal = document.getElementById('historicAspectsModal');
+    const body = document.getElementById('historicAspectsBody');
+    const L = currentLang === 'es';
+    document.getElementById('historicAspectsTitle').textContent = L ? '🏛️ Eventos Extraordinarios 2026' : '🏛️ Extraordinary Events 2026';
+
+    const events = [
+        {
+            type:'major', badge:L?'MAYOR':'MAJOR', badgeColor:'#ff8a80', badgeBg:'rgba(231,76,60,0.2)',
+            planet1:'Saturno', symbol:'☌', planet2:'Neptuno',
+            date:'20 Feb 2026', time:'07:24', degrees:'0°44', signs:'Aries',
+            cycle:L?'Ocurre cada ~36 años':'Occurs every ~36 years',
+            lastTime:L?'Última vez: 1989 en Capricornio':'Last time: 1989 in Capricorn',
+            history:[
+                {year:'1989',text:L?'Caída del Muro de Berlín. Fin de la Guerra Fría. Colapso de la URSS comienza. Masacre de Tiananmén. Se disuelven estructuras políticas de décadas.':'Fall of the Berlin Wall. End of Cold War. USSR collapse begins. Tiananmen Square. Decades-old political structures dissolve.'},
+                {year:'1953',text:L?'Muerte de Stalin. Fin de la Guerra de Corea. Descubrimiento del ADN. Coronación de Isabel II. Cambio de era política y científica.':'Death of Stalin. End of Korean War. DNA discovery. Queen Elizabeth II coronation. Political and scientific era shift.'},
+                {year:'1917',text:L?'Revolución Rusa. EE.UU. entra en la Primera Guerra Mundial. Colapso del orden imperial europeo. Nacen ideologías que definen el siglo XX.':'Russian Revolution. US enters WWI. European imperial order collapses. Ideologies born that define 20th century.'}
+            ],
+            meaning:L?'Cuando Saturno (estructura, realidad) se une con Neptuno (disolución, sueños), las viejas estructuras se disuelven para dar paso a nuevos ideales. Marca el fin de una era y el nacimiento de otra.':'When Saturn (structure, reality) meets Neptune (dissolution, dreams), old structures dissolve for new ideals. Marks end of one era and birth of another.'
+        },
+        {
+            type:'major', badge:L?'MAYOR':'MAJOR', badgeColor:'#ff8a80', badgeBg:'rgba(231,76,60,0.2)',
+            planet1:'Urano', symbol:'△', planet2:'Plutón',
+            date:'17 Jul 2026', time:'23:04', degrees:'4°29', signs:L?'Géminis/Acuario':'Gemini/Aquarius',
+            cycle:L?'Ciclo completo: ~127 años':'Full cycle: ~127 years',
+            lastTime:L?'Último trígono: 1921-1922':'Last trine: 1921-1922',
+            history:[
+                {year:'1921-22',text:L?'Boom de los "Roaring Twenties". Revolución en radio, cine y aviación. Nacimiento del jazz. Transformación cultural acelerada.':'Roaring Twenties boom. Revolution in radio, cinema and aviation. Birth of jazz. Accelerated cultural transformation.'},
+                {year:'1965-66',text:L?'(Conjunción) Revolución contracultural. Derechos civiles. Revolución sexual. Era espacial. Beatles, hippies, protesta social masiva.':'(Conjunction) Counterculture revolution. Civil rights. Sexual revolution. Space age. Beatles, hippies, massive social protest.'},
+                {year:'2012-15',text:L?'(Cuadratura) Primavera Árabe. Movimiento Occupy. Crisis de refugiados. Populismo global. Bitcoin y blockchain emergen.':'(Square) Arab Spring. Occupy movement. Refugee crisis. Global populism. Bitcoin and blockchain emerge.'}
+            ],
+            meaning:L?'Urano (revolución, tecnología) en flujo armónico con Plutón (transformación profunda). El aspecto de las grandes revoluciones tecnológicas y sociales que transforman civilizaciones.':'Uranus (revolution, technology) in harmonic flow with Pluto (deep transformation). The aspect of great revolutions that transform civilizations.'
+        },
+        {
+            type:'notable', badge:L?'NOTABLE':'NOTABLE', badgeColor:'#80cbc4', badgeBg:'rgba(78,205,196,0.2)',
+            planet1:'Marte', symbol:'☌', planet2:'Plutón',
+            date:'27 Ene 2026', time:'15:00', degrees:'3°34', signs:'Acuario',
+            cycle:L?'Ocurre cada ~2 años':'Occurs every ~2 years',
+            lastTime:L?'Última vez: Mar 2024 en Acuario':'Last time: Mar 2024 in Aquarius',
+            history:[
+                {year:'2020',text:L?'Conjunción en Capricornio con Saturno y Júpiter. Inicio pandemia COVID-19. Lockdowns globales. Transformación radical del trabajo.':'Conjunction in Capricorn with Saturn and Jupiter. COVID-19 pandemic starts. Global lockdowns. Radical work transformation.'},
+                {year:'2001',text:L?'Conjunción en Sagitario. Ataques del 11-S. Inicio de la "Guerra contra el Terror". Cambio radical en geopolítica global.':'Conjunction in Sagittarius. 9/11 attacks. Start of "War on Terror". Radical shift in global geopolitics.'}
+            ],
+            meaning:L?'Marte activa la energía transformadora de Plutón. Acción intensa, confrontación con el poder. En Acuario: transformación de estructuras colectivas y tecnológicas.':'Mars activates Pluto transformative energy. Intense action, confrontation with power. In Aquarius: transformation of collective and tech structures.'
+        },
+        {
+            type:'notable', badge:L?'NOTABLE':'NOTABLE', badgeColor:'#80cbc4', badgeBg:'rgba(78,205,196,0.2)',
+            planet1:'Saturno', symbol:'⚹', planet2:'Plutón',
+            date:'28 Mar 2026', time:'14:40', degrees:'5°09', signs:L?'Aries/Acuario':'Aries/Aquarius',
+            cycle:L?'Ciclo Saturno-Plutón: ~33 años':'Saturn-Pluto cycle: ~33 years',
+            lastTime:L?'Última conjunción: Ene 2020':'Last conjunction: Jan 2020',
+            history:[
+                {year:'2020',text:L?'(Conjunción) Pandemia COVID-19. Colapso económico mundial. Reestructuración del orden laboral y social.':'(Conjunction) COVID-19 pandemic. World economic collapse. Labor and social order restructuring.'},
+                {year:'1982',text:L?'(Conjunción) Recesión global. Crisis de deuda latinoamericana. Guerra de Malvinas. Inicio era Reagan/Thatcher.':'(Conjunction) Global recession. Latin American debt crisis. Falklands War. Reagan/Thatcher era begins.'},
+                {year:'1947',text:L?'(Conjunción) Inicio Guerra Fría. Plan Marshall. Partición India/Pakistán. Creación de Israel. Nuevo orden post-WWII.':'(Conjunction) Cold War begins. Marshall Plan. India/Pakistan partition. Israel created. New post-WWII order.'}
+            ],
+            meaning:L?'Oportunidad constructiva del ciclo Saturno-Plutón iniciado en 2020. Momento de darle forma productiva a las transformaciones post-pandemia.':'Constructive opportunity in Saturn-Pluto cycle from 2020. Time to give productive form to post-pandemic transformations.'
+        },
+        {
+            type:'notable', badge:L?'NOTABLE':'NOTABLE', badgeColor:'#80cbc4', badgeBg:'rgba(78,205,196,0.2)',
+            planet1:'Venus', symbol:'☌', planet2:'Júpiter',
+            date:'9 Jun 2026', time:'12:55', degrees:'25°46', signs:L?'Cáncer':'Cancer',
+            cycle:L?'Ocurre ~1 vez al año':'Occurs ~once a year',
+            lastTime:L?'Última vez: May 2024 en Tauro':'Last time: May 2024 in Taurus',
+            history:[
+                {year:L?'Tradición':'Tradition',text:L?'Conocida como "La Gran Benefactora". Conjunción de los dos planetas más benéficos. En la antigüedad, el mejor día del año para bodas, negocios e iniciar proyectos. En Cáncer: amor familiar y nutrición emocional amplificados.':'Known as "The Great Benefactress". Conjunction of the two most benefic planets. In antiquity, the best day for weddings, business and projects. In Cancer: family love and emotional nurturing amplified.'}
+            ],
+            meaning:L?'El aspecto más afortunado del zodíaco. Venus (amor, belleza) + Júpiter (abundancia, expansión). En Cáncer: generosidad emocional al máximo.':'Most fortunate aspect in zodiac. Venus (love, beauty) + Jupiter (abundance, expansion). In Cancer: emotional generosity at maximum.'
+        },
+        {
+            type:'notable', badge:L?'NOTABLE':'NOTABLE', badgeColor:'#80cbc4', badgeBg:'rgba(78,205,196,0.2)',
+            planet1:'Júpiter', symbol:'☍', planet2:'Plutón',
+            date:'20 Jul 2026', time:'07:54', degrees:'4°26', signs:L?'Leo/Acuario':'Leo/Aquarius',
+            cycle:L?'Ciclo Júpiter-Plutón: ~12 años':'Jupiter-Pluto cycle: ~12 years',
+            lastTime:L?'Última conjunción: Nov 2020':'Last conjunction: Nov 2020',
+            history:[
+                {year:'2020',text:L?'(Triple conjunción) Pandemia COVID-19 en apogeo. Mercados colapsan y se recuperan. Expansión monetaria sin precedentes. Billonarios aumentan riqueza masivamente.':'(Triple conjunction) COVID-19 at peak. Markets crash and recover. Unprecedented monetary expansion. Billionaires massively increase wealth.'},
+                {year:'2007',text:L?'(Cuadratura) Crisis financiera global. Burbuja inmobiliaria estalla. Colapso de Lehman Brothers. Gran Recesión.':'(Square) Global financial crisis. Housing bubble bursts. Lehman Brothers collapses. Great Recession.'}
+            ],
+            meaning:L?'Punto de máxima tensión del ciclo de 2020. Júpiter (expansión) vs Plutón (poder concentrado). En Leo/Acuario: expresión individual vs control colectivo.':'Peak tension of 2020 cycle. Jupiter (expansion) vs Pluto (concentrated power). In Leo/Aquarius: individual expression vs collective control.'
+        },
+        {
+            type:'notable', badge:L?'NOTABLE':'NOTABLE', badgeColor:'#80cbc4', badgeBg:'rgba(78,205,196,0.2)',
+            planet1:'Júpiter', symbol:'△', planet2:'Saturno',
+            date:'31 Ago 2026', time:'15:40', degrees:'13°41', signs:L?'Leo/Aries':'Leo/Aries',
+            cycle:L?'Ciclo Júpiter-Saturno: ~20 años':'Jupiter-Saturn cycle: ~20 years',
+            lastTime:L?'Última conjunción: Dic 2020 ("Gran Conjunción")':'Last conjunction: Dec 2020 ("Great Conjunction")',
+            history:[
+                {year:'2020',text:L?'(Gran Conjunción en Acuario) Primera en signo de aire en 200 años. Inicio "Era de Aire": tecnología e información como motores. Coincide con vacunas COVID.':'(Great Conjunction in Aquarius) First in air sign in 200 years. Start of "Age of Air": tech and info as drivers. Coincides with COVID vaccines.'},
+                {year:'2000',text:L?'(Conjunción en Tauro) Burbuja dot-com estalla. Consolidación tecnológica. Bush vs Gore. Incertidumbre de cambio de milenio.':'(Conjunction in Taurus) Dot-com bubble bursts. Tech consolidation. Bush vs Gore. Millennium uncertainty.'},
+                {year:'1981',text:L?'(Conjunción en Libra) Era Reagan. IBM lanza primera PC. MTV debut. Revolución neoliberal. Nuevas estructuras económicas globales.':'(Conjunction in Libra) Reagan era. IBM launches first PC. MTV debuts. Neoliberal revolution. New global economic structures.'}
+            ],
+            meaning:L?'Cosecha armónica del ciclo de la Gran Conjunción de 2020. Júpiter (visión) fluye con Saturno (estructura) en signos de fuego: acción decidida con forma.':'Harmonic harvest from 2020 Great Conjunction. Jupiter (vision) flows with Saturn (structure) in fire signs: decisive action with form.'
+        },
+        {
+            type:'generational', badge:L?'GENERACIONAL':'GENERATIONAL', badgeColor:'#d4a5f5', badgeBg:'rgba(155,89,182,0.25)',
+            planet1:'Neptuno', symbol:'→', planet2:L?'Aries':'Aries',
+            date:'26 Ene 2026', time:'', degrees:'', signs:'',
+            cycle:L?'Neptuno cambia de signo cada ~14 años':'Neptune changes signs every ~14 years',
+            lastTime:L?'Última vez en Aries: 1861-1875':'Last time in Aries: 1861-1875',
+            history:[
+                {year:'1861-75',text:L?'Guerra Civil de EE.UU. y abolición de la esclavitud. Unificación de Italia y Alemania. Comuna de París. Idealismo revolucionario aplicado a acción directa. Nacen movimientos obreros.':'US Civil War and abolition of slavery. Unification of Italy and Germany. Paris Commune. Revolutionary idealism in direct action. Labor movements born.'}
+            ],
+            meaning:L?'Neptuno (espiritualidad, inconsciente colectivo) entra en Aries (acción, identidad) por primera vez en 165 años. Nueva generación con ideales aplicados a la acción directa. Hasta 2039.':'Neptune (spirituality, collective unconscious) enters Aries (action, identity) for first time in 165 years. New generation with ideals in direct action. Until 2039.'
+        },
+        {
+            type:'generational', badge:L?'GENERACIONAL':'GENERATIONAL', badgeColor:'#d4a5f5', badgeBg:'rgba(155,89,182,0.25)',
+            planet1:'Urano', symbol:'→', planet2:L?'Géminis':'Gemini',
+            date:'7 Jul 2026', time:'', degrees:'', signs:'',
+            cycle:L?'Urano cambia de signo cada ~7 años':'Uranus changes signs every ~7 years',
+            lastTime:L?'Última vez en Géminis: 1941-1949':'Last time in Gemini: 1941-1949',
+            history:[
+                {year:'1941-49',text:L?'Revolución en comunicaciones de guerra (radar, computadoras, Enigma). Invención del transistor (1947). Plan Marshall. Nacen las Naciones Unidas. La información como arma y como puente.':'Revolution in wartime communications (radar, computers, Enigma). Transistor invention (1947). Marshall Plan. United Nations born. Information as weapon and bridge.'}
+            ],
+            meaning:L?'Urano (revolución, tecnología) entra en Géminis (comunicación, información) por primera vez en 77 años. Revolución en IA, comunicación y tecnología. Hasta 2033.':'Uranus (revolution, technology) enters Gemini (communication, information) for first time in 77 years. AI revolution, communication and tech. Until 2033.'
+        }
+    ];
+
+    let html = '<div style="font-size:0.82em;color:#a8b2d1;margin-bottom:15px;line-height:1.5;">' + (L?'Alineaciones poco frecuentes entre planetas lentos que marcan épocas enteras. Incluye contexto histórico de ciclos anteriores.':'Rare alignments between slow planets that mark entire eras. Includes historical context from previous cycles.') + '</div>';
+
+    events.forEach(function(ev) {
+        var isSC = ev.symbol === '→';
+        var titleLine = isSC ? tp(ev.planet1) + ' → ' + ts(ev.planet2) : tp(ev.planet1) + ' ' + ev.symbol + ' ' + tp(ev.planet2) + (ev.degrees ? ' (' + ev.degrees + ')' : '') + (ev.signs ? ' — ' + ev.signs : '');
+        html += '<div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:14px;margin-bottom:14px;border-left:4px solid ' + ev.badgeColor + ';">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px;">';
+        html += '<div style="font-size:1.05em;font-weight:700;color:#e8eaf6;">' + titleLine + '</div>';
+        html += '<span style="background:' + ev.badgeBg + ';color:' + ev.badgeColor + ';padding:2px 8px;border-radius:4px;font-size:0.72em;font-weight:700;border:1px solid ' + ev.badgeColor + '40;">' + ev.badge + '</span>';
+        html += '</div>';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;font-size:0.82em;">';
+        html += '<span style="color:#f0e68c;font-weight:600;">📅 ' + ev.date + (ev.time ? ' — ' + ev.time : '') + '</span>';
+        html += '<span style="color:#c9a840;">⏱️ ' + ev.cycle + '</span>';
+        html += '<span style="color:rgba(255,255,255,0.5);">🔄 ' + ev.lastTime + '</span>';
+        html += '</div>';
+        html += '<div style="font-size:0.82em;color:#cfd8dc;line-height:1.5;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:6px;">' + ev.meaning + '</div>';
+        if (ev.history && ev.history.length) {
+            var hid = 'hist_' + ev.planet1.replace(/[^a-z]/gi,'') + '_' + ev.symbol.charCodeAt(0);
+            html += '<div style="margin-top:8px;">';
+            html += '<div onclick="var el=document.getElementById(\'' + hid + '\');var ar=this.querySelector(\'.hist-arrow\');if(el.style.display===\'none\'){el.style.display=\'block\';ar.textContent=\'▼\';}else{el.style.display=\'none\';ar.textContent=\'▶\';}" style="font-size:0.78em;color:' + ev.badgeColor + ';font-weight:700;letter-spacing:0.3px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid ' + ev.badgeColor + '30;display:flex;align-items:center;gap:6px;">';
+            html += '<span class="hist-arrow" style="font-size:0.9em;">▶</span> 📜 ' + (L ? 'Eventos Históricos en Ciclos Anteriores' : 'Historical Events in Previous Cycles') + ' <span style="opacity:0.5;font-weight:400;margin-left:auto;">(' + ev.history.length + ')</span></div>';
+            html += '<div id="' + hid + '" style="display:none;margin-top:6px;">';
+            ev.history.forEach(function(h) {
+                html += '<div style="font-size:0.8em;padding:6px 10px;margin-bottom:4px;background:rgba(255,255,255,0.03);border-radius:5px;border-left:2px solid ' + ev.badgeColor + '40;">';
+                html += '<span style="color:' + ev.badgeColor + ';font-weight:700;">' + h.year + ':</span> <span style="color:#b0bec5;line-height:1.45;">' + h.text + '</span></div>';
+            });
+            html += '</div></div>';
+        }
+        html += '</div>';
+    });
+
+    body.innerHTML = html;
+    modal.classList.add('show');
+}
+
+function closeHistoricAspectsModal() {
+    document.getElementById('historicAspectsModal').classList.remove('show');
 }
 
 
@@ -6449,6 +7339,8 @@ function switchToEarthMode() {
     if (lib) lib.style.display = 'none';
     const cdi = document.getElementById('currentDayInfo');
     if (cdi) cdi.style.display = 'none';
+    const pas = document.getElementById('planetaryAspectsSection');
+    if (pas) pas.style.display = 'none';
 
     // Update title
     document.getElementById('calendarTitle').innerHTML = currentLang==='es' ? '🌍 Tierra en Vivo' : '🌍 Earth Live';
@@ -6476,6 +7368,9 @@ function switchToLunarMode() {
     const lunarWeeks = document.getElementById('lunarWeeks');
     if (lunarWeeks) lunarWeeks.style.display = 'block';
 
+    // Restore planetary aspects section (visible in lunar mode)
+    const pas = document.getElementById('planetaryAspectsSection');
+    if (pas) pas.style.display = '';
 
     // Hide solar calendar
     const solarWeeks = document.getElementById('solarWeeks');
@@ -6540,6 +7435,8 @@ function switchToSolarSystemMode() {
     if (lib) lib.style.display = 'none';
     const cdi = document.getElementById('currentDayInfo');
     if (cdi) cdi.style.display = 'none';
+    const pas2 = document.getElementById('planetaryAspectsSection');
+    if (pas2) pas2.style.display = 'none';
 
     // Update title
     document.getElementById('calendarTitle').innerHTML = currentLang==='es' ? '☀️ Sistema Solar' : '☀️ Solar System';
@@ -7593,7 +8490,7 @@ function getBirthUTCTime(dateStr, timeStr, lat, lon, countryCode) {
 
 function calculateNatalChart(birthDate) {
     // birthDate = Date object in UTC
-    const planets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'chiron', 'lilith'];
+    const planets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'chiron', 'northnode', 'lilith'];
     const natalPositions = {};
 
     // Calculate obliquity for declination
@@ -7642,8 +8539,8 @@ function calculateNatalChart(birthDate) {
     // Calculate natal aspects (planet-to-planet)
     const natalAspects = calculateNatalAspects(natalPositions, houses);
 
-    // Calculate elements & qualities distribution
-    const elementQuality = calculateElementsQualities(natalPositions);
+    // Calculate elements & qualities distribution (including ASC and MC)
+    const elementQuality = calculateElementsQualities(natalPositions, houses);
 
     return { planets: natalPositions, houses, natalAspects, elementQuality };
 }
@@ -7724,39 +8621,81 @@ function calculateNatalAspects(planets, houses) {
 }
 
 // Calculate elements (Fire/Earth/Air/Water) and qualities (Cardinal/Fixed/Mutable)
-function calculateElementsQualities(planets) {
+function calculateElementsQualities(planets, houses) {
     const signElements = {
-        '♈ Aries': 'Fire', '♉ Tauro': 'Earth', '♊ Géminis': 'Air', '♋ Cáncer': 'Water',
-        '♌ Leo': 'Fire', '♍ Virgo': 'Earth', '♎ Libra': 'Air', '♏ Escorpio': 'Water',
-        '♐ Sagitario': 'Fire', '♑ Capricornio': 'Earth', '♒ Acuario': 'Air', '♓ Piscis': 'Water'
+        'Aries': 'Fire', 'Tauro': 'Earth', 'Géminis': 'Air', 'Cáncer': 'Water',
+        'Leo': 'Fire', 'Virgo': 'Earth', 'Libra': 'Air', 'Escorpio': 'Water',
+        'Sagitario': 'Fire', 'Capricornio': 'Earth', 'Acuario': 'Air', 'Piscis': 'Water'
     };
     const signQualities = {
-        '♈ Aries': 'Cardinal', '♉ Tauro': 'Fixed', '♊ Géminis': 'Mutable', '♋ Cáncer': 'Cardinal',
-        '♌ Leo': 'Fixed', '♍ Virgo': 'Mutable', '♎ Libra': 'Cardinal', '♏ Escorpio': 'Fixed',
-        '♐ Sagitario': 'Mutable', '♑ Capricornio': 'Cardinal', '♒ Acuario': 'Fixed', '♓ Piscis': 'Mutable'
+        'Aries': 'Cardinal', 'Tauro': 'Fixed', 'Géminis': 'Mutable', 'Cáncer': 'Cardinal',
+        'Leo': 'Fixed', 'Virgo': 'Mutable', 'Libra': 'Cardinal', 'Escorpio': 'Fixed',
+        'Sagitario': 'Mutable', 'Capricornio': 'Cardinal', 'Acuario': 'Fixed', 'Piscis': 'Mutable'
     };
 
     const elements = { Fire: 0, Earth: 0, Air: 0, Water: 0 };
     const qualities = { Cardinal: 0, Fixed: 0, Mutable: 0 };
+    const signStrength = {}; // Track strength of each sign
     const elementColors = { Fire: '#e74c3c', Earth: '#f39c12', Air: '#2ecc71', Water: '#3498db' };
     const qualityColors = { Cardinal: '#f39c12', Fixed: '#2ecc71', Mutable: '#e74c3c' };
-    // Use main 10 planets + chiron for distribution (exclude lilith)
-    const countPlanets = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron'];
+
+    // 15-point unweighted system (each point = 1):
+    // 10 planets: sun, moon, mercury, venus, mars, jupiter, saturn, uranus, neptune, pluto
+    // 1 chiron
+    // 1 northnode
+    // 1 lilith
+    // 1 ASC
+    // 1 MC
+    const countPlanets = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','northnode','lilith'];
     let total = 0;
 
     const planetList = [];
+    const signNames = ['Aries', 'Tauro', 'Géminis', 'Cáncer', 'Leo', 'Virgo', 'Libra', 'Escorpio', 'Sagitario', 'Capricornio', 'Acuario', 'Piscis'];
+    for (const sign of signNames) {
+        signStrength[sign] = 0;
+    }
+
+    // Count 10 planets + chiron + northnode + lilith (13 points)
     for (const p of countPlanets) {
         if (!planets[p]) continue;
         const sign = planets[p].sign;
         const el = signElements[sign];
         const qu = signQualities[sign];
-        if (el) { elements[el]++; total++; }
-        if (qu) qualities[qu]++;
-        planetList.push({ planet: p, sign: sign, element: el, quality: qu });
+        const w = 1; // Equal weight of 1 for all points
+        if (el) { elements[el] += w; total += w; }
+        if (qu) qualities[qu] += w;
+        if (sign && signStrength[sign] !== undefined) { signStrength[sign] += w; }
+        planetList.push({ planet: p, sign: sign, element: el, quality: qu, weight: w });
+    }
+
+    // Add ASC and MC if houses data is provided (2 more points = 15 total)
+    if (houses) {
+        // ASC (Ascendant) - weight 1
+        if (houses.ascendant !== undefined) {
+            const ascSign = getZodiacSignFromLongitude(houses.ascendant);
+            const ascEl = signElements[ascSign];
+            const ascQu = signQualities[ascSign];
+            const ascW = 1;
+            if (ascEl) { elements[ascEl] += ascW; total += ascW; }
+            if (ascQu) qualities[ascQu] += ascW;
+            if (ascSign && signStrength[ascSign] !== undefined) { signStrength[ascSign] += ascW; }
+            planetList.push({ planet: 'asc', sign: ascSign, element: ascEl, quality: ascQu, weight: ascW });
+        }
+        // MC (Midheaven) - weight 1
+        if (houses.mc !== undefined) {
+            const mcSign = getZodiacSignFromLongitude(houses.mc);
+            const mcEl = signElements[mcSign];
+            const mcQu = signQualities[mcSign];
+            const mcW = 1;
+            if (mcEl) { elements[mcEl] += mcW; total += mcW; }
+            if (mcQu) qualities[mcQu] += mcW;
+            if (mcSign && signStrength[mcSign] !== undefined) { signStrength[mcSign] += mcW; }
+            planetList.push({ planet: 'mc', sign: mcSign, element: mcEl, quality: mcQu, weight: mcW });
+        }
     }
 
     return {
-        elements, qualities, total, planetList,
+        elements, qualities, total, planetList, signStrength,
         elementColors, qualityColors,
         elementPercents: {
             Fire: total ? ((elements.Fire / total) * 100).toFixed(1) : 0,
@@ -8078,7 +9017,7 @@ function switchToPersonalMode() {
     document.body.classList.add('personal-mode');
 
     // Hide other panels
-    ['lunarWeeks', 'solarWeeks', 'gregorianCalendar', 'solarInfoPanel', 'earthInfoPanel', 'solarSystemPanel', 'lunarInfoBanner', 'currentDayInfo'].forEach(id => {
+    ['lunarWeeks', 'solarWeeks', 'gregorianCalendar', 'solarInfoPanel', 'earthInfoPanel', 'solarSystemPanel', 'lunarInfoBanner', 'currentDayInfo', 'planetaryAspectsSection'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
@@ -8252,8 +9191,8 @@ function saveNatalForm() {
 
 // --- Natal Sub-Tabs Builder ---
 function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, moonSign, ascSign, mcSign, majorTransits, moonTransits, today) {
-    const planetSyms = {'sun':'☉','moon':'☽','mercury':'☿','venus':'♀','mars':'♂','jupiter':'♃','saturn':'♄','uranus':'♅','neptune':'♆','pluto':'♇','chiron':'⚷','lilith':'⚸','ASC':'↑','MC':'★'};
-    const planetNms = {'sun':L?'Sol':'Sun','moon':L?'Luna':'Moon','mercury':L?'Mercurio':'Mercury','venus':'Venus','mars':L?'Marte':'Mars','jupiter':L?'Júpiter':'Jupiter','saturn':L?'Saturno':'Saturn','uranus':L?'Urano':'Uranus','neptune':L?'Neptuno':'Neptune','pluto':L?'Plutón':'Pluto','chiron':L?'Quirón':'Chiron','lilith':'Lilith','ASC':'ASC','MC':'MC'};
+    const planetSyms = {'sun':'☉','moon':'☽','mercury':'☿','venus':'♀','mars':'♂','jupiter':'♃','saturn':'♄','uranus':'♅','neptune':'♆','pluto':'♇','chiron':'⚷','northnode':'☊','lilith':'⚸','ASC':'↑','MC':'★'};
+    const planetNms = {'sun':L?'Sol':'Sun','moon':L?'Luna':'Moon','mercury':L?'Mercurio':'Mercury','venus':'Venus','mars':L?'Marte':'Mars','jupiter':L?'Júpiter':'Jupiter','saturn':L?'Saturno':'Saturn','uranus':L?'Urano':'Uranus','neptune':L?'Neptuno':'Neptune','pluto':L?'Plutón':'Pluto','chiron':L?'Quirón':'Chiron','northnode':L?'Nodo Norte':'North Node','lilith':'Lilith','ASC':'ASC','MC':'MC'};
 
     // ===== TAB: CHART (wheel + existing content) =====
     const chartTab = `
@@ -8302,12 +9241,15 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
         </div>`;
 
     // ===== TAB: TABLES =====
+    // Store natal chart for detail modal
+    globalNatalChart = natalChart;
+
     // --- Planet Table ---
     let planetsTableRows = '';
     Object.entries(natalChart.planets).forEach(function(entry) {
         const p = entry[0], data = entry[1];
         const house = natalChart.houses ? getHouseForLongitude(data.longitude, natalChart.houses.cusps) : '-';
-        planetsTableRows += '<tr>' +
+        planetsTableRows += '<tr onclick="showNatalDetail(\'planet\', \'' + p + '\')" style="cursor:pointer;transition:all 0.2s;" onmouseover="this.style.backgroundColor=\'rgba(201,168,64,0.15)\';" onmouseout="this.style.backgroundColor=\'\';">' +
             '<td style="white-space:nowrap;"><span style="font-size:1.1em;">' + (planetSyms[p]||'') + '</span> ' + (planetNms[p]||p) + '</td>' +
             '<td>' + data.sign + '</td>' +
             '<td>' + data.degree + '°' + (data.minute < 10 ? '0' : '') + data.minute + "'" + '</td>' +
@@ -8322,7 +9264,7 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
     if (natalChart.houses && natalChart.houses.cusps) {
         natalChart.houses.cusps.forEach(function(cusp, i) {
             const info = getZodiacSignWithDegree(cusp);
-            housesTableRows += '<tr>' +
+            housesTableRows += '<tr onclick="showNatalDetail(\'house\', ' + (i + 1) + ')" style="cursor:pointer;transition:all 0.2s;" onmouseover="this.style.backgroundColor=\'rgba(201,168,64,0.15)\';" onmouseout="this.style.backgroundColor=\'\';">' +
                 '<td style="text-align:center;font-weight:600;">' + (i + 1) + '</td>' +
                 '<td>' + info.sign + '</td>' +
                 '<td>' + info.degree + '°' + (info.minute < 10 ? '0' : '') + info.minute + "'" + '</td>' +
@@ -8333,8 +9275,8 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
     // --- Natal Aspects Table ---
     let aspectsTableRows = '';
     if (natalChart.natalAspects) {
-        natalChart.natalAspects.forEach(function(a) {
-            aspectsTableRows += '<tr>' +
+        natalChart.natalAspects.forEach(function(a, idx) {
+            aspectsTableRows += '<tr onclick="showNatalDetail(\'aspect\', ' + idx + ')" style="cursor:pointer;transition:all 0.2s;" onmouseover="this.style.backgroundColor=\'rgba(201,168,64,0.15)\';" onmouseout="this.style.backgroundColor=\'\';">' +
                 '<td style="white-space:nowrap;">' + (planetSyms[a.planet1]||'') + ' ' + (planetNms[a.planet1]||a.planet1) + '</td>' +
                 '<td style="text-align:center;color:' + a.aspect.color + ';font-weight:600;">' + a.aspect.name + ' <span style="font-size:1.2em;">' + a.aspect.symbol + '</span></td>' +
                 '<td style="white-space:nowrap;">' + (planetSyms[a.planet2]||'') + ' ' + (planetNms[a.planet2]||a.planet2) + '</td>' +
@@ -8409,6 +9351,44 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
                     <div style="margin-bottom:6px;"><span style="display:inline-block;width:14px;height:14px;background:${qc.Fixed||'#2ecc71'};border-radius:3px;vertical-align:middle;margin-right:6px;"></span>${L?'Fijo':'Fixed'}: <b>${qp.Fixed||0}%</b> (${eq.qualities?eq.qualities.Fixed:0})</div>
                     <div style="margin-bottom:6px;"><span style="display:inline-block;width:14px;height:14px;background:${qc.Mutable||'#e74c3c'};border-radius:3px;vertical-align:middle;margin-right:6px;"></span>${L?'Mutable':'Mutable'}: <b>${qp.Mutable||0}%</b> (${eq.qualities?eq.qualities.Mutable:0})</div>
                 </div>
+            </div>
+        </div>
+        <div class="personal-natal-card">
+            <h3>♈ ${L ? 'Fortaleza por Signo' : 'Sign Strength'}</h3>
+            <div style="overflow-x:auto;">
+                <table class="natal-data-table">
+                    <thead><tr><th>${L?'Signo':'Sign'}</th><th>${L?'Elemento + Cualidad':'Element + Quality'}</th><th>${L?'Puntos':'Points'}</th><th>${L?'Porcentaje':'Percentage'}</th></tr></thead>
+                    <tbody>${(function() {
+                        const signData = [
+                            {name: 'Aries', el: 'Fire', qu: 'Cardinal'},
+                            {name: 'Tauro', el: 'Earth', qu: 'Fixed'},
+                            {name: 'Géminis', el: 'Air', qu: 'Mutable'},
+                            {name: 'Cáncer', el: 'Water', qu: 'Cardinal'},
+                            {name: 'Leo', el: 'Fire', qu: 'Fixed'},
+                            {name: 'Virgo', el: 'Earth', qu: 'Mutable'},
+                            {name: 'Libra', el: 'Air', qu: 'Cardinal'},
+                            {name: 'Escorpio', el: 'Water', qu: 'Fixed'},
+                            {name: 'Sagitario', el: 'Fire', qu: 'Mutable'},
+                            {name: 'Capricornio', el: 'Earth', qu: 'Cardinal'},
+                            {name: 'Acuario', el: 'Air', qu: 'Fixed'},
+                            {name: 'Piscis', el: 'Water', qu: 'Mutable'}
+                        ];
+                        return signData.sort(function(a, b) {
+                            const aStrength = (eq.signStrength && eq.signStrength[a.name]) || 0;
+                            const bStrength = (eq.signStrength && eq.signStrength[b.name]) || 0;
+                            return bStrength - aStrength;
+                        }).map(function(s) {
+                            const strength = (eq.signStrength && eq.signStrength[s.name]) || 0;
+                            const pct = (strength / (eq.total || 1) * 100).toFixed(2);
+                            const elLabel = L ? {Fire:'Fuego',Earth:'Tierra',Air:'Aire',Water:'Agua'}[s.el] || s.el : s.el;
+                            const quLabel = L ? {Cardinal:'Cardinal',Fixed:'Fijo',Mutable:'Mutable'}[s.qu] || s.qu : s.qu;
+                            const elColor = ec[s.el] || '#fff';
+                            const quColor = qc[s.qu] || '#fff';
+                            return '<tr><td><b>' + s.name + '</b></td><td><span style="color:' + elColor + ';">' + elLabel + '</span> + <span style="color:' + quColor + ';">' + quLabel + '</span></td><td>' + strength + '</td><td>' + pct + '%</td></tr>';
+                        }).join('');
+                    })()}
+                    </tbody>
+                </table>
             </div>
         </div>
         <div class="personal-natal-card">
@@ -10461,7 +11441,7 @@ function generateGregorianMonth() {
         // Planetary events
         if (astronomicalEvent) html += `<div style="color: #e8c84a; font-weight: bold; font-size: 0.8em; text-align: right;">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>`;
         if (moonEvent) html += `<div onclick="event.stopPropagation(); navigateToLunar2026Moon(${date.getTime()}, '${moonEvent.type}')" style="color:${moonEvent.type==='full'?'#FFD700':'#ccc'}; font-weight: bold; font-size: 0.6em; text-align: center; line-height: 1.2; overflow: visible; cursor:pointer;"><span style="font-size:0.9em;">${moonEvent.type==='full'?'🌕':moonEvent.icon}</span></div>`;
-        if (planetaryEvents.eclipse) html += `<div style="color:#FFD700; font-size: 0.6em; font-weight:bold;">${planetaryEvents.eclipse.type==='solar'?'☀️ Ecl.Sol':'🌒 Ecl.Lun'}</div>`;
+        if (planetaryEvents.eclipse) html += `<div style="color:#FFD700; font-size: 0.6em; font-weight:bold;">${planetaryEvents.eclipse.type==='solar'?(currentLang==='es'?'☀️ Ecl.Sol':'☀️ Sol.Ecl'):(currentLang==='es'?'🌒 Ecl.Lun':'🌒 Lun.Ecl')}</div>`;
         
         // Inter-planetary aspects (limit 1)
         planetaryEvents.interPlanetaryAspects.slice(0,1).forEach(asp => {
@@ -12472,6 +13452,7 @@ function renderCalendar() {
         container.appendChild(weekDiv);
     });
 
+    // Sync all week scrolls — when one scrolls, all follow
 }
 
 function nextCycle() {
@@ -12992,7 +13973,7 @@ function openMoonVerMas(timestamp) {
     const { prev, next } = _getMoonRelated(date);
     const months = currentLang==='es' ? ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'] : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const dNames = currentLang==='es' ? ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'] : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const signColors = {'♈ Aries':'#e85d7a','♉ Tauro':'#4ecdc4','♊ Géminis':'#f0e68c','♋ Cáncer':'#7ec8ff','♌ Leo':'#FFD54F','♍ Virgo':'#a8e6a3','♎ Libra':'#c9a840','♏ Escorpio':'#ff6b6b','♐ Sagitario':'#ff9f43','♑ Capricornio':'#8899cc','♒ Acuario':'#4FC3F7','♓ Piscis':'#b39ddb'};
+    const signColors = {'Aries':'#e85d7a','Tauro':'#4ecdc4','Géminis':'#f0e68c','Cáncer':'#7ec8ff','Leo':'#FFD54F','Virgo':'#a8e6a3','Libra':'#c9a840','Escorpio':'#ff6b6b','Sagitario':'#ff9f43','Capricornio':'#8899cc','Acuario':'#4FC3F7','Piscis':'#b39ddb'};
 
     function buildBlock(d, isMain, label) {
         if (!d) return '';
@@ -13750,37 +14731,37 @@ function openLunarCalendar2026(scrollToTimestamp) {
     if (titleEl) titleEl.textContent = currentLang==='es'?'🌑🌕 Lunas Nuevas y Llenas 2026':'🌑🌕 New & Full Moons 2026';
 
     const signColors = {
-        '♈ Aries':'#e85d7a','♉ Tauro':'#4ecdc4','♊ Géminis':'#f0e68c',
-        '♋ Cáncer':'#7ec8ff','♌ Leo':'#FFD54F','♍ Virgo':'#a8e6a3',
-        '♎ Libra':'#c9a840','♏ Escorpio':'#ff6b6b','♐ Sagitario':'#ff9f43',
-        '♑ Capricornio':'#8899cc','♒ Acuario':'#4FC3F7','♓ Piscis':'#b39ddb'
+        'Aries':'#e85d7a','Tauro':'#4ecdc4','Géminis':'#f0e68c',
+        'Cáncer':'#7ec8ff','Leo':'#FFD54F','Virgo':'#a8e6a3',
+        'Libra':'#c9a840','Escorpio':'#ff6b6b','Sagitario':'#ff9f43',
+        'Capricornio':'#8899cc','Acuario':'#4FC3F7','Piscis':'#b39ddb'
     };
     const signMeanings = currentLang==='es' ? {
-        '♈ Aries':'Comienzos, acción, identidad',
-        '♉ Tauro':'Recursos, valores, estabilidad',
-        '♊ Géminis':'Comunicación, aprendizaje, dualidad',
-        '♋ Cáncer':'Hogar, emociones, raíces',
-        '♌ Leo':'Creatividad, expresión, liderazgo',
-        '♍ Virgo':'Salud, servicio, análisis',
-        '♎ Libra':'Relaciones, equilibrio, justicia',
-        '♏ Escorpio':'Transformación, poder, profundidad',
-        '♐ Sagitario':'Expansión, fe, filosofía',
-        '♑ Capricornio':'Ambición, estructura, logro',
-        '♒ Acuario':'Innovación, comunidad, libertad',
-        '♓ Piscis':'Intuición, espiritualidad, disolución'
+        'Aries':'Comienzos, acción, identidad',
+        'Tauro':'Recursos, valores, estabilidad',
+        'Géminis':'Comunicación, aprendizaje, dualidad',
+        'Cáncer':'Hogar, emociones, raíces',
+        'Leo':'Creatividad, expresión, liderazgo',
+        'Virgo':'Salud, servicio, análisis',
+        'Libra':'Relaciones, equilibrio, justicia',
+        'Escorpio':'Transformación, poder, profundidad',
+        'Sagitario':'Expansión, fe, filosofía',
+        'Capricornio':'Ambición, estructura, logro',
+        'Acuario':'Innovación, comunidad, libertad',
+        'Piscis':'Intuición, espiritualidad, disolución'
     } : {
-        '♈ Aries':'Beginnings, action, identity',
-        '♉ Tauro':'Resources, values, stability',
-        '♊ Géminis':'Communication, learning, duality',
-        '♋ Cáncer':'Home, emotions, roots',
-        '♌ Leo':'Creativity, expression, leadership',
-        '♍ Virgo':'Health, service, analysis',
-        '♎ Libra':'Relationships, balance, justice',
-        '♏ Escorpio':'Transformation, power, depth',
-        '♐ Sagitario':'Expansion, faith, philosophy',
-        '♑ Capricornio':'Ambition, structure, achievement',
-        '♒ Acuario':'Innovation, community, freedom',
-        '♓ Piscis':'Intuition, spirituality, dissolution'
+        'Aries':'Beginnings, action, identity',
+        'Tauro':'Resources, values, stability',
+        'Géminis':'Communication, learning, duality',
+        'Cáncer':'Home, emotions, roots',
+        'Leo':'Creativity, expression, leadership',
+        'Virgo':'Health, service, analysis',
+        'Libra':'Relationships, balance, justice',
+        'Escorpio':'Transformation, power, depth',
+        'Sagitario':'Expansion, faith, philosophy',
+        'Capricornio':'Ambition, structure, achievement',
+        'Acuario':'Innovation, community, freedom',
+        'Piscis':'Intuition, spirituality, dissolution'
     };
 
     // --- Full moons: use exact dates from lunar-data.js if available, fallback to calculation ---
