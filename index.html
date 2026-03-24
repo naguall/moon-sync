@@ -592,6 +592,12 @@
             .lunar-weeks { gap: 2px; margin-bottom: 5px; }
             .lunar-week { padding: 2px 4px; gap: 2px; }
             
+            /* Hide weekday label in small cells on portrait (vertical phone) */
+            body.cell-size-small .day-weekday-label { display: none; }
+            @media (orientation: landscape) {
+                body.cell-size-small .day-weekday-label { display: inline !important; }
+            }
+
             /* ── Solar/Gregorian ── */
             body.solar-mode .lunar-week { min-width: unset; }
             body.solar-mode .day-cell { min-width: 0; min-height: var(--day-cell-min-height, 85px); overflow: hidden; word-break: break-word; }
@@ -11344,7 +11350,7 @@ function renderNatalLunarCal() {
                 + ' onclick="handleDayClick(this)">'
                 + '<div class="day-header" style="display:flex;justify-content:space-between;align-items:baseline;width:100%;">'
                 + '<div class="day-number">' + day.lunarDay + '</div>'
-                + '<div style="font-size:0.7em;color:rgba(255,255,255,0.6);font-weight:600;white-space:nowrap;">' + formatShortDate(day.date) + ' ' + weekday + '</div>'
+                + '<div style="font-size:0.7em;color:rgba(255,255,255,0.6);font-weight:600;white-space:nowrap;">' + formatShortDate(day.date) + ' <span class="day-weekday-label">' + weekday + '</span></div>'
                 + '</div>'
                 + '<div class="day-content">'
                 + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;align-items:flex-start;">' + eventsHTML + moreEvents + '</div>'
@@ -13939,7 +13945,7 @@ function generateSolarWeeks(sign) {
                     
                     <div class="day-header" style="display: flex; justify-content: space-between; align-items: baseline; width: 100%;">
                         <div class="day-number">${dayCounter}</div>
-                        <div style="font-size: 0.7em; color: rgba(255,255,255,0.6); font-weight: 600; white-space:nowrap;">${formatShortDate(dayDate)} ${weekday}</div>
+                        <div style="font-size: 0.7em; color: rgba(255,255,255,0.6); font-weight: 600; white-space:nowrap;">${formatShortDate(dayDate)} <span class="day-weekday-label">${weekday}</span></div>
                     </div>
                     
                     <div class="day-content">
@@ -15403,7 +15409,7 @@ function renderCalendar() {
                     
                     <div class="day-header" style="display: flex; justify-content: space-between; align-items: baseline; width: 100%;">
                         <div class="day-number">${day.lunarDay}</div>
-                        <div style="font-size: 0.7em; color: rgba(255,255,255,0.6); font-weight: 600; white-space:nowrap;">${formatShortDate(day.date)} ${weekday}</div>
+                        <div style="font-size: 0.7em; color: rgba(255,255,255,0.6); font-weight: 600; white-space:nowrap;">${formatShortDate(day.date)} <span class="day-weekday-label">${weekday}</span></div>
                     </div>
                     
                     <div class="day-content">
@@ -16507,6 +16513,8 @@ function setCellSize(size) {
     const gaps = { small: '2px', medium: '3px', large: '4px' };
     const paddings = { small: '2px', medium: '5px', large: '8px' };
     localStorage.setItem('dayCellSize', size);
+    // Toggle body class for CSS rules (hide weekday in small portrait)
+    document.body.classList.toggle('cell-size-small', size === 'small');
     document.documentElement.style.setProperty('--day-cell-min-height', dims[size] || '100px');
     document.documentElement.style.setProperty('--day-cell-min-width', '0');
     document.documentElement.style.setProperty('--day-cell-font-size', fonts[size] || '0.75em');
@@ -17380,7 +17388,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v215';
+const APP_VERSION = 'v216';
 var _pendingSW = null;
 
 function showUpdateBanner() {
