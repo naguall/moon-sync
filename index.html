@@ -8041,6 +8041,9 @@ function switchToEarthMode() {
     nav.innerHTML = '<div class="cycle-info"><div class="cycle-number" id="cycleNumber">' + (currentLang==='es'?'Datos de la Tierra en Tiempo Real':'Real-Time Earth Data') + '</div><div class="cycle-dates" id="cycleDates">' + ASTRO_USER_NAME + '</div></div>';
 
     updateModeButtons();
+    // Force clear old earth panel so it re-renders fresh with new seismic data
+    var oldEip = document.getElementById('earthInfoPanel');
+    if (oldEip) oldEip.remove();
     renderEarthInfoPanel();
 }
 
@@ -8095,6 +8098,8 @@ function switchToLunarMode() {
     
     updateModeButtons();
     renderCalendar();
+    // Force refresh moon position, tide data, and astro info
+    updateCurrentDayInfoForMode('lunar');
 }
 
 // ══════════════════════════════════════════════════
@@ -13578,7 +13583,15 @@ const TIDE_STATIONS = [
      M2:{a:0.08,p:155},S2:{a:0.05,p:178},K1:{a:0.14,p:290},O1:{a:0.11,p:268},N2:{a:0.03,p:138}},
     {n:'Havana',lat:23.13,lon:-82.38,
      M2:{a:0.12,p:145},S2:{a:0.07,p:168},K1:{a:0.16,p:285},O1:{a:0.13,p:262},N2:{a:0.04,p:128}},
-    // Europe Atlantic
+    // Europe Atlantic & Mediterranean
+    {n:'Bordeaux',lat:44.84,lon:-0.58,
+     M2:{a:1.95,p:72},S2:{a:0.68,p:96},K1:{a:0.10,p:178},O1:{a:0.08,p:158},N2:{a:0.42,p:52}},
+    {n:'Brest',lat:48.39,lon:-4.49,
+     M2:{a:2.10,p:85},S2:{a:0.72,p:110},K1:{a:0.09,p:190},O1:{a:0.07,p:170},N2:{a:0.45,p:65}},
+    {n:'Marseille',lat:43.30,lon:5.37,
+     M2:{a:0.08,p:145},S2:{a:0.04,p:170},K1:{a:0.06,p:250},O1:{a:0.04,p:228},N2:{a:0.02,p:128}},
+    {n:'Barcelona',lat:41.39,lon:2.17,
+     M2:{a:0.09,p:140},S2:{a:0.04,p:165},K1:{a:0.05,p:248},O1:{a:0.04,p:225},N2:{a:0.02,p:124}},
     {n:'Lisbon',lat:38.72,lon:-9.14,
      M2:{a:1.75,p:64},S2:{a:0.60,p:88},K1:{a:0.12,p:172},O1:{a:0.10,p:152},N2:{a:0.38,p:46}},
     {n:'London (Thames)',lat:51.51,lon:-0.13,
@@ -13639,10 +13652,10 @@ async function fetchOpenMeteoTides(lat, lon, dateStr) {
     try {
         const res = await fetch(url);
         const data = await res.json();
-        if (data.hourly && data.hourly.sea_level_height_msl) {
+        if (data.hourly && data.hourly.sea_level_height_msl && data.hourly.sea_level_height_msl.some(v => v !== null && v !== undefined)) {
             const hours = data.hourly.time.map((t, i) => ({
                 hour: new Date(t).getHours() + new Date(t).getMinutes()/60,
-                level: data.hourly.sea_level_height_msl[i] || 0
+                level: (data.hourly.sea_level_height_msl[i] !== null && data.hourly.sea_level_height_msl[i] !== undefined) ? data.hourly.sea_level_height_msl[i] : 0
             }));
             // Interpolate to 15-min resolution
             const pts = [];
@@ -13675,7 +13688,12 @@ function getDateStr(date) {
 async function refreshTidesFromAPI(today, currentDayInCycle, todayWeeks, currentWeekIndex) {
     const dateStr = getDateStr(today);
     const realTides = await fetchOpenMeteoTides(ASTRO_USER_LAT, ASTRO_USER_LON, dateStr);
-    if (!realTides) return; // Keep harmonic model if API fails
+    if (!realTides) {
+        // API failed — keep harmonic model, update status
+        const statusEl = document.getElementById('tideApiStatus');
+        if (statusEl) statusEl.innerHTML = currentLang === 'es' ? '📐 Modelo armónico (estación más cercana)' : '📐 Harmonic model (nearest station)';
+        return;
+    }
     
     // Update the tide curve container in place
     const tideContainer = document.querySelector('.tide-curve-container');
