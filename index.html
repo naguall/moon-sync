@@ -649,8 +649,10 @@
                 <button id="lunarModeBtn" onclick="switchToLunarMode()" style="padding:5px 12px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;border-radius:20px;color:white;font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;">Lunar</button>
                 <button id="solarModeBtn" onclick="switchToSolarMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;">Solar</button>
                 <button id="personalModeBtn" onclick="switchToPersonalMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="personalButtonLabel">Natal</span></button>
-                <button id="earthModeBtn" onclick="switchToEarthMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="earthButtonLabel">Tierra</span></button>
-                <button id="solarSystemModeBtn" onclick="switchToSolarSystemMode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="ssButtonLabel">S.S</span></button>
+                <!-- HIDDEN: Earth and Solar System buttons (kept for future reactivation) -->
+                <button id="earthModeBtn" onclick="switchToEarthMode()" style="display:none;padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="earthButtonLabel">Tierra</span></button>
+                <button id="solarSystemModeBtn" onclick="switchToSolarSystemMode()" style="display:none;padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="ssButtonLabel">S.S</span></button>
+                <button id="aspects2026ModeBtn" onclick="switchToAspects2026Mode()" style="padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="asp2026ButtonLabel">Asp 2026</span></button>
                 <!-- HIDDEN: Gregorian button (kept for future use) -->
                 <button id="gregorianModeBtn" onclick="switchToGregorianMode()" style="display:none;padding:5px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:0.85em;"><span id="gregorianButtonLabel">Gregoriano</span></button>
                 <button id="notificationBtn" onclick="toggleNotifications()" style="background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:5px;padding:3px 5px;cursor:pointer;font-size:0.75em;opacity:0.5;flex-shrink:0;margin-left:4px;display:none;">🔔</button>
@@ -3522,6 +3524,8 @@ function updateUILanguage() {
         switchToEarthMode();
     } else if (calendarMode === 'solarsystem') {
         switchToSolarSystemMode();
+    } else if (calendarMode === 'aspects2026') {
+        switchToAspects2026Mode();
     } else if (calendarMode === 'personal') {
         switchToPersonalMode();
     }
@@ -8035,11 +8039,13 @@ function switchToSolarMode() {
     document.body.classList.remove('gregorian-mode');
     document.body.classList.remove('personal-mode');
 
-    // Hide earth, solar system, and personal panels
+    // Hide earth, solar system, aspects2026, and personal panels
     const eip = document.getElementById('earthInfoPanel');
     if (eip) eip.style.display = 'none';
     const ssp = document.getElementById('solarSystemPanel');
     if (ssp) ssp.style.display = 'none';
+    const a26p = document.getElementById('aspects2026Panel');
+    if (a26p) a26p.style.display = 'none';
     const pCal = document.getElementById('personalCalendar');
     if (pCal) pCal.style.display = 'none';
 
@@ -8056,13 +8062,15 @@ function switchToGregorianMode() {
     document.body.classList.remove('solar-mode');
     document.body.classList.remove('personal-mode');
 
-    // Hide solar, earth, solar system, and personal panels
+    // Hide solar, earth, solar system, aspects2026, and personal panels
     const sip = document.getElementById('solarInfoPanel');
     if (sip) sip.style.display = 'none';
     const eip = document.getElementById('earthInfoPanel');
     if (eip) eip.style.display = 'none';
     const ssp = document.getElementById('solarSystemPanel');
     if (ssp) ssp.style.display = 'none';
+    const a26p = document.getElementById('aspects2026Panel');
+    if (a26p) a26p.style.display = 'none';
     const pCal = document.getElementById('personalCalendar');
     if (pCal) pCal.style.display = 'none';
 
@@ -8091,6 +8099,8 @@ function switchToEarthMode() {
     if (sip) sip.style.display = 'none';
     const ssp = document.getElementById('solarSystemPanel');
     if (ssp) ssp.style.display = 'none';
+    const a26p = document.getElementById('aspects2026Panel');
+    if (a26p) a26p.style.display = 'none';
     const lib = document.getElementById('lunarInfoBanner');
     if (lib) lib.style.display = 'none';
     const cdi = document.getElementById('currentDayInfo');
@@ -8136,18 +8146,20 @@ function switchToLunarMode() {
     const solarWeeks = document.getElementById('solarWeeks');
     if (solarWeeks) solarWeeks.style.display = 'none';
 
-    // Hide solar, earth, and solar system panels
+    // Hide solar, earth, solar system, and aspects2026 panels
     const sip = document.getElementById('solarInfoPanel');
     if (sip) sip.style.display = 'none';
     const eip = document.getElementById('earthInfoPanel');
     if (eip) eip.style.display = 'none';
     const ssp = document.getElementById('solarSystemPanel');
     if (ssp) ssp.style.display = 'none';
+    const a26p = document.getElementById('aspects2026Panel');
+    if (a26p) a26p.style.display = 'none';
 
     // Hide gregorian calendar
     const gregorianCal = document.getElementById('gregorianCalendar');
     if (gregorianCal) gregorianCal.style.display = 'none';
-    
+
     // Update title
     document.getElementById('calendarTitle').innerHTML = t('lunarCalendar');
     
@@ -8201,6 +8213,8 @@ function switchToSolarSystemMode() {
     if (cdi) cdi.style.display = 'none';
     const pas2 = document.getElementById('planetaryAspectsSection');
     if (pas2) pas2.style.display = 'none';
+    const a26p = document.getElementById('aspects2026Panel');
+    if (a26p) a26p.style.display = 'none';
 
     // Update title
     document.getElementById('calendarTitle').innerHTML = currentLang==='es' ? 'Sistema Solar' : 'Solar System';
@@ -8984,6 +8998,225 @@ function togglePlanetDetails(idx) {
     }
 }
 
+function switchToAspects2026Mode() {
+    calendarMode = 'aspects2026';
+    localStorage.setItem('calendarMode', 'aspects2026');
+
+    document.body.classList.remove('solar-mode');
+    document.body.classList.remove('gregorian-mode');
+    document.body.classList.remove('personal-mode');
+
+    // Hide other panels
+    const lunarWeeks = document.getElementById('lunarWeeks');
+    if (lunarWeeks) lunarWeeks.style.display = 'none';
+    const solarWeeks = document.getElementById('solarWeeks');
+    if (solarWeeks) solarWeeks.style.display = 'none';
+    const pCal = document.getElementById('personalCalendar');
+    if (pCal) pCal.style.display = 'none';
+    const gregorianCal = document.getElementById('gregorianCalendar');
+    if (gregorianCal) gregorianCal.style.display = 'none';
+    const sip = document.getElementById('solarInfoPanel');
+    if (sip) sip.style.display = 'none';
+    const eip = document.getElementById('earthInfoPanel');
+    if (eip) eip.style.display = 'none';
+    const lib = document.getElementById('lunarInfoBanner');
+    if (lib) lib.style.display = 'none';
+    const cdi = document.getElementById('currentDayInfo');
+    if (cdi) cdi.style.display = 'none';
+    const pas2 = document.getElementById('planetaryAspectsSection');
+    if (pas2) pas2.style.display = 'none';
+    const ssp = document.getElementById('solarSystemPanel');
+    if (ssp) ssp.style.display = 'none';
+
+    // Update title
+    document.getElementById('calendarTitle').innerHTML = currentLang === 'es' ? 'Aspectos Planetarios 2026' : 'Planetary Aspects 2026';
+
+    // Navigation
+    const nav = document.querySelector('.navigation');
+    nav.style.display = '';
+    nav.innerHTML = '<div class="cycle-info"><div class="cycle-number" id="cycleNumber">' + (currentLang === 'es' ? 'Tránsitos y Aspectos del Año' : 'Transits & Aspects of the Year') + '</div><div class="cycle-dates" id="cycleDates">' + ASTRO_USER_NAME + '</div></div>';
+
+    updateModeButtons();
+    renderAspects2026Panel();
+}
+
+function renderAspects2026Panel() {
+    const es = currentLang === 'es';
+
+    let panel = document.getElementById('aspects2026Panel');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'aspects2026Panel';
+        panel.style.marginTop = '8px';
+        const nav = document.querySelector('.navigation');
+        if (nav) nav.parentNode.insertBefore(panel, nav.nextSibling);
+    }
+    panel.style.display = 'block';
+
+    // Planet data for photos and colors
+    const planetInfo = {
+        'Sol':      { icon: '☉', color: '#FFD700', colorBg: 'rgba(255,215,0,', photo: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg' },
+        'Luna':     { icon: '☽', color: '#7ec8ff', colorBg: 'rgba(126,200,255,', photo: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/FullMoon2010.jpg' },
+        'Mercurio': { icon: '☿', color: '#f39c12', colorBg: 'rgba(243,156,18,', photo: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Mercury_in_true_color.jpg' },
+        'Venus':    { icon: '♀', color: '#e91e63', colorBg: 'rgba(233,30,99,', photo: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Venus_from_Mariner_10.jpg' },
+        'Marte':    { icon: '♂', color: '#ff6b6b', colorBg: 'rgba(255,107,107,', photo: 'https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg' },
+        'Júpiter':  { icon: '♃', color: '#9b59b6', colorBg: 'rgba(155,89,182,', photo: 'https://upload.wikimedia.org/wikipedia/commons/2/2b/Jupiter_and_its_shrunken_Great_Red_Spot.jpg' },
+        'Saturno':  { icon: '♄', color: '#3498db', colorBg: 'rgba(52,152,219,', photo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Saturn_during_Equinox.jpg' },
+        'Urano':    { icon: '♅', color: '#1abc9c', colorBg: 'rgba(26,188,156,', photo: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Uranus2.jpg' },
+        'Neptuno':  { icon: '♆', color: '#5dade2', colorBg: 'rgba(93,173,226,', photo: 'https://upload.wikimedia.org/wikipedia/commons/6/63/Neptune_-_Voyager_2_%2829347980845%29_flatten_crop.jpg' },
+        'Plutón':   { icon: '♇', color: '#7f8c8d', colorBg: 'rgba(127,140,141,', photo: 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Pluto_in_True_Color_-_High-Res.jpg' }
+    };
+
+    // Planets to show (exclude Luna for cleaner view — too many aspects)
+    const planetOrder = ['Sol', 'Mercurio', 'Venus', 'Marte', 'Júpiter', 'Saturno', 'Urano', 'Neptuno', 'Plutón'];
+
+    let html = '<div style="padding:6px;font-size:0.8em;">';
+
+    // Header
+    html += '<div style="margin-bottom:10px;padding:12px;background:rgba(5,7,30,0.95);border:1px solid rgba(233,30,99,0.3);border-radius:12px;border-top:2px solid rgba(233,30,99,0.6);text-align:center;">'
+        + '<div style="font-family:\'Cinzel\',serif;color:#e91e63;font-size:1em;font-weight:600;letter-spacing:2px;margin-bottom:6px;">'
+        + '🪐 ' + (es ? 'ASPECTOS PLANETARIOS 2026' : 'PLANETARY ASPECTS 2026') + '</div>'
+        + '<div style="color:rgba(255,255,255,0.5);font-size:0.8em;line-height:1.5;">'
+        + (es ? 'Tránsitos, retrogradaciones, cambios de signo y aspectos entre planetas' : 'Transits, retrogrades, sign changes and inter-planetary aspects')
+        + '<br>' + (es ? 'Click en cada planeta para ver sus aspectos del año' : 'Click each planet to see its yearly aspects')
+        + '</div>'
+        + '</div>';
+
+    // Legend
+    html += '<div style="margin-bottom:10px;padding:8px 10px;background:rgba(0,0,0,0.3);border-radius:8px;font-size:0.78em;color:#a8b2d1;text-align:center;">'
+        + '☌ ' + (es ? 'Conjunción' : 'Conjunction') + ' • ⚹ ' + (es ? 'Sextil' : 'Sextile') + ' • □ ' + (es ? 'Cuadratura' : 'Square') + ' • △ ' + (es ? 'Trígono' : 'Trine') + ' • ☍ ' + (es ? 'Oposición' : 'Opposition')
+        + '</div>';
+
+    // Planet cards
+    planetOrder.forEach((pName, idx) => {
+        const p = planetInfo[pName];
+        if (!p) return;
+        const aspects = getAllAspectsForPlanet(pName);
+        const aspectCount = aspects.length;
+
+        // Count types
+        const retros = aspects.filter(a => a.type && (a.type.includes('Retrógrado') || a.type.includes('Directo'))).length;
+        const signChanges = aspects.filter(a => a.type && a.type.includes('Entra en')).length;
+        const interAspects = aspectCount - retros - signChanges;
+
+        html += '<div style="margin-bottom:10px;padding:10px;background:rgba(5,7,30,0.95);border:1px solid ' + p.colorBg + '0.25);border-radius:12px;border-top:2px solid ' + p.colorBg + '0.6);">';
+
+        // Planet header with photo
+        html += '<div onclick="toggleAspect2026Details(' + idx + ')" style="cursor:pointer;display:flex;align-items:center;gap:10px;">'
+            + '<div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px solid ' + p.colorBg + '0.4);box-shadow:0 0 12px ' + p.colorBg + '0.3);flex-shrink:0;">'
+            + '<img src="' + p.photo + '" alt="' + p.icon + '" class="planet-spin" style="--spin-duration:30s;width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"/>'
+            + '<div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:radial-gradient(circle,' + p.colorBg + '0.5),' + p.colorBg + '0.2));font-size:1.6em;">' + p.icon + '</div>'
+            + '</div>'
+            + '<div style="flex:1;">'
+            + '<div style="font-family:\'Cinzel\',serif;color:' + p.color + ';font-size:0.9em;font-weight:700;letter-spacing:1px;">' + (es ? tp(pName) : pName).toUpperCase() + '</div>'
+            + '<div style="font-size:0.68em;color:rgba(255,255,255,0.4);">'
+            + aspectCount + ' ' + (es ? 'eventos' : 'events')
+            + (retros > 0 ? ' • ' + retros + ' ' + (es ? 'retrógrados' : 'retrogrades') : '')
+            + (signChanges > 0 ? ' • ' + signChanges + ' ' + (es ? 'cambios' : 'changes') : '')
+            + (interAspects > 0 ? ' • ' + interAspects + ' ' + (es ? 'aspectos' : 'aspects') : '')
+            + '</div>'
+            + '</div>'
+            + '<div style="color:rgba(255,255,255,0.3);font-size:1.2em;" id="asp2026Arrow' + idx + '">▼</div>'
+            + '</div>';
+
+        // Quick stats row
+        html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px;">';
+
+        // Next upcoming aspect
+        const now = new Date();
+        const nextAspect = aspects.find(a => new Date(a.date) >= now);
+        const nextLabel = nextAspect ? formatShortDate(nextAspect.date) : (es ? 'N/A' : 'N/A');
+        const nextType = nextAspect ? (nextAspect.type || '').substring(0, 15) : '-';
+
+        html += '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+            + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es ? 'Próximo' : 'Next') + '</div>'
+            + '<div style="font-size:0.75em;font-weight:bold;color:' + p.color + ';">' + nextLabel + '</div>'
+            + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + nextType + '</div>'
+            + '</div>';
+
+        html += '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+            + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es ? 'Total aspectos' : 'Total aspects') + '</div>'
+            + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">' + aspectCount + '</div>'
+            + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + (es ? 'en 2026' : 'in 2026') + '</div>'
+            + '</div>';
+
+        html += '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+            + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es ? 'Retro' : 'Retro') + '</div>'
+            + '<div style="font-size:0.85em;font-weight:bold;color:' + (retros > 0 ? '#ff6b6b' : p.color) + ';">' + retros + '</div>'
+            + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + (es ? 'períodos' : 'periods') + '</div>'
+            + '</div>';
+        html += '</div>';
+
+        // Expandable details
+        html += '<div id="asp2026Details' + idx + '" style="display:none;margin-top:8px;">';
+
+        // Planet large photo
+        html += '<div style="text-align:center;margin-bottom:8px;padding:12px;background:radial-gradient(circle,' + p.colorBg + '0.1) 0%,rgba(0,0,0,0) 70%);border-radius:10px;">'
+            + '<div style="width:120px;height:120px;margin:0 auto;perspective:300px;">'
+            + '<img src="' + p.photo + '" alt="' + (es ? tp(pName) : pName) + '" class="planet-spin" style="--spin-duration:30s;width:100%;height:100%;object-fit:cover;border-radius:50%;box-shadow:0 0 25px ' + p.colorBg + '0.3),0 0 50px ' + p.colorBg + '0.15);" referrerpolicy="no-referrer"/>'
+            + '</div>'
+            + '</div>';
+
+        // All aspects list
+        if (aspects.length > 0) {
+            html += '<div style="display:flex;flex-direction:column;gap:6px;">';
+            aspects.forEach(asp => {
+                const aspectColor = getAspectColor(asp.type) || p.color;
+                const translatedType = translateAspectType(asp.type) || asp.type;
+                const translatedWith = ts(asp.with) || tp(asp.with) || asp.with;
+                const timeStr = asp.time ? '<span style="font-weight:bold;color:#f0e68c;">' + asp.time + '</span> — ' : '';
+                const symbolStr = asp.symbol ? asp.symbol + ' ' : '';
+                const meaning = translateMeaning(asp.meaning) || '';
+                const dateStr = formatShortDate(asp.date);
+                const isPast = new Date(asp.date) < now;
+                const aspTextForAI = ((es ? tp(pName) : pName) + ' ' + symbolStr + translatedType + ' ' + translatedWith).replace(/'/g, "\\'");
+
+                html += '<div onclick="aiInterpretAspect(\'' + aspTextForAI + '\')" style="background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;border-left:3px solid ' + aspectColor + ';cursor:pointer;' + (isPast ? 'opacity:0.55;' : '') + '">'
+                    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
+                    + '<div style="font-size:0.9em;flex:1;">'
+                    + timeStr + '<strong style="color:' + p.color + ';">' + (es ? tp(pName) : pName) + '</strong> '
+                    + '<strong style="color:' + aspectColor + ';">' + symbolStr + translatedType + '</strong> '
+                    + '<strong style="color:#a8b2d1;">' + translatedWith + '</strong>'
+                    + '</div>'
+                    + '<div style="text-align:right;font-size:0.78em;color:#f0e68c;white-space:nowrap;">' + dateStr + '</div>'
+                    + '</div>'
+                    + (meaning ? '<p style="color:rgba(255,255,255,0.6);font-size:0.8em;margin:4px 0 0 0;">' + meaning + '</p>' : '')
+                    + '</div>';
+            });
+            html += '</div>';
+        } else {
+            html += '<div style="text-align:center;padding:20px;color:#a8b2d1;font-style:italic;">' + (es ? 'Sin aspectos calculados' : 'No aspects calculated') + '</div>';
+        }
+
+        html += '</div>'; // end details
+        html += '</div>'; // end card
+    });
+
+    // Major aspects button at bottom
+    html += '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+    html += '<button onclick="showMajorAspectsModal()" style="padding:12px;background:linear-gradient(135deg,rgba(233,30,99,0.25),rgba(155,89,182,0.2));border:2px solid #e91e63;border-radius:10px;color:#ff69b4;font-size:0.9em;font-weight:bold;cursor:pointer;">'
+        + '⭐ ' + (es ? 'Aspectos Mayores' : 'Major Aspects') + '</button>';
+    html += '<button onclick="showHistoricAspectsModal()" style="padding:12px;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(231,76,60,0.2));border:2px solid #e8c84a;border-radius:10px;color:#e8c84a;font-size:0.9em;font-weight:bold;cursor:pointer;">'
+        + '🏛️ ' + (es ? 'Eventos 2026' : 'Events 2026') + '</button>';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+}
+
+function toggleAspect2026Details(idx) {
+    const el = document.getElementById('asp2026Details' + idx);
+    const arrow = document.getElementById('asp2026Arrow' + idx);
+    if (!el) return;
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+        if (arrow) arrow.textContent = '▲';
+    } else {
+        el.style.display = 'none';
+        if (arrow) arrow.textContent = '▼';
+    }
+}
+
 function updateCurrentDayInfoForMode(mode) {
     const today = new Date();
     today.setHours(0,0,0,0);
@@ -9157,8 +9390,10 @@ function updateModeButtons() {
     const gregorianBtn = document.getElementById('gregorianModeBtn');
     const personalBtn = document.getElementById('personalModeBtn');
 
+    const asp2026Btn = document.getElementById('aspects2026ModeBtn');
+
     // Reset all
-    [lunarBtn, solarBtn, earthBtn, ssBtn, gregorianBtn, personalBtn].forEach(btn => {
+    [lunarBtn, solarBtn, earthBtn, ssBtn, gregorianBtn, personalBtn, asp2026Btn].forEach(btn => {
         if (!btn) return;
         btn.style.background = 'rgba(255,255,255,0.04)'; btn.style.border = '1px solid rgba(255,255,255,0.10)';
         btn.style.color = 'rgba(255,255,255,0.45)';
@@ -9177,6 +9412,7 @@ function updateModeButtons() {
     else if (calendarMode === 'solarsystem') activeStyle(ssBtn, '#ff9500');
     else if (calendarMode === 'gregorian') activeStyle(gregorianBtn, '#e8c84a');
     else if (calendarMode === 'personal') activeStyle(personalBtn, '#9b59b6');
+    else if (calendarMode === 'aspects2026') activeStyle(asp2026Btn, '#e91e63');
 }
 
 // ══════════════════════════════════════════════════
@@ -9923,7 +10159,7 @@ function switchToPersonalMode() {
     document.body.classList.add('personal-mode');
 
     // Hide other panels
-    ['lunarWeeks', 'solarWeeks', 'gregorianCalendar', 'solarInfoPanel', 'earthInfoPanel', 'solarSystemPanel', 'lunarInfoBanner', 'currentDayInfo', 'planetaryAspectsSection'].forEach(id => {
+    ['lunarWeeks', 'solarWeeks', 'gregorianCalendar', 'solarInfoPanel', 'earthInfoPanel', 'solarSystemPanel', 'aspects2026Panel', 'lunarInfoBanner', 'currentDayInfo', 'planetaryAspectsSection'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
@@ -10318,14 +10554,37 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
             </div>
         </div>`;
 
+    // ===== TAB: HOY (Today's transits - rich view) =====
+    const allTransits = [...majorTransits, ...moonTransits];
+
+    function buildHoyTransitCard(t, idx, isMoon) {
+        var tName = planetNms[t.transitPlanet]||t.transitPlanet;
+        var nName = planetNms[t.natalPlanet]||t.natalPlanet;
+        var aspName = t.type === 'conjunction' ? (L?'Conjunción':'Conjunction') : t.type === 'opposition' ? (L?'Oposición':'Opposition') : t.type === 'trine' ? (L?'Trígono':'Trine') : t.type === 'square' ? (L?'Cuadratura':'Square') : t.type === 'sextile' ? (L?'Sextil':'Sextile') : t.type;
+        if (isMoon) {
+            return '<div onclick="aiInterpretHoyTransit(' + idx + ')" style="background:rgba(0,0,0,0.2);padding:8px 10px;border-radius:6px;border-left:2px solid rgba(126,200,255,0.4);cursor:pointer;opacity:0.75;transition:all 0.2s;" onmouseover="this.style.opacity=0.5" onmouseout="this.style.opacity=0.75"><div style="display:flex;align-items:center;gap:6px;"><span>☽</span><span style="color:' + t.color + ';">' + t.symbol + '</span><span>' + t.natalSymbol + '</span><span style="color:rgba(255,255,255,0.4);margin-left:4px;font-size:0.85em;">' + aspName + ' natal ' + nName + '</span></div></div>';
+        }
+        return '<div onclick="aiInterpretHoyTransit(' + idx + ')" style="background:rgba(0,0,0,0.3);padding:10px 12px;border-radius:8px;border-left:3px solid ' + t.color + ';cursor:pointer;transition:all 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:1.3em;">' + t.transitSymbol + '</span><span style="color:' + t.color + ';font-size:1.2em;font-weight:bold;">' + t.symbol + '</span><span style="font-size:1.3em;">' + t.natalSymbol + '</span><div style="flex:1;margin-left:6px;"><div style="font-size:0.9em;font-weight:600;color:rgba(255,255,255,0.85);">' + tName + ' <span style="color:' + t.color + ';">' + t.symbol + ' ' + aspName + '</span> ' + nName + ' <span style="font-size:0.75em;color:rgba(255,255,255,0.3);">(natal)</span></div><div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-top:2px;">' + (L?'Orbe':'Orb') + ': ' + (t.orb||'?') + '°</div></div></div></div>';
+    }
+
+    const hoyTab = `
+        <div class="personal-natal-card" style="border-top:2px solid #c9a840;">
+            <h3 style="color:#c9a840;">🌟 ${L ? 'Tránsitos de Hoy' : "Today's Transits"} — ${today.toLocaleDateString(L?'es':'en', {weekday:'long',day:'numeric',month:'long'})}</h3>
+            <div style="font-size:0.75em;color:rgba(255,255,255,0.35);margin-bottom:10px;">${L ? 'Click en cualquier tránsito para que el AI lo interprete' : 'Click any transit for AI interpretation'}</div>
+            ${majorTransits.length > 0 ? '<div style="margin-bottom:12px;"><div style="font-size:0.72em;color:rgba(201,168,64,0.7);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">' + (L ? '🪐 Aspectos Planetarios Mayores' : '🪐 Major Planetary Aspects') + '</div><div style="display:flex;flex-direction:column;gap:6px;">' + majorTransits.map(function(t, idx){ return buildHoyTransitCard(t, idx, false); }).join('') + '</div></div>' : '<div style="text-align:center;padding:16px;color:rgba(255,255,255,0.3);font-style:italic;">' + (L ? 'Sin aspectos planetarios mayores hoy' : 'No major planetary aspects today') + '</div>'}
+            ${moonTransits.length > 0 ? '<div><div style="font-size:0.72em;color:rgba(126,200,255,0.7);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">☽ ' + (L ? 'Luna Transitando' : 'Moon Transiting') + '</div><div style="display:flex;flex-direction:column;gap:4px;">' + moonTransits.map(function(t, idx){ return buildHoyTransitCard(t, majorTransits.length + idx, true); }).join('') + '</div></div>' : ''}
+        </div>`;
+
     // ===== COMBINE WITH TABS =====
     return `
         <div class="natal-subtabs">
+            <button class="natal-subtab" onclick="switchNatalTab('hoy',this)" style="color:#c9a840;">🌟 ${L?'Hoy':'Today'}</button>
             <button class="natal-subtab active" onclick="switchNatalTab('calendar',this)">📅 ${L?'Calendario':'Calendar'}</button>
             <button class="natal-subtab" onclick="switchNatalTab('chart',this)">📜 ${L?'Carta':'Chart'}</button>
             <button class="natal-subtab" onclick="switchNatalTab('tables',this)">📊 ${L?'Tablas':'Tables'}</button>
             <button class="natal-subtab" onclick="switchNatalTab('elements',this)">🔥 ${L?'Elementos':'Elements'}</button>
         </div>
+        <div id="natalTabHoy" class="natal-tab-content" style="display:none;">${hoyTab}</div>
         <div id="natalTabCalendar" class="natal-tab-content" style="display:block;">${calendarTransitsTab}</div>
         <div id="natalTabChart" class="natal-tab-content" style="display:none;">${chartTab}</div>
         <div id="natalTabTables" class="natal-tab-content" style="display:none;">${tablesTab}</div>
@@ -14207,33 +14466,36 @@ function renderCalendar() {
                         ${allPlanetaryEvents.slice(0, 8).map(event => {
                             if (event.type === 'eclipse') {
                                 const ecl = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.2);border-radius:4px;border-left:2px solid #f5576c;font-weight:bold;text-align:center;width:100%;">🌑 ${ecl.type || 'Eclipse'}</div>`;
+                                const eclText = (ecl.type || 'Eclipse').replace(/'/g, "\\'");
+                                return `<div onclick="aiInterpretAspect('${eclText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.2);border-radius:4px;border-left:2px solid #f5576c;font-weight:bold;text-align:center;width:100%;cursor:pointer;">🌑 ${ecl.type || 'Eclipse'}</div>`;
                             } else if (event.type === 'astroEvent') {
                                 const ae = event.data;
                                 const lbl = currentLang==='es'?(ae.esName||'Evento'):(ae.enName||'Event');
                                 const timeStr = ae.date ? ae.date.toLocaleTimeString(currentLang==='es'?'es':'en',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(255,215,0,0.15);border-radius:4px;border-left:2px solid #FFD700;font-weight:bold;text-align:center;width:100%;">☀️ ${lbl}${timeStr?' · '+timeStr:''}</div>`;
+                                const aeText = (lbl + (timeStr ? ' ' + timeStr : '')).replace(/'/g, "\\'");
+                                return `<div onclick="aiInterpretAspect('${aeText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(255,215,0,0.15);border-radius:4px;border-left:2px solid #FFD700;font-weight:bold;text-align:center;width:100%;cursor:pointer;">☀️ ${lbl}${timeStr?' · '+timeStr:''}</div>`;
                             } else if (event.type === 'stellium') {
                                 const st = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(201,168,64,0.15);border-radius:4px;border-left:2px solid #c9a840;text-align:center;width:100%;">✨ Stellium ${st.sign||''}</div>`;
+                                const stText = ('Stellium en ' + (st.sign||'')).replace(/'/g, "\\'");
+                                return `<div onclick="aiInterpretAspect('${stText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(201,168,64,0.15);border-radius:4px;border-left:2px solid #c9a840;text-align:center;width:100%;cursor:pointer;">✨ Stellium ${st.sign||''}</div>`;
                             } else if (event.type === 'signChange') {
                                 const ch = event.data;
-                                const ds = JSON.stringify(currentDayInCycle).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${ch.color};"><span style="color:#e8eaf6">${tp(ch.planet)} → ${ts(ch.toSign)}${ch.time?' <span style="font-weight:bold;color:#c9a840">'+ch.time+'</span>':''}</span></div>`;
+                                const chText = (tp(ch.planet) + ' entra en ' + ts(ch.toSign)).replace(/'/g, "\\'");
+                                return `<div onclick="aiInterpretAspect('${chText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${ch.color};"><span style="color:#e8eaf6">${tp(ch.planet)} → ${ts(ch.toSign)}${ch.time?' <span style="font-weight:bold;color:#c9a840">'+ch.time+'</span>':''}</span></div>`;
                             } else if (event.type === 'retrograde') {
                                 const ret = event.data;
-                                const ds = JSON.stringify(currentDayInCycle).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid #ff6b6b;"><span style="color:#e8eaf6">${tp(ret.planet)} ${ret.isStart?'R':'D'}</span></div>`;
+                                const retText = (tp(ret.planet) + (ret.isStart ? ' entra en retrogradación' : ' se pone directo')).replace(/'/g, "\\'");
+                                return `<div onclick="aiInterpretAspect('${retText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid #ff6b6b;"><span style="color:#e8eaf6">${tp(ret.planet)} ${ret.isStart?'R':'D'}</span></div>`;
                             } else if (event.type === 'interPlanetaryAspect') {
                                 const asp = event.data;
                                 const ts2 = asp.time?`<span style="font-weight:bold;color:#c9a840">${asp.time}</span> `:'';
-                                const ds = JSON.stringify(currentDayInCycle).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${asp.color};"><span style="color:#e8eaf6">${ts2}${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)}</span></div>`;
+                                const ipaText = (tp(asp.planet1) + ' ' + asp.symbol + ' ' + tp(asp.planet2) + (asp.aspectName ? ' (' + asp.aspectName + ')' : '')).replace(/'/g, "\\'");
+                                return `<div onclick="aiInterpretAspect('${ipaText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${asp.color};"><span style="color:#e8eaf6">${ts2}${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)}</span></div>`;
                             } else if (event.type === 'aspect') {
                                 const asp = event.data;
                                 const color = asp.class==='conjunction'?'#ff6b6b':asp.class==='sextile'?'#4ecdc4':asp.class==='square'?'#ff9f43':asp.class==='trine'?'#7c4dff':'#ee5a6f';
-                                const ds = JSON.stringify(currentDayInCycle).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-                                return `<div onclick="openAspectsModal(new Date(${today.getTime()}),${currentDayInCycle.lunarDay},JSON.parse('${ds}'))" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${color};border-right:2px solid ${color};"><span style="color:#e8eaf6">☽ ${asp.symbol} ${tp(asp.planetName)}</span></div>`;
+                                const aspText = ('Luna ' + asp.symbol + ' ' + tp(asp.planetName) + ' (' + (asp.class||'') + ')').replace(/'/g, "\\'");
+                                return `<div onclick="aiInterpretAspect('${aspText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${color};border-right:2px solid ${color};"><span style="color:#e8eaf6">☽ ${asp.symbol} ${tp(asp.planetName)}</span></div>`;
                             }
                         }).join('')}
                         ${allPlanetaryEvents.length > 6 ? `<div style="font-size:0.6em;text-align:center;color:#8899cc;">+${allPlanetaryEvents.length - 6}</div>` : ''}
@@ -14473,6 +14735,8 @@ if (calendarMode === 'solar') {
     switchToEarthMode();
 } else if (calendarMode === 'solarsystem') {
     switchToSolarSystemMode();
+} else if (calendarMode === 'aspects2026') {
+    switchToAspects2026Mode();
 } else if (calendarMode === 'gregorian') {
     document.body.classList.add('gregorian-mode');
     renderGregorianCalendar();
@@ -14871,6 +15135,8 @@ window.switchToSolarMode = switchToSolarMode;
 window.switchToGregorianMode = switchToGregorianMode;
 window.switchToEarthMode = switchToEarthMode;
 window.switchToSolarSystemMode = switchToSolarSystemMode;
+window.switchToAspects2026Mode = switchToAspects2026Mode;
+window.toggleAspect2026Details = toggleAspect2026Details;
 window.togglePlanetDetails = togglePlanetDetails;
 window.fetchEarthWeather = fetchEarthWeather;
 window.fetchEarthquakes = fetchEarthquakes;
@@ -16212,7 +16478,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v186';
+const APP_VERSION = 'v189';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -16622,13 +16888,42 @@ function aiQuickAction(id) {
     const prompts = {
         1: isEs ? 'Dame una lectura completa de mi carta astral' : 'Give me a complete reading of my natal chart',
         2: isEs ? 'Que eventos astronomicos hay en este ciclo lunar?' : 'What astronomical events are in this lunar cycle?',
-        3: isEs ? 'Como me afectan los transitos planetarios de hoy?' : 'How do today\'s planetary transits affect me?'
+        3: isEs ? 'Como me afectan los transitos planetarios de hoy?' : 'How do today\'s planetary transits affect me?',
+        4: isEs ? 'Dime los eventos de mi calendario de este ciclo lunar y solar y cómo se relacionan con la astrología' : 'Tell me the calendar events of this lunar and solar cycle and how they relate to astrology',
+        5: isEs ? 'Cuáles son los eventos astrológicos más importantes de este ciclo lunar y solar? Eclipses, retrogradaciones, aspectos mayores, cambios de signo.' : 'What are the most important astrological events of this lunar and solar cycle? Eclipses, retrogrades, major aspects, sign changes.'
     };
     const input = document.getElementById('aiChatInput');
     if (input && prompts[id]) {
         input.value = prompts[id];
         sendAIMessage();
     }
+}
+
+function aiInterpretAspect(aspectText) {
+    const isEs = currentLang === 'es';
+    const prompt = isEs
+        ? 'Interpreta este aspecto astrológico de hoy y cómo me afecta personalmente según mi carta natal: ' + aspectText
+        : 'Interpret this astrological aspect happening today and how it affects me personally based on my natal chart: ' + aspectText;
+    openAIChat();
+    setTimeout(() => {
+        const input = document.getElementById('aiChatInput');
+        if (input) {
+            input.value = prompt;
+            sendAIMessage();
+        }
+    }, 300);
+}
+
+function aiInterpretHoyTransit(idx) {
+    const t = globalTodayTransits[idx];
+    if (!t) return;
+    const isEs = currentLang === 'es';
+    const planetNmsLocal = {'sun':isEs?'Sol':'Sun','moon':isEs?'Luna':'Moon','mercury':isEs?'Mercurio':'Mercury','venus':'Venus','mars':isEs?'Marte':'Mars','jupiter':isEs?'Júpiter':'Jupiter','saturn':isEs?'Saturno':'Saturn','uranus':isEs?'Urano':'Uranus','neptune':isEs?'Neptuno':'Neptune','pluto':isEs?'Plutón':'Pluto','chiron':isEs?'Quirón':'Chiron','northnode':isEs?'Nodo Norte':'North Node','lilith':'Lilith','ASC':'ASC','MC':'MC'};
+    const tName = planetNmsLocal[t.transitPlanet] || t.transitPlanet;
+    const nName = planetNmsLocal[t.natalPlanet] || t.natalPlanet;
+    const aspName = t.type === 'conjunction' ? (isEs?'Conjunción':'Conjunction') : t.type === 'opposition' ? (isEs?'Oposición':'Opposition') : t.type === 'trine' ? (isEs?'Trígono':'Trine') : t.type === 'square' ? (isEs?'Cuadratura':'Square') : t.type === 'sextile' ? (isEs?'Sextil':'Sextile') : t.type;
+    const text = tName + ' en tránsito ' + (t.symbol||'') + ' ' + aspName + ' ' + nName + ' natal';
+    aiInterpretAspect(text);
 }
 
 function showAIWelcome() {
@@ -16660,6 +16955,8 @@ function showAIWelcome() {
                     <button onclick="aiQuickAction(1)" style="padding:10px 14px;background:linear-gradient(135deg,rgba(102,126,234,0.25),rgba(118,75,162,0.25));border:1px solid rgba(102,126,234,0.4);border-radius:10px;color:#c4b5fd;font-size:0.85em;font-weight:600;cursor:pointer;text-align:left;">🔮 ${isEs ? 'Lectura completa de carta astral' : 'Full natal chart reading'}</button>
                     <button onclick="aiQuickAction(2)" style="padding:10px 14px;background:linear-gradient(135deg,rgba(78,205,196,0.2),rgba(102,126,234,0.15));border:1px solid rgba(78,205,196,0.35);border-radius:10px;color:#7dd3c8;font-size:0.85em;font-weight:600;cursor:pointer;text-align:left;">🌙 ${isEs ? 'Eventos de este ciclo' : 'This cycle events'}</button>
                     <button onclick="aiQuickAction(3)" style="padding:10px 14px;background:linear-gradient(135deg,rgba(255,224,102,0.15),rgba(255,149,0,0.15));border:1px solid rgba(255,224,102,0.3);border-radius:10px;color:#ffd54f;font-size:0.85em;font-weight:600;cursor:pointer;text-align:left;">🪐 ${isEs ? 'Tránsitos de hoy' : 'Today transits'}</button>
+                    <button onclick="aiQuickAction(4)" style="padding:10px 14px;background:linear-gradient(135deg,rgba(102,187,106,0.15),rgba(78,205,196,0.15));border:1px solid rgba(102,187,106,0.3);border-radius:10px;color:#81c784;font-size:0.85em;font-weight:600;cursor:pointer;text-align:left;">📅 ${isEs ? 'Eventos de calendario de este ciclo' : 'Calendar events this cycle'}</button>
+                    <button onclick="aiQuickAction(5)" style="padding:10px 14px;background:linear-gradient(135deg,rgba(186,104,200,0.15),rgba(149,117,205,0.15));border:1px solid rgba(186,104,200,0.3);border-radius:10px;color:#ce93d8;font-size:0.85em;font-weight:600;cursor:pointer;text-align:left;">⭐ ${isEs ? 'Eventos astrológicos de este ciclo' : 'Astrological events this cycle'}</button>
                 </div>
                 <p style="font-size:0.78em;color:rgba(255,255,255,0.4);line-height:1.5;margin-top:4px;">${isEs ? 'Puedes añadir eventos a tu calendario, preguntarme sobre cualquier aspecto de tu carta natal, tránsitos, fases lunares y más.' : 'You can add events to your calendar, ask me about any aspect of your natal chart, transits, lunar phases and more.'}</p>
             </div>`;
@@ -16874,7 +17171,27 @@ REGLAS DE ESTILO (OBLIGATORIAS):
 - Da interpretaciones concretas: evolutiva, psicológica, práctica. Sin relleno.
 - Cuando la pregunta lo amerite, sé extenso (5-8 párrafos) pero siempre con sustancia.
 - Usa emojis astrológicos con moderación (🌙☀️♈♉♊♋♌♍♎♏♐♑♒♓)
-- Responde SIEMPRE en español`;
+- Responde SIEMPRE en español
+
+LECTURA COMPLETA — Cuando te pidan una lectura completa o análisis de carta astral, DEBES cubrir TODOS estos elementos SIN EXCEPCIÓN (mínimo 15 párrafos con sustancia):
+1. Sol: signo, casa, grado, aspectos principales
+2. Luna: signo, casa, grado, aspectos — vida emocional profunda
+3. Ascendente: signo, grado, regente y su posición
+4. Mercurio: signo, casa, aspectos — mente y comunicación
+5. Venus: signo, casa, aspectos — amor, valores, estética
+6. Marte: signo, casa, aspectos — acción, deseo, energía vital
+7. Júpiter: signo, casa, aspectos — expansión, sentido, abundancia
+8. Saturno: signo, casa, aspectos — estructura, maestro, karma
+9. Urano: signo, casa, aspectos — revolución, despertar
+10. Neptuno: signo, casa, aspectos — espiritualidad, ilusión, trascendencia
+11. Plutón: signo, casa, aspectos — transformación, poder, eje evolutivo
+12. Nodos Lunares: Nodo Norte y Sur, casas, significado kármico-evolutivo
+13. Quirón: signo, casa — herida sagrada y don sanador
+14. Lilith: signo, casa — fuerza salvaje, sombra femenina
+15. Medio Cielo (MC): signo, vocación, propósito público
+16. Aspectos mayores entre planetas (conjunciones, oposiciones, trígonos, cuadraturas, sextiles)
+17. Síntesis final: patrón evolutivo general, propósito del alma
+NO te detengas en Sol y Ascendente — la lectura completa debe cubrir TODOS los planetas y puntos listados arriba.`;
     } else {
         return `You are a transpersonal evolutionary astrologer integrated in "Moon Sync". Theoretical bases: evolutionary astrology (Jeff Green, Steven Forrest), transpersonal (Dane Rudhyar), archetypal (Richard Tarnas), depth psychology (Liz Greene), perennial wisdom and hermeticism.
 
@@ -16903,7 +17220,27 @@ STYLE RULES (MANDATORY):
 - Give concrete interpretations: evolutionary, psychological, practical. No filler.
 - When warranted, be thorough (5-8 paragraphs) but always with substance.
 - Use astrological emojis sparingly (🌙☀️♈♉♊♋♌♍♎♏♐♑♒♓)
-- Always respond in English`;
+- Always respond in English
+
+FULL READING — When asked for a complete or full reading of the natal chart, you MUST cover ALL these elements WITHOUT EXCEPTION (minimum 15 paragraphs with substance):
+1. Sun: sign, house, degree, main aspects
+2. Moon: sign, house, degree, aspects — deep emotional life
+3. Ascendant: sign, degree, ruler and its position
+4. Mercury: sign, house, aspects — mind and communication
+5. Venus: sign, house, aspects — love, values, aesthetics
+6. Mars: sign, house, aspects — action, desire, vital energy
+7. Jupiter: sign, house, aspects — expansion, meaning, abundance
+8. Saturn: sign, house, aspects — structure, teacher, karma
+9. Uranus: sign, house, aspects — revolution, awakening
+10. Neptune: sign, house, aspects — spirituality, illusion, transcendence
+11. Pluto: sign, house, aspects — transformation, power, evolutionary axis
+12. Lunar Nodes: North and South Node, houses, karmic-evolutionary meaning
+13. Chiron: sign, house — sacred wound and healing gift
+14. Lilith: sign, house — wild force, feminine shadow
+15. Midheaven (MC): sign, vocation, public purpose
+16. Major aspects between planets (conjunctions, oppositions, trines, squares, sextiles)
+17. Final synthesis: general evolutionary pattern, soul purpose
+DO NOT stop at Sun and Ascendant — a complete reading must cover ALL planets and points listed above.`;
     }
 }
 
@@ -16920,6 +17257,32 @@ function addAIMessage(role, text) {
             .replace(/\n\n/g, '</p><p>')
             .replace(/\n/g, '<br>');
         div.innerHTML = '<p>' + html + '</p>';
+        // Share/copy/save button bar
+        const btnBar = document.createElement('div');
+        btnBar.style.cssText = 'display:flex;gap:6px;margin-top:8px;justify-content:flex-end;';
+        const rawText = text;
+        // Copy button
+        const copyBtn = document.createElement('button');
+        copyBtn.innerHTML = '📋 ' + (currentLang === 'es' ? 'Copiar' : 'Copy');
+        copyBtn.style.cssText = 'padding:4px 10px;font-size:0.72em;background:rgba(102,126,234,0.2);border:1px solid rgba(102,126,234,0.35);border-radius:6px;color:#c4b5fd;cursor:pointer;font-weight:600;';
+        copyBtn.onclick = function() {
+            navigator.clipboard.writeText(rawText).then(() => {
+                copyBtn.innerHTML = '✅ ' + (currentLang === 'es' ? 'Copiado' : 'Copied');
+                setTimeout(() => { copyBtn.innerHTML = '📋 ' + (currentLang === 'es' ? 'Copiar' : 'Copy'); }, 2000);
+            });
+        };
+        btnBar.appendChild(copyBtn);
+        // Share button (Web Share API if available)
+        if (navigator.share) {
+            const shareBtn = document.createElement('button');
+            shareBtn.innerHTML = '📤 ' + (currentLang === 'es' ? 'Compartir' : 'Share');
+            shareBtn.style.cssText = 'padding:4px 10px;font-size:0.72em;background:rgba(78,205,196,0.2);border:1px solid rgba(78,205,196,0.35);border-radius:6px;color:#7dd3c8;cursor:pointer;font-weight:600;';
+            shareBtn.onclick = function() {
+                navigator.share({ title: 'Moon Sync AI', text: rawText }).catch(() => {});
+            };
+            btnBar.appendChild(shareBtn);
+        }
+        div.appendChild(btnBar);
     } else {
         div.textContent = text;
     }
@@ -16979,7 +17342,7 @@ async function sendAIMessage() {
             contents: aiChatHistory,
             generationConfig: {
                 temperature: 0.8,
-                maxOutputTokens: 4096
+                maxOutputTokens: 8192
             }
         };
 
