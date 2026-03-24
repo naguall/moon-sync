@@ -241,7 +241,7 @@
         .days-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 4px; padding: 2px 0; width: 100%; }
 
         .day-cell {
-            min-width: 0; min-height: 110px;
+            min-width: var(--day-cell-min-width, 0); min-height: var(--day-cell-min-height, 110px);
             display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
             background: rgba(5,7,30,0.95);
             border: 1px solid rgba(74,158,255,0.18);
@@ -414,7 +414,7 @@
         /* Solar mode */
         body.solar-mode { background: radial-gradient(ellipse 70% 50% at 20% 15%, rgba(90,55,0,0.55) 0%, transparent 55%), radial-gradient(ellipse 55% 45% at 80% 80%, rgba(70,35,0,0.50) 0%, transparent 55%), linear-gradient(170deg, #0e0700 0%, #180e00 40%, #0e0700 100%); }
         body.solar-mode .lunar-week { background: rgba(18,11,2,0.95); border-color: rgba(212,175,55,0.18) !important; border-left-color: rgba(212,175,55,0.50) !important; }
-        body.solar-mode .day-cell { background: rgba(14,9,2,0.95); border: 1px solid rgba(212,175,55,0.16); min-width: 0; min-height: 110px; }
+        body.solar-mode .day-cell { background: rgba(14,9,2,0.95); border: 1px solid rgba(212,175,55,0.16); min-width: var(--day-cell-min-width, 0); min-height: var(--day-cell-min-height, 110px); }
         body.solar-mode .day-cell:hover { background: rgba(22,14,2,0.98); border-color: rgba(212,175,55,0.38); }
         body.solar-mode .day-cell.today, body.solar-mode .day-cell.today.weekend { background: linear-gradient(160deg, rgba(10,25,50,0.98) 0%, rgba(8,20,45,0.98) 100%) !important; border: 1px solid rgba(100,181,246,0.60) !important; border-top: 3px solid #64B5F6 !important; box-shadow: 0 0 22px rgba(100,181,246,0.25), inset 0 1px 0 rgba(100,181,246,0.20) !important; }
         body.solar-mode .day-cell.weekend { background: rgba(25,18,2,0.95); border: 1px solid rgba(212,175,55,0.35); border-top: 2px solid rgba(212,175,55,0.55); box-shadow: 0 0 8px rgba(212,175,55,0.15), inset 0 0 12px rgba(212,175,55,0.06); }
@@ -8086,7 +8086,7 @@ function switchToSolarMode() {
     document.body.classList.remove('gregorian-mode');
     document.body.classList.remove('personal-mode');
 
-    // Hide earth, solar system, aspects2026, and personal panels
+    // Hide panels not used in solar mode
     const eip = document.getElementById('earthInfoPanel');
     if (eip) eip.style.display = 'none';
     const ssp = document.getElementById('solarSystemPanel');
@@ -8095,9 +8095,23 @@ function switchToSolarMode() {
     if (a26p) a26p.style.display = 'none';
     const pCal = document.getElementById('personalCalendar');
     if (pCal) pCal.style.display = 'none';
+    const lunarWeeks = document.getElementById('lunarWeeks');
+    if (lunarWeeks) lunarWeeks.style.display = 'none';
+    const gregorianCal = document.getElementById('gregorianCalendar');
+    if (gregorianCal) gregorianCal.style.display = 'none';
+    const pas = document.getElementById('planetaryAspectsSection');
+    if (pas) pas.style.display = 'none';
+    const lib = document.getElementById('lunarInfoBanner');
+    if (lib) lib.style.display = 'none';
+
+    // Ensure currentDayInfo is visible (may have been hidden by other modes)
+    const cdi = document.getElementById('currentDayInfo');
+    if (cdi) cdi.style.display = '';
 
     updateModeButtons();
     renderSolarCalendar();
+    refreshAllLiveData();
+    setTimeout(reapplyCellSize, 300);
 }
 
 function switchToGregorianMode() {
@@ -8109,7 +8123,7 @@ function switchToGregorianMode() {
     document.body.classList.remove('solar-mode');
     document.body.classList.remove('personal-mode');
 
-    // Hide solar, earth, solar system, aspects2026, and personal panels
+    // Hide panels not used in gregorian mode
     const sip = document.getElementById('solarInfoPanel');
     if (sip) sip.style.display = 'none';
     const eip = document.getElementById('earthInfoPanel');
@@ -8120,6 +8134,18 @@ function switchToGregorianMode() {
     if (a26p) a26p.style.display = 'none';
     const pCal = document.getElementById('personalCalendar');
     if (pCal) pCal.style.display = 'none';
+    const lunarWeeks = document.getElementById('lunarWeeks');
+    if (lunarWeeks) lunarWeeks.style.display = 'none';
+    const solarWeeks = document.getElementById('solarWeeks');
+    if (solarWeeks) solarWeeks.style.display = 'none';
+    const pas = document.getElementById('planetaryAspectsSection');
+    if (pas) pas.style.display = 'none';
+    const lib = document.getElementById('lunarInfoBanner');
+    if (lib) lib.style.display = 'none';
+
+    // Ensure currentDayInfo is visible
+    const cdi = document.getElementById('currentDayInfo');
+    if (cdi) cdi.style.display = '';
 
     updateModeButtons();
     renderGregorianCalendar();
@@ -8227,6 +8253,7 @@ function switchToLunarMode() {
     // Force refresh moon position, tide data, and astro info
     updateCurrentDayInfoForMode('lunar');
     refreshAllLiveData();
+    setTimeout(reapplyCellSize, 300);
 }
 
 // ══════════════════════════════════════════════════
@@ -9313,6 +9340,69 @@ function showBannerAspectDetail(text) {
 }
 window.showBannerAspectDetail = showBannerAspectDetail;
 
+function showAllAspectsInterpretation() {
+    var modal = document.getElementById('natalDetailModal');
+    var titleEl = document.getElementById('natalDetailTitle');
+    var bodyEl = document.getElementById('natalDetailBody');
+    var L = currentLang === 'es';
+    var today = new Date();
+
+    titleEl.textContent = L ? '✦ Aspectos de Hoy' : '✦ Today\'s Aspects';
+
+    // Gather all aspect texts
+    var todayLunarDay = getLunarDayForDate(today);
+    var aspects = [];
+    if (todayLunarDay) {
+        var nm = findNearestNewMoon(today);
+        var wks = calculateLunarCycle(nm);
+        for (var wi = 0; wi < wks.length; wi++) {
+            for (var di = 0; di < wks[wi].days.length; di++) {
+                if (wks[wi].days[di].date.toDateString() === today.toDateString()) {
+                    aspects = wks[wi].days[di].aspects || [];
+                    break;
+                }
+            }
+            if (aspects.length > 0) break;
+        }
+    }
+    var signChanges = getSignChanges(today);
+    var retrogrades = getRetrogrades(today);
+    var interAspects = getInterPlanetaryAspects(today);
+    var eclipse = getEclipseInfo(today);
+    var astroEvent = isAstronomicalEvent(today);
+    var stellium = getStellium(today);
+
+    // Build summary text
+    var allTexts = [];
+    if (eclipse) allTexts.push(eclipse.type || 'Eclipse');
+    if (astroEvent) allTexts.push(L ? (astroEvent.esName || 'Evento') : (astroEvent.enName || 'Event'));
+    if (stellium) allTexts.push('Stellium ' + (stellium.sign || ''));
+    signChanges.forEach(function(ch) { allTexts.push(tp(ch.planet) + ' → ' + ts(ch.toSign)); });
+    retrogrades.forEach(function(ret) { allTexts.push(tp(ret.planet) + (ret.isStart ? ' ℞' : ' D')); });
+    interAspects.forEach(function(asp) { allTexts.push(tp(asp.planet1) + ' ' + asp.symbol + ' ' + tp(asp.planet2)); });
+    aspects.forEach(function(asp) { allTexts.push('☽ ' + asp.symbol + ' ' + tp(asp.planetName)); });
+
+    // Build HTML — list all aspects at top, then AI below
+    var html = '<div style="margin-bottom:15px;">';
+    html += '<div style="font-size:0.85em;color:rgba(255,255,255,0.5);margin-bottom:8px;">' + today.toLocaleDateString(L?'es':'en',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) + '</div>';
+    allTexts.forEach(function(txt) {
+        var safeTxt = txt.replace(/'/g, "\\'");
+        html += '<div onclick="showBannerAspectDetail(\'' + safeTxt + '\')" style="font-size:0.85em;padding:6px 10px;margin-bottom:4px;background:rgba(201,168,64,0.08);border:1px solid rgba(201,168,64,0.15);border-radius:6px;cursor:pointer;color:rgba(255,255,255,0.75);transition:all 0.2s;" onmouseover="this.style.borderColor=\'rgba(201,168,64,0.4)\'" onmouseout="this.style.borderColor=\'rgba(201,168,64,0.15)\'">' + txt + '</div>';
+    });
+    html += '</div>';
+    html += '<div style="border-top:2px solid #c9a840;padding-top:12px;"><h4 style="color:#c9a840;margin-bottom:8px;">✦ ' + (L ? 'Interpretación del Día' : 'Day Interpretation') + '</h4><div id="aiInterpDiv"></div></div>';
+
+    bodyEl.innerHTML = html;
+    modal.classList.add('show');
+
+    var prompt = L
+        ? 'Interpreta los siguientes aspectos astrológicos de hoy EN CONJUNTO, como un panorama energético del día, y cómo me afectan según mi carta natal:\n' + allTexts.join('\n')
+        : 'Interpret the following astrological aspects of today AS A WHOLE, as an energetic overview of the day, and how they affect me based on my natal chart:\n' + allTexts.join('\n');
+    var readingTitle = L ? 'Aspectos de Hoy — ' + today.toLocaleDateString('es',{day:'numeric',month:'short'}) : 'Today\'s Aspects — ' + today.toLocaleDateString('en',{day:'numeric',month:'short'});
+    setTimeout(function() { fetchAIInterpretation(prompt, 'aiInterpDiv', readingTitle); }, 100);
+}
+window.showAllAspectsInterpretation = showAllAspectsInterpretation;
+
 function showAI2026Summary(type) {
     var modal = document.getElementById('natalDetailModal');
     var titleEl = document.getElementById('natalDetailTitle');
@@ -9476,32 +9566,42 @@ function updateCurrentDayInfoForMode(mode) {
                         ${allPlanetaryEvents.slice(0, 8).map(event => {
                             if (event.type === 'eclipse') {
                                 const ecl = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.2);border-radius:4px;border-left:2px solid #f5576c;font-weight:bold;text-align:center;width:100%;">🌑 ${ecl.type || (currentLang==='es'?'Eclipse':'Eclipse')}</div>`;
+                                const eclText = (ecl.type || (currentLang==='es'?'Eclipse':'Eclipse')).replace(/'/g, "\\'");
+                                return `<div onclick="showBannerAspectDetail('${eclText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.2);border-radius:4px;border-left:2px solid #f5576c;font-weight:bold;text-align:center;width:100%;cursor:pointer;">🌑 ${eclText}</div>`;
                             } else if (event.type === 'astroEvent') {
                                 const ae = event.data;
                                 const lbl = currentLang==='es'?(ae.esName||'Evento'):(ae.enName||'Event');
                                 const timeStr = ae.date ? ae.date.toLocaleTimeString(currentLang==='es'?'es':'en',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(255,215,0,0.15);border-radius:4px;border-left:2px solid #FFD700;font-weight:bold;text-align:center;width:100%;">☀️ ${lbl}${timeStr?' · '+timeStr:''}</div>`;
+                                const aeText = (lbl + (timeStr?' · '+timeStr:'')).replace(/'/g, "\\'");
+                                return `<div onclick="showBannerAspectDetail('${aeText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(255,215,0,0.15);border-radius:4px;border-left:2px solid #FFD700;font-weight:bold;text-align:center;width:100%;cursor:pointer;">☀️ ${aeText}</div>`;
                             } else if (event.type === 'stellium') {
                                 const st = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(201,168,64,0.15);border-radius:4px;border-left:2px solid #c9a840;text-align:center;width:100%;">✨ ${currentLang==='es'?'Stellium':'Stellium'} ${st.sign||''}</div>`;
+                                const stText = ('Stellium ' + (st.sign||'')).replace(/'/g, "\\'");
+                                return `<div onclick="showBannerAspectDetail('${stText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(201,168,64,0.15);border-radius:4px;border-left:2px solid #c9a840;text-align:center;width:100%;cursor:pointer;">✨ ${stText}</div>`;
                             } else if (event.type === 'signChange') {
                                 const ch = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(78,205,196,0.12);border-radius:4px;border-left:2px solid ${ch.color||'#4ecdc4'};text-align:center;width:100%;">${tp(ch.planet)} → ${ts(ch.toSign) || ch.toSign}${ch.time?' <span style="font-weight:bold;color:#c9a840;">'+ch.time+'</span>':''}</div>`;
+                                const chText = (tp(ch.planet) + ' → ' + ts(ch.toSign || ch.toSign) + (ch.time?' '+ch.time:'')).replace(/'/g, "\\'");
+                                return `<div onclick="showBannerAspectDetail('${chText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(78,205,196,0.12);border-radius:4px;border-left:2px solid ${ch.color||'#4ecdc4'};text-align:center;width:100%;cursor:pointer;">${chText}</div>`;
                             } else if (event.type === 'retrograde') {
                                 const ret = event.data;
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.12);border-radius:4px;border-left:2px solid #e85d7a;text-align:center;width:100%;">${tp(ret.planet)} ${ret.type==='start'?(currentLang==='es'?'℞ Retro':'℞ Retro'):(currentLang==='es'?'℞ Directo':'℞ Direct')}</div>`;
+                                const retText = (tp(ret.planet) + ' ' + (ret.type==='start'?(currentLang==='es'?'℞ Retro':'℞ Retro'):(currentLang==='es'?'℞ Directo':'℞ Direct'))).replace(/'/g, "\\'");
+                                return `<div onclick="showBannerAspectDetail('${retText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(232,93,122,0.12);border-radius:4px;border-left:2px solid #e85d7a;text-align:center;width:100%;cursor:pointer;">${retText}</div>`;
                             } else if (event.type === 'interPlanetaryAspect') {
                                 const asp = event.data;
                                 const ts2 = asp.time ? `<span style="font-weight:bold;color:#c9a840">${asp.time}</span> ` : '';
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;border-left:2px solid ${asp.color};text-align:center;width:100%;"><span style="color:#e8eaf6">${ts2}${tp(asp.planet1)} ${asp.symbol} ${tp(asp.planet2)}</span></div>`;
+                                const ipaText = (tp(asp.planet1) + ' ' + asp.symbol + ' ' + tp(asp.planet2) + (asp.aspectName ? ' (' + asp.aspectName + ')' : '')).replace(/'/g, "\\'");
+                                return `<div onclick="showBannerAspectDetail('${ipaText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;border-left:2px solid ${asp.color};text-align:center;width:100%;cursor:pointer;"><span style="color:#e8eaf6">${ts2}${ipaText}</span></div>`;
                             } else if (event.type === 'aspect') {
                                 const asp = event.data;
                                 const color = asp.class==='conjunction'?'#ff6b6b':asp.class==='sextile'?'#4ecdc4':asp.class==='square'?'#ff9f43':asp.class==='trine'?'#7c4dff':'#ee5a6f';
-                                return `<div style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;border-left:2px solid ${color};border-right:2px solid ${color};text-align:center;width:100%;"><span style="color:#e8eaf6">${asp.symbol} ${tp(asp.planetName)}</span></div>`;
+                                const aspText = ('☽ ' + asp.symbol + ' ' + tp(asp.planetName) + ' (' + (asp.class||'') + ')').replace(/'/g, "\\'");
+                                return `<div onclick="showBannerAspectDetail('${aspText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;border-left:2px solid ${color};border-right:2px solid ${color};text-align:center;width:100%;cursor:pointer;"><span style="color:#e8eaf6">${asp.symbol} ${tp(asp.planetName)}</span></div>`;
                             }
                             return '';
                         }).join('')}
+                    </div>
+                    <div style="margin-top:4px;border-top:1px solid rgba(201,168,64,0.15);padding-top:4px;">
+                        <div onclick="showAllAspectsInterpretation()" style="font-size:0.6em;text-align:center;color:#c9a840;cursor:pointer;padding:3px;background:rgba(201,168,64,0.08);border-radius:4px;border:1px solid rgba(201,168,64,0.2);">✦ ${currentLang==='es'?'Interpretar todo':'Interpret all'}</div>
                     </div>
                     ` : `<div style="font-size:0.6em;color:rgba(201,168,64,0.4);font-style:italic;padding:4px 0;">${currentLang==='es'?'Sin aspectos':'No aspects'}</div>`}
                 </div>
@@ -10302,6 +10402,7 @@ function switchToPersonalMode() {
     } else {
         renderPersonalCalendar();
     }
+    setTimeout(reapplyCellSize, 300);
 }
 
 // --- Birth Data Setup Form ---
@@ -11900,16 +12001,17 @@ function renderPersonalCalendar() {
         if (isBirthday) classes += ' birthday';
 
         const lunarDay = getLunarDayForDate(date);
-        const solarEquinox = new Date(year, 2, 20); // March 20
-        let solarDay = Math.floor((date - solarEquinox) / 86400000) + 1;
-        if (solarDay <= 0) solarDay += 365;
+        // Personal year day: day 1 = birthday
+        const birthAnniversary = new Date(year, birthM - 1, birthD);
+        let personalDay = Math.floor((date - birthAnniversary) / 86400000) + 1;
+        if (personalDay <= 0) personalDay += 365;
 
         calendarHTML += `
             <div class="${classes}" onclick="showPersonalDayDetail(${year},${month},${day})" title="${isBirthday ? '🎂 ' : ''}${date.toLocaleDateString(L?'es':'en')}">
                 <div class="personal-day-num">${isBirthday ? '🎂 ' : ''}${day}</div>
                 <div style="display:flex;justify-content:space-between;margin-top:2px;font-size:0.6em;line-height:1;">
                     <span style="color:rgba(192,192,255,0.5);" title="${L?'Día lunar':'Lunar day'}">☽${lunarDay}</span>
-                    <span style="color:rgba(255,255,255,0.7);" title="${L?'Día solar':'Solar day'}">☉${solarDay}</span>
+                    <span style="color:rgba(255,255,255,0.7);" title="${L?'Día personal':'Personal day'}">☉${personalDay}</span>
                 </div>
                 ${majorCount > 0 ? `<div style="font-size:0.65em;color:rgba(255,255,255,0.3);margin-top:1px;">${majorCount} ${L?'asp.':'asp.'}</div>` : ''}
             </div>
@@ -11923,7 +12025,7 @@ function renderPersonalCalendar() {
         <!-- Legend -->
         <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:8px;font-size:0.72em;color:rgba(255,255,255,0.4);">
             <span style="color:rgba(192,192,255,0.6);">☽ = ${L?'Día lunar':'Lunar day'}</span>
-            <span style="color:rgba(255,255,255,0.7);">☉ = ${L?'Día solar':'Solar day'}</span>
+            <span style="color:rgba(255,255,255,0.7);">☉ = ${L?'Día personal (desde cumpleaños)':'Personal day (from birthday)'}</span>
         </div>
         </div><!-- close natalCalendarGrid -->
     `;
@@ -12931,6 +13033,7 @@ function renderSolarCalendar() {
         if (banner) banner.style.display = 'none';
         // renderLunarInfoBanner(today, cday, null, -1);
     }
+    setTimeout(reapplyCellSize, 300);
 }
 
 function renderSolarInfoPanel() {
@@ -13371,13 +13474,28 @@ function generateSolarWeeks(sign) {
                 </div>
             ` : '';
             
-            const dayDataStr = JSON.stringify({date: dayDate, lunarDay: realLunarDay, aspects: []}).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            // Get lunar aspects for this day
+            let solarDayAspects = [];
+            try {
+                const nm = findNearestNewMoon(dayDate);
+                const wks = calculateLunarCycle(nm);
+                for (const wk of wks) {
+                    for (const d of wk.days) {
+                        if (d.date.toDateString() === dayDate.toDateString()) {
+                            solarDayAspects = d.aspects || [];
+                            break;
+                        }
+                    }
+                    if (solarDayAspects.length > 0) break;
+                }
+            } catch(e) { /* ignore */ }
+            const dayDataStr = JSON.stringify({date: dayDate, lunarDay: realLunarDay, aspects: solarDayAspects}).replace(/'/g, "\\'").replace(/"/g, '&quot;');
             
             html += `
                 <div class="day-cell ${isToday ? 'today' : ''} ${dayDate.getDay()===0||dayDate.getDay()===6 ? 'weekend' : ''}" 
                      data-date="${dayDate.getTime()}"
                      data-lunar-day="${realLunarDay}"
-                     data-has-aspects="false"
+                     data-has-aspects="${solarDayAspects.length > 0 || interAspects.length > 0 || signChanges.length > 0 || retrogrades.length > 0}"
                      data-day-data='${dayDataStr}'
                      onclick="handleDayClick(this)">
                     
@@ -14754,6 +14872,9 @@ function renderCalendar() {
                         }).join('')}
                         ${allPlanetaryEvents.length > 6 ? `<div style="font-size:0.6em;text-align:center;color:#8899cc;">+${allPlanetaryEvents.length - 6}</div>` : ''}
                     </div>
+                    <div style="margin-top:4px;border-top:1px solid rgba(201,168,64,0.15);padding-top:4px;">
+                        <div onclick="showAllAspectsInterpretation()" style="font-size:0.6em;text-align:center;color:#c9a840;cursor:pointer;padding:3px;background:rgba(201,168,64,0.08);border-radius:4px;border:1px solid rgba(201,168,64,0.2);">✦ ${currentLang==='es'?'Interpretar todo':'Interpret all'}</div>
+                    </div>
                     ` : `<div style="font-size:0.6em;color:rgba(201,168,64,0.4);font-style:italic;padding:4px 0;">${currentLang==='es'?'Sin aspectos':'No aspects'}</div>`}
                 </div>
             </div>
@@ -15917,25 +16038,23 @@ async function handleNotifToggle(enable) {
 }
 
 function setCellSize(size) {
-    const heights = { small: '85px', medium: '110px', large: '140px' };
-    const widths = { small: '85px', medium: '110px', large: '140px' };
-    const fontScales = { small: '0.7em', medium: '0.82em', large: '0.95em' };
+    const dims = { small: '85px', medium: '110px', large: '140px' };
+    const fonts = { small: '0.7em', medium: '0.82em', large: '0.95em' };
     localStorage.setItem('dayCellSize', size);
-    document.documentElement.style.setProperty('--day-cell-min-height', heights[size] || '110px');
-    document.documentElement.style.setProperty('--day-cell-min-width', widths[size] || '110px');
-    // Update all day-cell elements
-    const dayCells = document.querySelectorAll('.day-cell');
-    dayCells.forEach(cell => {
-        cell.style.minHeight = heights[size] || '110px';
-        cell.style.minWidth = widths[size] || '110px';
-        cell.style.fontSize = fontScales[size] || '0.82em';
+    document.documentElement.style.setProperty('--day-cell-min-height', dims[size] || '110px');
+    document.documentElement.style.setProperty('--day-cell-min-width', dims[size] || '0');
+    document.documentElement.style.setProperty('--day-cell-font-size', fonts[size] || '0.82em');
+    // Also apply to existing cells directly for immediate effect
+    document.querySelectorAll('.day-cell').forEach(function(cell) {
+        cell.style.minHeight = dims[size] || '110px';
+        cell.style.minWidth = dims[size] || '0';
+        cell.style.fontSize = fonts[size] || '0.82em';
     });
-    // Make week containers scroll horizontally if cells are large
-    const weekContainers = document.querySelectorAll('.days-container, .lunar-week > div:not(.week-header)');
-    weekContainers.forEach(c => {
-        c.style.overflowX = size === 'large' ? 'auto' : '';
-        c.style.webkitOverflowScrolling = 'touch';
-    });
+}
+
+function reapplyCellSize() {
+    var saved = localStorage.getItem('dayCellSize');
+    if (saved) setCellSize(saved);
 }
 
 // Apply saved cell size on load
@@ -16787,7 +16906,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v207';
+const APP_VERSION = 'v208';
 var _pendingSW = null;
 
 function showUpdateBanner() {
