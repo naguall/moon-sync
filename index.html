@@ -16459,25 +16459,39 @@ function gatherAstroContext() {
     // ========== USER EVENTS & DIARY ==========
     try {
         var eventsData = JSON.parse(localStorage.getItem('lunarCalendarEvents') || '{}');
+        var gcalData = JSON.parse(localStorage.getItem('gcalEvents') || '{}');
         var today = new Date();
         var monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-        var monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        var futureLimit = new Date(today.getTime() + 60*86400000); // 60 days ahead
         var upcomingEvents = [];
+
+        // Local events
         Object.entries(eventsData).forEach(function(entry) {
             var dateKey = entry[0], evList = entry[1];
             var d = new Date(dateKey + 'T12:00:00');
-            // Include events from this month and next 30 days
-            if (d >= monthStart && d <= new Date(today.getTime() + 30*86400000)) {
+            if (d >= monthStart && d <= futureLimit) {
                 evList.forEach(function(ev) {
-                    upcomingEvents.push({ date: dateKey, title: ev.title, type: ev.type, time: ev.time || '', desc: ev.description || '' });
+                    upcomingEvents.push({ date: dateKey, title: ev.title, type: ev.type || '', time: ev.time || '', desc: ev.description || '', source: 'local' });
                 });
             }
         });
+
+        // Google Calendar events
+        Object.entries(gcalData).forEach(function(entry) {
+            var dateKey = entry[0], evList = entry[1];
+            var d = new Date(dateKey + 'T12:00:00');
+            if (d >= monthStart && d <= futureLimit) {
+                evList.forEach(function(ev) {
+                    upcomingEvents.push({ date: dateKey, title: ev.title || ev.summary || '', type: 'google', time: ev.time || '', desc: ev.description || '', source: 'Google Calendar' });
+                });
+            }
+        });
+
         if (upcomingEvents.length > 0) {
             upcomingEvents.sort(function(a,b) { return a.date.localeCompare(b.date); });
-            ctx += 'EVENTOS/AGENDA DEL USUARIO (próximos 30 días):\n';
+            ctx += 'EVENTOS/AGENDA DEL USUARIO (próximos 60 días):\n';
             upcomingEvents.forEach(function(ev) {
-                ctx += ev.date + ': ' + ev.title + (ev.time ? ' a las ' + ev.time : '') + (ev.type ? ' [' + ev.type + ']' : '') + (ev.desc ? ' — ' + ev.desc : '') + '\n';
+                ctx += ev.date + ': ' + ev.title + (ev.time ? ' a las ' + ev.time : '') + (ev.source === 'Google Calendar' ? ' [Google Calendar]' : (ev.type ? ' [' + ev.type + ']' : '')) + (ev.desc ? ' — ' + ev.desc : '') + '\n';
             });
             ctx += '\n';
         }
