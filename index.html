@@ -4290,11 +4290,15 @@ async function gcalExportAstroEvents(btn) {
                     transparency: 'transparent'
                 };
             } else {
+                // All-day events: end date must be next day (exclusive)
+                const nextDay = new Date(evt.date);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const endDateStr = getDateKey(nextDay);
                 gcalEvent = {
                     summary: evt.title,
                     description: evt.description ? `[Moon Sync] ${evt.description}` : '[Moon Sync]',
                     start: { date: dateStr },
-                    end: { date: dateStr },
+                    end: { date: endDateStr },
                     colorId: colorId,
                     reminders: { useDefault: false, overrides: [] },
                     transparency: 'transparent'
@@ -16163,10 +16167,10 @@ console.log('✅ Window functions exposed:', {
 
 // Force Update function — called from Preferences modal
 function forceAppUpdate() {
-    const statusEl = event && event.target ? event.target : null;
-    if (statusEl) {
-        statusEl.textContent = currentLang === 'es' ? '⏳ Actualizando...' : '⏳ Updating...';
-        statusEl.style.pointerEvents = 'none';
+    const btn = event && event.target ? event.target.closest('button') || event.target : null;
+    if (btn) {
+        btn.textContent = currentLang === 'es' ? '⏳ Limpiando caché...' : '⏳ Clearing cache...';
+        btn.style.pointerEvents = 'none';
     }
     // 1. Unregister all service workers
     const swPromise = navigator.serviceWorker ?
@@ -16177,19 +16181,38 @@ function forceAppUpdate() {
     const cachePromise = caches ?
         caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))) :
         Promise.resolve();
-    // 3. Reload
+    // 3. Re-register SW and show success (no reload)
     Promise.all([swPromise, cachePromise]).then(() => {
-        console.log('🔄 All caches cleared, all SWs unregistered. Reloading...');
-        window.location.reload(true);
+        console.log('🔄 All caches cleared, all SWs unregistered.');
+        // Re-register service worker
+        if (navigator.serviceWorker) {
+            navigator.serviceWorker.register('/moon-sync/sw.js').then(() => {
+                console.log('🔄 SW re-registered');
+            });
+        }
+        if (btn) {
+            btn.textContent = currentLang === 'es' ? '✅ Caché limpiado — recarga cuando quieras' : '✅ Cache cleared — reload when ready';
+            btn.style.color = '#66bb6a';
+            btn.style.borderColor = 'rgba(102,187,106,0.45)';
+            setTimeout(() => {
+                btn.textContent = '🔄 ' + (currentLang === 'es' ? 'Forzar Actualización' : 'Force Update');
+                btn.style.color = '#ffb347';
+                btn.style.borderColor = 'rgba(255,165,0,0.45)';
+                btn.style.pointerEvents = '';
+            }, 5000);
+        }
     }).catch(err => {
         console.error('Force update error:', err);
-        window.location.reload(true);
+        if (btn) {
+            btn.textContent = '❌ Error — ' + err.message;
+            btn.style.pointerEvents = '';
+        }
     });
 }
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v185';
+const APP_VERSION = 'v186';
 var _pendingSW = null;
 
 function showUpdateBanner() {
