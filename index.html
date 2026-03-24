@@ -661,6 +661,19 @@
                 <button id="notifHistoryBtn" onclick="openNotifHistoryModal()" style="position:relative;background:transparent;border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:4px 7px;cursor:pointer;font-size:0.85em;flex-shrink:0;color:rgba(255,255,255,0.8);">🔔<span id="notifBadge" style="display:none;position:absolute;top:-8px;right:-8px;background:#FF3B30;color:#fff;font-size:0.7em;font-weight:800;min-width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;padding:0 4px;box-sizing:border-box;box-shadow:0 2px 6px rgba(255,59,48,0.6);border:2px solid #0a0a2e;">0</span></button>
             </div>
         </header>
+        <script>
+            // EARLY: Hide non-active mode elements immediately to prevent flash
+            (function() {
+                var sm = localStorage.getItem('calendarMode') || 'lunar';
+                if (sm !== 'lunar') {
+                    // Inject a style rule that hides lunar-only elements instantly
+                    var s = document.createElement('style');
+                    s.id = 'modeFlashFix';
+                    s.textContent = '.navigation, #currentDayInfo, #lunarWeeks, #planetaryAspectsSection, #lunarInfoBanner { display:none !important; } #calendarTitle { visibility:hidden; }';
+                    document.head.appendChild(s);
+                }
+            })();
+        </script>
 
         <div class="navigation" id="lunarNavigation">
             <div class="cycle-info">
@@ -680,20 +693,7 @@
 
         <div id="lunarInfoBanner" style="display:none; margin-bottom: 6px;"></div>
 
-        <script>
-            // Hide non-active mode elements immediately on load to prevent flash
-            (function() {
-                var savedMode = localStorage.getItem('calendarMode') || 'lunar';
-                if (savedMode !== 'lunar') {
-                    var lw = document.getElementById('lunarWeeks');
-                    if (lw) lw.style.display = 'none';
-                    var cdi = document.getElementById('currentDayInfo');
-                    if (cdi) cdi.style.display = 'none';
-                    var nav = document.querySelector('.navigation');
-                    if (nav) nav.style.display = 'none';
-                }
-            })();
-        </script>
+        <!-- flash prevention moved to early script above -->
 
         <div class="legend" id="planetaryAspectsSection">
             <h3 id="planetaryAspectsTitle">🪐 Aspectos Planetarios 2026</h3>
@@ -8277,6 +8277,38 @@ function getSolarSystemData() {
     const es = currentLang === 'es';
     return [
         {
+            name: es?'Sol':'Sun', icon: '☉', color: '#FFD700', colorBg: 'rgba(255,215,0,',
+            photo: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg',
+            textureMap: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg',
+            rotatingGif: '',
+            diameter: 1392700, mass: '1.989×10³⁰ kg', gravity: 274,
+            distSun: 0, distSunUnit: 'M km',
+            orbitalPeriod: 0, orbitalPeriodUnit: es?'centro del sistema':'center of system',
+            rotationPeriod: '25.4 '+(es?'días (ecuador)':'days (equator)'), rotHours: 609.6,
+            orbitalSpeed: 0, axialTilt: 7.25,
+            tempMin: 5500, tempMax: 15000000, tempAvg: 5500,
+            moons: 0, moonNames: [],
+            atmosphere: es?'Hidrógeno (73.5%), Helio (24.8%), Oxígeno, Carbono, Neón, Hierro':'Hydrogen (73.5%), Helium (24.8%), Oxygen, Carbon, Neon, Iron',
+            composition: es?'Plasma: Hidrógeno fusionándose en Helio':'Plasma: Hydrogen fusing into Helium',
+            magneticField: es?'Extremadamente fuerte y complejo — ciclo de 11 años (manchas solares). Genera el viento solar y la heliosfera.':'Extremely strong and complex — 11-year cycle (sunspots). Generates solar wind and the heliosphere.',
+            rings: false,
+            funFact: es?'Contiene el 99.86% de toda la masa del sistema solar. Su luz tarda 8 min 20 seg en llegar a la Tierra.':'Contains 99.86% of all mass in the solar system. Its light takes 8 min 20 sec to reach Earth.',
+            orbitRatio: 0, synodicPeriod: 0,
+            geoPattern: es?'Centro gravitacional del sistema':'Gravitational center of the system',
+            geoPetals: 0, geoLoops: 0, isEarth: false, isStar: true,
+            spiro: { layers: [{R:0.10,r:0.10,d:0.0,loops:1}] },
+            spectralType: 'G2V',
+            luminosity: '3.828×10²⁶ W',
+            age: es?'4,600 millones de años':'4.6 billion years',
+            coreTemp: es?'~15 millones °C':'~15 million °C',
+            surfaceTemp: '5,500°C',
+            coronaTemp: es?'1-3 millones °C':'1-3 million °C',
+            solarWind: es?'400-800 km/s':'400-800 km/s',
+            energySource: es?'Fusión nuclear (H → He) — 600 millones ton H/seg':'Nuclear fusion (H → He) — 600 million tons H/sec',
+            solarCycle: es?'Ciclo de ~11 años de actividad magnética (manchas, erupciones, viento solar)':'~11-year cycle of magnetic activity (sunspots, flares, solar wind)',
+            distEarthMin: 147.1, distEarthMax: 152.1, distEarthAvg: 149.6
+        },
+        {
             name: es?'Mercurio':'Mercury', icon: '☿', color: '#b0b0b0', colorBg: 'rgba(176,176,176,',
             photo: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Mercury_in_true_color.jpg',
             textureMap: 'https://commons.wikimedia.org/wiki/Special:FilePath/Solarsystemscope_texture_2k_mercury.jpg?width=1024',
@@ -8608,6 +8640,7 @@ function renderPlanetSVG(planet, size) {
 
 function calcDistanceFromEarth(planet) {
     if (planet.isEarth) return { au: 0, mkm: 0 };
+    if (planet.isStar) return { au: 1.0, mkm: 149.6 };
     // Rough current distance using simplified circular orbits
     const now = new Date();
     const J2000 = new Date(2000, 0, 1, 12, 0, 0);
@@ -8678,34 +8711,55 @@ function renderSolarSystemPanel() {
             + '</div>'
             + '<div style="font-size:0.68em;color:rgba(255,255,255,0.4);">'
             + '📏 ' + p.diameter.toLocaleString() + ' km'
-            + ' • 🌡️ ' + p.tempAvg + '°C'
-            + ' • 🛰️ ' + p.moons + ' '+(es?'lunas':'moons')
+            + ' • 🌡️ ' + (p.isStar ? p.surfaceTemp : p.tempAvg + '°C')
+            + (p.isStar ? ' • ' + p.spectralType : ' • 🛰️ ' + p.moons + ' '+(es?'lunas':'moons'))
             + '</div>'
             + '</div>'
             + '<div style="color:rgba(255,255,255,0.3);font-size:1.2em;" id="planetArrow' + idx + '">▼</div>'
             + '</div>';
 
         // Quick stats row (always visible)
-        const distLabel = p.isEarth ? (es?'Dist. al Sol':'Dist. to Sun') : (es?'Dist. actual':'Current dist.');
-        const distVal = p.isEarth ? p.distSun : dist.mkm.toFixed(1);
-        const distSub = p.isEarth ? 'M km (1.00 AU)' : 'M km (' + dist.au.toFixed(2) + ' AU)';
-        html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px;">'
-            + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
-            + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + distLabel + '</div>'
-            + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">' + distVal + '</div>'
-            + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + distSub + '</div>'
-            + '</div>'
-            + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
-            + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es?'Vel. orbital':'Orbital speed') + '</div>'
-            + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">' + p.orbitalSpeed + '</div>'
-            + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">km/s (' + (p.orbitalSpeed * 3600).toLocaleString() + ' km/h)</div>'
-            + '</div>'
-            + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
-            + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es?'Órbita':'Orbit') + '</div>'
-            + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">' + p.orbitalPeriod.toLocaleString() + '</div>'
-            + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + p.orbitalPeriodUnit + '</div>'
-            + '</div>'
-            + '</div>';
+        // Quick stats row — Sun gets different labels
+        if (p.isStar) {
+            html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px;">'
+                + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+                + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es?'Dist. a Tierra':'Dist. to Earth') + '</div>'
+                + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">149.6</div>'
+                + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">M km (1.00 AU)</div>'
+                + '</div>'
+                + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+                + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es?'Tipo espectral':'Spectral type') + '</div>'
+                + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">' + p.spectralType + '</div>'
+                + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + (es?'Enana amarilla':'Yellow dwarf') + '</div>'
+                + '</div>'
+                + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+                + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es?'Edad':'Age') + '</div>'
+                + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">4.6</div>'
+                + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + (es?'mil millones de años':'billion years') + '</div>'
+                + '</div>'
+                + '</div>';
+        } else {
+            const distLabel = p.isEarth ? (es?'Dist. al Sol':'Dist. to Sun') : (es?'Dist. actual':'Current dist.');
+            const distVal = p.isEarth ? p.distSun : dist.mkm.toFixed(1);
+            const distSub = p.isEarth ? 'M km (1.00 AU)' : 'M km (' + dist.au.toFixed(2) + ' AU)';
+            html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px;">'
+                + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+                + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + distLabel + '</div>'
+                + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">' + distVal + '</div>'
+                + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + distSub + '</div>'
+                + '</div>'
+                + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+                + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es?'Vel. orbital':'Orbital speed') + '</div>'
+                + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">' + p.orbitalSpeed + '</div>'
+                + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">km/s (' + (p.orbitalSpeed * 3600).toLocaleString() + ' km/h)</div>'
+                + '</div>'
+                + '<div style="text-align:center;padding:4px;background:' + p.colorBg + '0.06);border-radius:6px;border:1px solid ' + p.colorBg + '0.12);">'
+                + '<div style="font-size:0.58em;color:' + p.colorBg + '0.5);">' + (es?'Órbita':'Orbit') + '</div>'
+                + '<div style="font-size:0.85em;font-weight:bold;color:' + p.color + ';">' + p.orbitalPeriod.toLocaleString() + '</div>'
+                + '<div style="font-size:0.55em;color:rgba(255,255,255,0.3);">' + p.orbitalPeriodUnit + '</div>'
+                + '</div>'
+                + '</div>';
+        }
 
         // Expandable details (hidden by default)
         html += '<div id="planetDetails' + idx + '" style="display:none;margin-top:8px;">';
@@ -8737,17 +8791,25 @@ function renderSolarSystemPanel() {
         // Temperature
         html += '<div style="padding:6px;background:' + p.colorBg + '0.05);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);">'
             + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:4px;">' + (es?'TEMPERATURA':'TEMPERATURE') + '</div>'
-            + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.6;">'
-            + '❄️ Min: ' + p.tempMin + '°C<br>'
-            + '🔥 Max: ' + p.tempMax + '°C<br>'
-            + '🌡️ ' + (es?'Promedio':'Average') + ': <span style="color:' + p.color + ';font-weight:bold;">' + p.tempAvg + '°C</span>'
-            + '</div>'
-            // Temperature bar
-            + '<div style="margin-top:4px;height:6px;background:rgba(0,0,0,0.3);border-radius:3px;overflow:hidden;">'
-            + '<div style="height:100%;width:' + Math.min(100, ((p.tempAvg + 230) / 700 * 100)) + '%;background:linear-gradient(90deg,#4169e1,#ff6b6b);border-radius:3px;"></div>'
-            + '</div>'
-            + '<div style="display:flex;justify-content:space-between;font-size:0.5em;color:rgba(255,255,255,0.2);"><span>-230°C</span><span>470°C</span></div>'
-            + '</div>';
+            + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.6;">';
+        if (p.isStar) {
+            html += '☀️ ' + (es?'Superficie':'Surface') + ': <span style="color:' + p.color + ';font-weight:bold;">' + p.surfaceTemp + '</span><br>'
+                + '👑 ' + (es?'Corona':'Corona') + ': ' + p.coronaTemp + '<br>'
+                + '🔥 ' + (es?'Núcleo':'Core') + ': ' + p.coreTemp;
+        } else {
+            html += '❄️ Min: ' + p.tempMin + '°C<br>'
+                + '🔥 Max: ' + p.tempMax + '°C<br>'
+                + '🌡️ ' + (es?'Promedio':'Average') + ': <span style="color:' + p.color + ';font-weight:bold;">' + p.tempAvg + '°C</span>';
+        }
+        html += '</div>';
+        if (!p.isStar) {
+            // Temperature bar (planets only)
+            html += '<div style="margin-top:4px;height:6px;background:rgba(0,0,0,0.3);border-radius:3px;overflow:hidden;">'
+                + '<div style="height:100%;width:' + Math.min(100, ((p.tempAvg + 230) / 700 * 100)) + '%;background:linear-gradient(90deg,#4169e1,#ff6b6b);border-radius:3px;"></div>'
+                + '</div>'
+                + '<div style="display:flex;justify-content:space-between;font-size:0.5em;color:rgba(255,255,255,0.2);"><span>-230°C</span><span>470°C</span></div>';
+        }
+        html += '</div>';
 
         // Composition & Atmosphere
         html += '<div style="padding:6px;background:' + p.colorBg + '0.05);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);">'
@@ -8758,16 +8820,47 @@ function renderSolarSystemPanel() {
             + '🧲 ' + (es?'Campo magnético':'Magnetic field') + ': ' + p.magneticField
             + '</div></div>';
 
-        // Orbital mechanics
-        html += '<div style="padding:6px;background:' + p.colorBg + '0.05);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);">'
-            + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:4px;">' + (es?'MECÁNICA ORBITAL':'ORBITAL MECHANICS') + '</div>'
-            + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.6;">'
-            + '☀️ ' + (es?'Dist. al Sol':'Dist. to Sun') + ': ' + p.distSun + ' ' + p.distSunUnit + '<br>'
-            + '🔄 ' + (es?'Rotación':'Rotation') + ': ' + p.rotationPeriod + '<br>'
-            + '📡 ' + (es?'Periodo sinódico':'Synodic period') + ': ' + p.synodicPeriod + ' ' + (es?'días':'days')
-            + '</div></div>';
+        // Orbital mechanics / Solar structure
+        if (p.isStar) {
+            html += '<div style="padding:6px;background:' + p.colorBg + '0.05);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);">'
+                + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:4px;">' + (es?'ESTRUCTURA SOLAR':'SOLAR STRUCTURE') + '</div>'
+                + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.6;">'
+                + '🔥 ' + (es?'Núcleo':'Core') + ': ' + p.coreTemp + '<br>'
+                + '☀️ ' + (es?'Superficie':'Surface') + ': ' + p.surfaceTemp + '<br>'
+                + '👑 ' + (es?'Corona':'Corona') + ': ' + p.coronaTemp + '<br>'
+                + '💨 ' + (es?'Viento solar':'Solar wind') + ': ' + p.solarWind
+                + '</div></div>';
 
-        html += '</div>'; // end detail grid
+            html += '</div>'; // end detail grid
+
+            // Extra: Energy & Solar cycle
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">';
+            html += '<div style="padding:6px;background:' + p.colorBg + '0.05);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);">'
+                + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:4px;">' + (es?'ENERGÍA':'ENERGY') + '</div>'
+                + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.6;">'
+                + '⚡ ' + (es?'Fuente':'Source') + ': ' + p.energySource + '<br>'
+                + '💡 ' + (es?'Luminosidad':'Luminosity') + ': ' + p.luminosity + '<br>'
+                + '🔄 ' + (es?'Rotación':'Rotation') + ': ' + p.rotationPeriod
+                + '</div></div>';
+            html += '<div style="padding:6px;background:' + p.colorBg + '0.05);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);">'
+                + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:4px;">' + (es?'CICLO SOLAR':'SOLAR CYCLE') + '</div>'
+                + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.6;">'
+                + p.solarCycle + '<br><br>'
+                + '📏 ' + (es?'Dist. Tierra min':'Dist. Earth min') + ': ' + p.distEarthMin + ' M km<br>'
+                + '📏 ' + (es?'Dist. Tierra max':'Dist. Earth max') + ': ' + p.distEarthMax + ' M km'
+                + '</div></div>';
+            html += '</div>';
+        } else {
+            html += '<div style="padding:6px;background:' + p.colorBg + '0.05);border-radius:8px;border:1px solid ' + p.colorBg + '0.1);">'
+                + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:4px;">' + (es?'MECÁNICA ORBITAL':'ORBITAL MECHANICS') + '</div>'
+                + '<div style="font-size:0.68em;color:rgba(255,255,255,0.5);line-height:1.6;">'
+                + '☀️ ' + (es?'Dist. al Sol':'Dist. to Sun') + ': ' + p.distSun + ' ' + p.distSunUnit + '<br>'
+                + '🔄 ' + (es?'Rotación':'Rotation') + ': ' + p.rotationPeriod + '<br>'
+                + '📡 ' + (es?'Periodo sinódico':'Synodic period') + ': ' + p.synodicPeriod + ' ' + (es?'días':'days')
+                + '</div></div>';
+
+            html += '</div>'; // end detail grid
+        }
 
         // Moons section
         if (p.moons > 0) {
@@ -8780,8 +8873,8 @@ function renderSolarSystemPanel() {
             html += '</div></div>';
         }
 
-        // Orbit geometry (spirograph pattern) — skip for Earth
-        if (!p.isEarth) {
+        // Orbit geometry (spirograph pattern) — skip for Earth and Sun
+        if (!p.isEarth && !p.isStar) {
         html += '<div style="padding:8px;background:rgba(0,5,20,0.8);border-radius:10px;border:1px solid ' + p.colorBg + '0.15);margin-bottom:6px;">'
             + '<div style="font-size:0.65em;color:' + p.color + ';font-weight:600;margin-bottom:6px;text-align:center;">'
             + '🌀 ' + (es?'GEOMETRÍA ORBITAL CON LA TIERRA':'ORBITAL GEOMETRY WITH EARTH') + '</div>'
@@ -8821,8 +8914,8 @@ function renderSolarSystemPanel() {
     const jupR = 18; // Jupiter radius in pixels
     const scaleP = jupR / (142984 / 2); // px per km radius
 
-    // Planet radii in pixels (proportional)
-    const planetSizes = planets.map(p => ({
+    // Planet radii in pixels (proportional) — exclude Sun (shown separately as arc)
+    const planetSizes = planets.filter(p => !p.isStar).map(p => ({
         name: p.name, icon: p.icon, color: p.color, colorBg: p.colorBg,
         r: Math.max(1, (p.diameter / 2) * scaleP),
         diam: p.diameter, isDwarf: p.isDwarf
@@ -14427,7 +14520,9 @@ document.getElementById('langEN').addEventListener('click', function() {
     changeLanguage('en');
 });
 
-// Initialize calendar based on saved mode
+// Initialize calendar based on saved mode — remove flash-prevention styles
+var _flashFix = document.getElementById('modeFlashFix');
+if (_flashFix) _flashFix.remove();
 updateModeButtons();
 if (calendarMode === 'solar') {
     document.body.classList.add('solar-mode');
@@ -16157,7 +16252,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v182';
+const APP_VERSION = 'v183';
 var _pendingSW = null;
 
 function showUpdateBanner() {
