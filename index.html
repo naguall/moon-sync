@@ -10992,21 +10992,31 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
                 Lat: ${parseFloat(localStorage.getItem('natalLat')||0).toFixed(2)} · Lng: ${parseFloat(localStorage.getItem('natalLon')||0).toFixed(2)}<br>
                 Geocentric · Tropical · ${L?'Casas Iguales':'Equal Houses'}
             </div>
-            <!-- Compass toggle button -->
-            <button id="aspectGridToggle" onclick="toggleAspectGrid()" style="position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;background:rgba(30,40,70,0.9);border:1.5px solid rgba(100,130,200,0.5);color:rgba(200,210,240,0.8);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" title="${L?'Alternar Grilla de Aspectos':'Toggle Aspect Grid'}">⚲</button>
             <!-- Wheel view -->
             <div id="natalWheelView">
                 <canvas id="natalWheelCanvas" width="600" height="600" style="max-width:100%;margin:0 auto;display:block;"></canvas>
-            </div>
-            <!-- Aspect Grid view (hidden by default) -->
-            <div id="natalAspectGridView" style="display:none;">
-                <div id="aspectGridContainer" style="overflow-x:auto;padding:4px;"></div>
             </div>
         </div>
         <div style="display:flex;justify-content:center;padding:4px;">
                 <button onclick="copyNatalChartForAI()" style="background:none;border:1px solid rgba(78,205,196,0.2);border-radius:6px;padding:4px 10px;color:rgba(78,205,196,0.4);font-size:0.68em;cursor:pointer;">
                     📋 ${L ? 'Copiar para AI' : 'Copy for AI'}
                 </button>
+        </div>
+        <div class="personal-natal-card" style="margin-top:8px;">
+            <h3>📊 ${L ? 'Planetas' : 'Planets'}</h3>
+            <div style="overflow-x:auto;">
+                <table class="natal-data-table" id="chartPlanetsTable">
+                    <thead><tr>
+                        <th>${L?'Planeta':'Planet'}</th><th>${L?'Signo':'Sign'}</th><th>${L?'Grado':'Degree'}</th>
+                        <th>${L?'Casa':'House'}</th><th>${L?'Vel.':'Spd'}</th><th>${L?'Dec.':'Dec'}</th>
+                    </tr></thead>
+                    <tbody id="chartPlanetsBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="personal-natal-card" style="margin-top:8px;">
+            <h3>⚲ ${L ? 'Grilla de Aspectos' : 'Aspect Grid'}</h3>
+            <div id="aspectGridContainer" style="overflow-x:auto;padding:4px;"></div>
         </div>`;
 
     // ===== TAB: CALENDAR (monthly grid only — transits moved to Hoy tab) =====
@@ -11239,6 +11249,30 @@ function switchNatalTab(tabName, btn) {
     }
     if (tabName === 'chart') {
         setTimeout(drawNatalWheel, 100);
+        setTimeout(function() {
+            var tbody = document.getElementById('chartPlanetsBody');
+            if (tbody && globalNatalChart && globalNatalChart.planets && !tbody.hasChildNodes()) {
+                var html = '';
+                Object.entries(globalNatalChart.planets).forEach(function(entry) {
+                    var p = entry[0], data = entry[1];
+                    var house = globalNatalChart.houses ? getHouseForLongitude(data.longitude, globalNatalChart.houses.cusps) : '-';
+                    html += '<tr onclick="showNatalDetail(\'planet\', \'' + p + '\')" style="cursor:pointer;transition:all 0.2s;" onmouseover="this.style.backgroundColor=\'rgba(201,168,64,0.15)\';" onmouseout="this.style.backgroundColor=\'\';">' +
+                        '<td style="white-space:nowrap;">' + (planetNms[p]||p) + '</td>' +
+                        '<td>' + data.sign + '</td>' +
+                        '<td>' + data.degree + '°' + (data.minute < 10 ? '0' : '') + data.minute + "'" + '</td>' +
+                        '<td style="text-align:center;">' + house + '</td>' +
+                        '<td style="text-align:center;">' + (data.speedFormatted || '-') + (data.isRetrograde ? ' <span style="color:#e74c3c;font-weight:700;">R</span>' : '') + '</td>' +
+                        '<td style="text-align:center;">' + (data.declinationFormatted || '-') + '</td>' +
+                        '</tr>';
+                });
+                tbody.innerHTML = html;
+            }
+            // Build aspect grid below planets
+            var gridContainer = document.getElementById('aspectGridContainer');
+            if (gridContainer && !gridContainer.hasChildNodes()) {
+                buildAspectGrid();
+            }
+        }, 150);
     }
     if (tabName === 'hoy') {
         setTimeout(function() { drawNatalWheelOnCanvas('hoyNatalWheelCanvas'); }, 100);
@@ -17388,7 +17422,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v216';
+const APP_VERSION = 'v217';
 var _pendingSW = null;
 
 function showUpdateBanner() {
