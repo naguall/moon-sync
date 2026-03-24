@@ -5291,6 +5291,51 @@ function openSavedReadingsModal() {
             html += '</div>';
         });
     }
+    // === DIARY / REFLECTIONS SECTION ===
+    html += '<div style="margin-top:20px;border-top:1px solid rgba(201,168,64,0.2);padding-top:16px;">';
+    html += '<h3 style="color:#9b59b6;font-size:1em;margin-bottom:12px;">📝 ' + (L ? 'Diario y Reflexiones' : 'Diary & Reflections') + '</h3>';
+
+    // Gather all diary entries from both storage systems
+    var diaryEntries = [];
+    // From journals object (lunarCalendarJournals)
+    var journalsData = {};
+    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
+    Object.keys(journalsData).forEach(function(key) {
+        if (journalsData[key] && journalsData[key].trim()) {
+            diaryEntries.push({ date: key, text: journalsData[key] });
+        }
+    });
+    // From individual diary_ keys
+    for (var si = 0; si < localStorage.length; si++) {
+        var skey = localStorage.key(si);
+        if (skey && skey.startsWith('diary_')) {
+            var dkey = skey.replace('diary_', '');
+            var dtext = localStorage.getItem(skey);
+            if (dtext && dtext.trim() && !journalsData[dkey]) {
+                diaryEntries.push({ date: dkey, text: dtext });
+            }
+        }
+    }
+    // Sort by date descending
+    diaryEntries.sort(function(a, b) { return b.date.localeCompare(a.date); });
+
+    if (diaryEntries.length === 0) {
+        html += '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.85em;">' + (L ? 'Sin entradas de diario aún' : 'No diary entries yet') + '</div>';
+    } else {
+        html += '<div style="color:rgba(255,255,255,0.4);font-size:0.8em;margin-bottom:8px;">' + diaryEntries.length + (L ? ' entradas' : ' entries') + '</div>';
+        diaryEntries.forEach(function(entry) {
+            var preview = entry.text.substring(0, 100).replace(/\n/g, ' ') + (entry.text.length > 100 ? '...' : '');
+            html += '<div style="background:rgba(155,89,182,0.08);border:1px solid rgba(155,89,182,0.2);border-radius:8px;padding:10px;margin-bottom:8px;">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
+            html += '<span style="color:#9b59b6;font-weight:600;font-size:0.85em;">📝 ' + entry.date + '</span>';
+            html += '<span style="color:rgba(255,255,255,0.3);font-size:0.7em;">' + entry.text.split(/\s+/).length + (L ? ' palabras' : ' words') + '</span>';
+            html += '</div>';
+            html += '<div style="color:rgba(255,255,255,0.5);font-size:0.8em;line-height:1.4;">' + preview + '</div>';
+            html += '</div>';
+        });
+    }
+    html += '</div>';
+
     bodyEl.innerHTML = html;
     modal.classList.add('show');
 }
@@ -14637,8 +14682,7 @@ function renderCalendar() {
                         
                     </div>
                     <div style="margin: 3px 0; display:flex; justify-content:center; font-size: 2em;">${displayEmoji || (calendarMode === 'lunar' ? getMoonSVG(calculateLunarPhase(today), 30) : '☉')}</div>
-                    <div style="font-size: 0.57em; margin: 2px 0; color: rgba(255,255,255,0.78);">${calendarMode === 'lunar' ? `${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} · ${currentLang === 'es' ? 'Día' : 'Day'} ${weekDayNumber}` : ''}</div>
-                    <div style="font-size: 0.52em; margin: 1px 0; color: rgba(201,168,64,0.85); font-weight: 600;">${calendarMode === 'lunar' ? todayWeeks[currentWeekIndex].name : ''}</div>
+                    <div style="font-size: 2.2em; margin: 4px 0; color: rgba(255,255,255,0.9); font-weight: 800; letter-spacing: 1px; text-shadow: 0 0 12px rgba(201,168,64,0.3);">${calendarMode === 'lunar' ? `${currentLang === 'es' ? 'Sem' : 'Wk'}${currentWeekIndex + 1} ${currentLang === 'es' ? 'Día' : 'Day'} ${weekDayNumber}` : ''}</div>
                     <div style="font-size: 0.47em; opacity: 0.60; color: #8899cc;">${displayInfo}</div>
                     
                 </div>
@@ -16662,7 +16706,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v204';
+const APP_VERSION = 'v205';
 var _pendingSW = null;
 
 function showUpdateBanner() {
