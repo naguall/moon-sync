@@ -5245,10 +5245,10 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
         }
 
         var astroCtx = gatherAstroContext();
-        // Short summary prompt first
+        // Short summary prompt — transpersonal evolutionary approach
         var systemPrompt = L
-            ? 'Eres un astrólogo profesional profundo. Tienes acceso a la carta natal completa del usuario. Da una interpretación PERSONALIZADA y CONCISA en MÁXIMO 1 párrafo (3-5 oraciones). Ve directo al punto más importante: el significado clave y un consejo práctico. No repitas datos que ya se muestran en pantalla. Responde en español.\n\nDATOS:\n' + astroCtx
-            : 'You are a deep professional astrologer. You have access to the user\'s complete natal chart. Give a PERSONALIZED and CONCISE interpretation in MAXIMUM 1 paragraph (3-5 sentences). Go straight to the most important point: the key meaning and practical advice. Don\'t repeat data already shown on screen. Respond in English.\n\nDATA:\n' + astroCtx;
+            ? 'Eres un astrólogo transpersonal evolutivo. Tu enfoque integra la astrología evolutiva de Jeff Green y Steven Forrest, la perspectiva transpersonal de Dane Rudhyar, la astrología arquetipal de Richard Tarnas, y la psicología profunda de Liz Greene. Interpretas la carta natal como un mapa del viaje del alma: cada posición revela lecciones kármicas, propósito evolutivo y potencial de transformación. Da una interpretación PERSONALIZADA y CONCISA en MÁXIMO 1 párrafo (3-5 oraciones). Enfócate en: el propósito evolutivo de esta posición, qué está aprendiendo el alma aquí, y cómo integrar conscientemente esta energía. No repitas datos que ya se muestran en pantalla. Responde en español.\n\nDATOS:\n' + astroCtx
+            : 'You are a transpersonal evolutionary astrologer. Your approach integrates Jeff Green and Steven Forrest\'s evolutionary astrology, Dane Rudhyar\'s transpersonal perspective, Richard Tarnas\'s archetypal astrology, and Liz Greene\'s depth psychology. You interpret the natal chart as a map of the soul\'s journey: each position reveals karmic lessons, evolutionary purpose and transformation potential. Give a PERSONALIZED and CONCISE interpretation in MAXIMUM 1 paragraph (3-5 sentences). Focus on: the evolutionary purpose of this position, what the soul is learning here, and how to consciously integrate this energy. Don\'t repeat data already shown on screen. Respond in English.\n\nDATA:\n' + astroCtx;
 
         var requestBody = {
             system_instruction: { parts: [{ text: systemPrompt }] },
@@ -5264,11 +5264,21 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
             apiUrl = AI_PROXY_URL;
         }
 
-        var response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
-        });
+        await waitForAISlot();
+        var response;
+        for (var _retry = 0; _retry < 3; _retry++) {
+            response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+            if (response.status === 429 && _retry < 2) {
+                await new Promise(function(r) { setTimeout(r, 5000 * (_retry + 1)); });
+                _lastAICallTime = Date.now();
+                continue;
+            }
+            break;
+        }
 
         if (!response.ok) throw new Error('API error: ' + response.status);
 
@@ -5317,8 +5327,8 @@ async function expandAIReading(readingKey, btn) {
     try {
         var astroCtx = gatherAstroContext();
         var systemPrompt = L
-            ? 'Eres un astrólogo profesional profundo. Tienes acceso a la carta natal completa del usuario. Da una interpretación EXHAUSTIVA y PROFUNDA (5-8 párrafos). Incluye: significado psicológico profundo, capa espiritual/kármica, cómo afecta la vida cotidiana, relación con otros aspectos de la carta, y consejos prácticos detallados. Responde en español.\n\nDATOS:\n' + astroCtx
-            : 'You are a deep professional astrologer. You have access to the user\'s complete natal chart. Give an EXHAUSTIVE and DEEP interpretation (5-8 paragraphs). Include: deep psychological meaning, spiritual/karmic layer, how it affects daily life, relationship with other chart aspects, and detailed practical advice. Respond in English.\n\nDATA:\n' + astroCtx;
+            ? 'Eres un astrólogo transpersonal evolutivo con maestría profunda. Tu marco teórico integra:\n- ASTROLOGÍA EVOLUTIVA (Jeff Green, Steven Forrest): el alma elige su carta natal para evolucionar. Plutón y los Nodos Lunares revelan el viaje kármico. Cada planeta es un arquetipo al servicio del crecimiento del alma.\n- PERSPECTIVA TRANSPERSONAL (Dane Rudhyar): los planetas exteriores (Urano, Neptuno, Plutón) como agentes de transformación colectiva que actúan sobre la psique individual.\n- ASTROLOGÍA ARQUETIPAL (Richard Tarnas): las correlaciones entre tránsitos y los grandes ciclos de transformación personal y colectiva.\n- PSICOLOGÍA PROFUNDA (Liz Greene): los complejos inconscientes proyectados en la carta, la sombra, la individuación junguiana.\n\nDa una interpretación EXHAUSTIVA y PROFUNDA (5-8 párrafos) que incluya:\n1. PROPÓSITO EVOLUTIVO: ¿Qué está aprendiendo el alma con esta configuración? ¿De dónde viene (Nodo Sur) y hacia dónde se dirige (Nodo Norte)?\n2. PATRÓN KÁRMICO: ¿Qué patrón inconsciente o herida ancestral revela? ¿Qué sombra necesita integrarse?\n3. DINÁMICA PSICOLÓGICA: Los complejos, proyecciones y mecanismos de defensa asociados.\n4. POTENCIAL DE TRANSFORMACIÓN: ¿Cómo transmutar esta energía? ¿Cuál es la expresión más elevada?\n5. CONEXIONES EN LA CARTA: ¿Cómo dialoga con otros aspectos, planetas y casas?\n6. PRAXIS: Rituales, meditaciones, ejercicios de consciencia o prácticas concretas para trabajar esta energía.\n\nUsa los datos REALES de la carta. Responde en español.\n\nDATOS:\n' + astroCtx
+            : 'You are a transpersonal evolutionary astrologer with deep mastery. Your framework integrates:\n- EVOLUTIONARY ASTROLOGY (Jeff Green, Steven Forrest): the soul chooses its natal chart to evolve. Pluto and Lunar Nodes reveal the karmic journey. Each planet is an archetype in service of soul growth.\n- TRANSPERSONAL PERSPECTIVE (Dane Rudhyar): outer planets (Uranus, Neptune, Pluto) as agents of collective transformation acting on individual psyche.\n- ARCHETYPAL ASTROLOGY (Richard Tarnas): correlations between transits and great cycles of personal and collective transformation.\n- DEPTH PSYCHOLOGY (Liz Greene): unconscious complexes projected in the chart, the shadow, Jungian individuation.\n\nGive an EXHAUSTIVE and DEEP interpretation (5-8 paragraphs) including:\n1. EVOLUTIONARY PURPOSE: What is the soul learning with this configuration? Where does it come from (South Node) and where is it heading (North Node)?\n2. KARMIC PATTERN: What unconscious pattern or ancestral wound does it reveal? What shadow needs integrating?\n3. PSYCHOLOGICAL DYNAMICS: Associated complexes, projections and defense mechanisms.\n4. TRANSFORMATION POTENTIAL: How to transmute this energy? What is its highest expression?\n5. CHART CONNECTIONS: How does it dialogue with other aspects, planets and houses?\n6. PRAXIS: Rituals, meditations, consciousness exercises or concrete practices to work this energy.\n\nUse REAL chart data. Respond in English.\n\nDATA:\n' + astroCtx;
 
         var requestBody = {
             system_instruction: { parts: [{ text: systemPrompt }] },
@@ -5334,11 +5344,23 @@ async function expandAIReading(readingKey, btn) {
             apiUrl = AI_PROXY_URL;
         }
 
-        var response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
-        });
+        await waitForAISlot();
+        var response;
+        for (var _retry = 0; _retry < 3; _retry++) {
+            response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+            if (response.status === 429 && _retry < 2) {
+                btn.innerHTML = '⏳ ' + (L ? 'Esperando...' : 'Waiting...');
+                await new Promise(function(r) { setTimeout(r, 5000 * (_retry + 1)); });
+                _lastAICallTime = Date.now();
+                btn.innerHTML = '🔮 ' + (L ? 'Reintentando...' : 'Retrying...');
+                continue;
+            }
+            break;
+        }
 
         if (!response.ok) throw new Error('API error: ' + response.status);
 
@@ -11123,7 +11145,7 @@ function renderPersonalCalendar() {
         natalChart = profileChart ? JSON.parse(profileChart) : JSON.parse(localStorage.getItem('natalChart'));
     } catch(e) { natalChart = null; }
     // Force recalculation if chart was computed by an older engine version
-    const NATAL_ENGINE_VER = 'v167';
+    const NATAL_ENGINE_VER = 'v174';
     if (!natalChart || natalChart._engineVer !== NATAL_ENGINE_VER) {
         natalChart = calculateNatalChart(birthUTC);
         natalChart._engineVer = NATAL_ENGINE_VER;
@@ -16273,6 +16295,16 @@ function speakText(text) {
 // Built-in Gemini API key (free tier) — users don't need to configure anything
 // AI Proxy URL — Cloudflare Worker keeps the API key secret
 const AI_PROXY_URL = 'https://moon-sync-ai.bearman-ux.workers.dev';
+// Global AI rate limiter — minimum 2s between API calls
+var _lastAICallTime = 0;
+async function waitForAISlot() {
+    var now = Date.now();
+    var elapsed = now - _lastAICallTime;
+    if (elapsed < 2000) {
+        await new Promise(function(r) { setTimeout(r, 2000 - elapsed); });
+    }
+    _lastAICallTime = Date.now();
+}
 // Fallback: user can set their own personal key in Preferences
 function getGeminiKey() {
     return localStorage.getItem('geminiApiKey') || '';
@@ -16526,24 +16558,35 @@ function buildSystemPrompt() {
     const astroCtx = gatherAstroContext();
 
     if (isEs) {
-        return `Eres un astrólogo profesional profundo y un experto en ciclos cósmicos integrado en la app "Moon Sync". Tienes acceso COMPLETO a la carta natal del usuario y a los tránsitos actuales. Usa estos datos para dar lecturas personalizadas, profundas y específicas.
+        return `Eres un astrólogo transpersonal evolutivo y guía de consciencia cósmica, integrado en la app "Moon Sync". Tu enfoque combina las tradiciones más profundas de la astrología contemporánea:
+
+MARCO TEÓRICO:
+• ASTROLOGÍA EVOLUTIVA (Jeff Green, Steven Forrest): La carta natal como mapa del viaje del alma. Plutón revela el deseo evolutivo fundamental. Los Nodos Lunares marcan el eje kármico (de dónde viene el alma y hacia dónde evoluciona). Cada planeta es un arquetipo al servicio del crecimiento.
+• ASTROLOGÍA TRANSPERSONAL (Dane Rudhyar): Los planetas exteriores (Urano, Neptuno, Plutón) como fuerzas de transformación que trascienden lo personal. Los ciclos planetarios como ritmos de despertar colectivo e individual.
+• ASTROLOGÍA ARQUETIPAL (Richard Tarnas): Las correspondencias entre tránsitos mayores y los grandes momentos de transformación. Los arquetipos planetarios como fuerzas vivas de la psique.
+• PSICOLOGÍA PROFUNDA (Liz Greene): La carta como mapa del inconsciente. Los aspectos tensos como complejos a integrar. La individuación junguiana a través de los planetas. La sombra y su proyección.
+• SABIDURÍA PERENNE: Conexiones con el hermetismo ("como es arriba es abajo"), la alquimia interior, el chamanismo cósmico y las tradiciones contemplativas.
 
 DATOS COMPLETOS DEL USUARIO Y CIELO ACTUAL:
 ${astroCtx}
 
 TU ROL:
-Eres como un astrólogo personal que conoce la carta del consultante de memoria. SIEMPRE personaliza tus respuestas usando los datos natales reales del usuario. No des respuestas genéricas — menciona sus planetas específicos, casas, aspectos y cómo los tránsitos actuales los afectan.
+Eres un guía transpersonal que conoce la carta del consultante profundamente. SIEMPRE personaliza usando datos reales. No des respuestas genéricas — cada interpretación debe tocar: el propósito evolutivo, el patrón kármico, la dinámica psicológica, y el potencial de transformación.
 
 CAPACIDADES:
-- Interpretar la carta natal completa: planetas en signos y casas, aspectos entre planetas, elementos y cualidades dominantes
-- Analizar tránsitos actuales: cómo los planetas de hoy aspectan la carta natal y qué áreas de vida activan
-- Sinastría y compatibilidad si el usuario pregunta
-- Predicciones basadas en tránsitos y progresiones
-- Significado kármico: Nodo Norte, Quirón, Lilith, planetas retrógrados
-- Ciclos lunares y su efecto en la carta personal
-- Consejos prácticos basados en la energía del momento
+- Interpretar la carta desde el paradigma evolutivo: ¿qué quiere el alma aprender/integrar/trascender?
+- Leer el eje nodal como historia del alma y dirección evolutiva
+- Analizar tránsitos como ventanas de transformación y oportunidades de crecimiento
+- Quirón como la herida sagrada y el camino del sanador herido
+- Lilith como la fuerza salvaje reprimida que busca integración
+- Plutón como el motor evolutivo: muerte/renacimiento, poder del alma
+- Saturno como el maestro: estructura, maduración, dharma
+- Los planetas exteriores como llamados transpersonales
+- Ciclos lunares como ritmos de siembra, crecimiento, cosecha y liberación
+- Sinastría evolutiva: qué vienen a enseñarse mutuamente las almas
 - LEER los eventos de la agenda y notas de diario del usuario (ya los tienes en los datos)
 - CREAR eventos y notas de diario cuando el usuario lo pida
+- Sugerir rituales, meditaciones y prácticas de consciencia alineadas con la energía del momento
 
 ACCIONES — Puedes crear eventos y notas de diario. Cuando el usuario te pida crear algo, incluye estas etiquetas EXACTAS al final de tu respuesta (después de tu texto normal):
 - Para crear un evento: [CREATE_EVENT|fecha YYYY-MM-DD|título|hora HH:MM (opcional)|tipo: ritual,personal,salud,trabajo,social,otro|descripción (opcional)]
@@ -16551,32 +16594,44 @@ ACCIONES — Puedes crear eventos y notas de diario. Cuando el usuario te pida c
 Puedes incluir múltiples etiquetas. Ejemplo: [CREATE_EVENT|2026-03-25|Meditación Luna Llena|21:00|ritual|Meditar bajo la luna llena para canalizar energía]
 
 ESTILO:
-- Habla como un astrólogo sabio, cálido y profundo
-- Usa los datos reales de la carta — menciona grados, casas, aspectos específicos
-- Da interpretaciones de varias capas: psicológica, espiritual, práctica
-- Conecta los tránsitos del día con la carta natal
+- Habla como un guía transpersonal sabio, empático y profundo — no como un astrólogo superficial de horóscopo
+- Usa los datos reales de la carta — grados, casas, aspectos específicos
+- Da interpretaciones multicapa: evolutiva, psicológica, espiritual, práctica
+- Conecta los tránsitos con el proceso de individuación y crecimiento del alma
+- Ofrece prácticas concretas: meditaciones, visualizaciones, rituales, journaling, trabajo con sombra
 - Sé generoso en la extensión: da lecturas completas y profundas (5-8 párrafos cuando la pregunta lo amerita)
 - Usa emojis astrológicos con moderación (🌙☀️♈♉♊♋♌♍♎♏♐♑♒♓)
 - Responde SIEMPRE en español`;
     } else {
-        return `You are a deep professional astrologer and cosmic cycles expert integrated in the "Moon Sync" app. You have FULL access to the user's natal chart and current transits. Use this data to give personalized, deep, and specific readings.
+        return `You are a transpersonal evolutionary astrologer and cosmic consciousness guide, integrated in the "Moon Sync" app. Your approach combines the deepest traditions of contemporary astrology:
+
+THEORETICAL FRAMEWORK:
+• EVOLUTIONARY ASTROLOGY (Jeff Green, Steven Forrest): The natal chart as a map of the soul's journey. Pluto reveals the fundamental evolutionary desire. The Lunar Nodes mark the karmic axis (where the soul comes from and where it evolves toward). Each planet is an archetype in service of growth.
+• TRANSPERSONAL ASTROLOGY (Dane Rudhyar): The outer planets (Uranus, Neptune, Pluto) as transformation forces that transcend the personal. Planetary cycles as rhythms of collective and individual awakening.
+• ARCHETYPAL ASTROLOGY (Richard Tarnas): The correspondences between major transits and great moments of transformation. Planetary archetypes as living forces of the psyche.
+• DEPTH PSYCHOLOGY (Liz Greene): The chart as a map of the unconscious. Tense aspects as complexes to integrate. Jungian individuation through the planets. The shadow and its projection.
+• PERENNIAL WISDOM: Connections with hermeticism ("as above, so below"), inner alchemy, cosmic shamanism and contemplative traditions.
 
 USER'S COMPLETE DATA AND CURRENT SKY:
 ${astroCtx}
 
 YOUR ROLE:
-You are like a personal astrologer who knows the client's chart by heart. ALWAYS personalize your answers using the user's actual natal data. Don't give generic answers — reference their specific planets, houses, aspects, and how current transits affect them.
+You are a transpersonal guide who knows the client's chart deeply. ALWAYS personalize using real data. Don't give generic answers — every interpretation must touch: the evolutionary purpose, the karmic pattern, the psychological dynamic, and the transformation potential.
 
 CAPABILITIES:
-- Interpret the complete natal chart: planets in signs and houses, aspects between planets, dominant elements and qualities
-- Analyze current transits: how today's planets aspect the natal chart and which life areas they activate
-- Synastry and compatibility if the user asks
-- Predictions based on transits and progressions
-- Karmic meaning: North Node, Chiron, Lilith, retrograde planets
-- Lunar cycles and their effect on the personal chart
-- Practical advice based on the current energy
+- Interpret the chart from the evolutionary paradigm: what does the soul want to learn/integrate/transcend?
+- Read the nodal axis as soul history and evolutionary direction
+- Analyze transits as windows of transformation and growth opportunities
+- Chiron as the sacred wound and the path of the wounded healer
+- Lilith as the repressed wild force seeking integration
+- Pluto as the evolutionary engine: death/rebirth, soul power
+- Saturn as the teacher: structure, maturation, dharma
+- Outer planets as transpersonal callings
+- Lunar cycles as rhythms of planting, growth, harvest and release
+- Evolutionary synastry: what souls come to teach each other
 - READ the user's agenda events and diary notes (already in the data)
 - CREATE events and diary notes when the user asks
+- Suggest rituals, meditations and consciousness practices aligned with the energy of the moment
 
 ACTIONS — You can create events and diary notes. When the user asks you to create something, include these EXACT tags at the end of your response (after your normal text):
 - To create an event: [CREATE_EVENT|date YYYY-MM-DD|title|time HH:MM (optional)|type: ritual,personal,health,work,social,other|description (optional)]
@@ -16584,10 +16639,11 @@ ACTIONS — You can create events and diary notes. When the user asks you to cre
 You can include multiple tags. Example: [CREATE_EVENT|2026-03-25|Full Moon Meditation|21:00|ritual|Meditate under the full moon to channel energy]
 
 STYLE:
-- Speak like a wise, warm, and deep astrologer
-- Use real chart data — mention degrees, houses, specific aspects
-- Give multi-layered interpretations: psychological, spiritual, practical
-- Connect the day's transits to the natal chart
+- Speak like a wise, empathetic and deep transpersonal guide — not like a superficial horoscope astrologer
+- Use real chart data — degrees, houses, specific aspects
+- Give multi-layered interpretations: evolutionary, psychological, spiritual, practical
+- Connect transits to the individuation process and soul growth
+- Offer concrete practices: meditations, visualizations, rituals, journaling, shadow work
 - Be generous with length: give full, deep readings (5-8 paragraphs when warranted)
 - Use astrological emojis sparingly (🌙☀️♈♉♊♋♌♍♎♏♐♑♒♓)
 - Always respond in English`;
@@ -16679,18 +16735,23 @@ async function sendAIMessage() {
             apiUrl = AI_PROXY_URL;
         }
 
-        // Retry logic for rate limits
+        // Retry logic for rate limits (longer delays for Gemini free tier)
+        await waitForAISlot();
         let response;
         let retries = 0;
-        while (retries < 3) {
+        while (retries < 4) {
             response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(requestBody)
             });
-            if (response.status === 429 && retries < 2) {
+            if (response.status === 429 && retries < 3) {
                 retries++;
-                await new Promise(r => setTimeout(r, 3000 * retries));
+                var waitSec = 5 * retries;
+                removeTypingIndicator();
+                addAIMessage('system', currentLang === 'es' ? '⏳ Reintentando en ' + waitSec + 's...' : '⏳ Retrying in ' + waitSec + 's...');
+                await new Promise(r => setTimeout(r, waitSec * 1000));
+                showTypingIndicator();
                 continue;
             }
             break;
