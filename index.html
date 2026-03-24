@@ -238,17 +238,17 @@
         .perfection-time { color: var(--gold); font-style: italic; white-space: nowrap; }
         .zodiac-sign { color: var(--gold); white-space: nowrap; }
 
-        .days-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--day-cell-grid-min, 90px), 1fr)); gap: var(--day-cell-gap, 4px); padding: 2px 0; width: 100%; }
+        .days-container { display: grid; grid-template-columns: var(--day-cell-grid-cols, repeat(auto-fill, minmax(90px, 1fr))); gap: var(--day-cell-gap, 3px); padding: 2px 0; width: 100%; }
 
         .day-cell {
-            min-width: var(--day-cell-min-width, 0); min-height: var(--day-cell-min-height, 110px);
+            min-width: 0; min-height: var(--day-cell-min-height, 100px);
             display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
             background: rgba(5,7,30,0.95);
             border: 1px solid rgba(74,158,255,0.18);
             border-top: 2px solid rgba(74,158,255,0.22);
             border-radius: 7px; font-size: var(--day-cell-font-size, 0.75em);
-            transition: all 0.2s; cursor: pointer; padding: var(--day-cell-padding, 6px);
-            position: relative; overflow: visible;
+            transition: all 0.2s; cursor: pointer; padding: var(--day-cell-padding, 5px);
+            position: relative; overflow: hidden; word-break: break-word;
         }
         .day-cell:hover {
             background: rgba(12,16,58,0.98);
@@ -285,7 +285,7 @@
         .day-cell.weekend .day-weekday { color: rgba(201,168,64,0.65); font-weight: bold; }
         .day-cell.today .day-date, .day-cell.today .day-weekday { color: rgba(255,255,255,0.85); }
 
-        .day-content { width: 100%; font-size: 0.5em; display: flex; flex-direction: row; gap: 4px; overflow: visible; align-items: flex-start; justify-content: space-between; }
+        .day-content { width: 100%; font-size: 0.5em; display: flex; flex-direction: row; gap: 2px; overflow: hidden; align-items: flex-start; justify-content: space-between; word-break: break-word; }
 
         .day-event-item { background: rgba(74,158,255,0.08); padding: 0px 2px; border-radius: 2px; border-left: 2px solid var(--blue-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; font-size: 0.9em; }
         .day-event-item.type-reminder { border-left-color: #e85d7a; background: rgba(232,93,122,0.08); }
@@ -414,7 +414,7 @@
         /* Solar mode */
         body.solar-mode { background: radial-gradient(ellipse 70% 50% at 20% 15%, rgba(90,55,0,0.55) 0%, transparent 55%), radial-gradient(ellipse 55% 45% at 80% 80%, rgba(70,35,0,0.50) 0%, transparent 55%), linear-gradient(170deg, #0e0700 0%, #180e00 40%, #0e0700 100%); }
         body.solar-mode .lunar-week { background: rgba(18,11,2,0.95); border-color: rgba(212,175,55,0.18) !important; border-left-color: rgba(212,175,55,0.50) !important; }
-        body.solar-mode .day-cell { background: rgba(14,9,2,0.95); border: 1px solid rgba(212,175,55,0.16); min-width: var(--day-cell-min-width, 0); min-height: var(--day-cell-min-height, 110px); }
+        body.solar-mode .day-cell { background: rgba(14,9,2,0.95); border: 1px solid rgba(212,175,55,0.16); min-width: 0; min-height: var(--day-cell-min-height, 100px); overflow: hidden; word-break: break-word; }
         body.solar-mode .day-cell:hover { background: rgba(22,14,2,0.98); border-color: rgba(212,175,55,0.38); }
         body.solar-mode .day-cell.today, body.solar-mode .day-cell.today.weekend { background: linear-gradient(160deg, rgba(10,25,50,0.98) 0%, rgba(8,20,45,0.98) 100%) !important; border: 1px solid rgba(100,181,246,0.60) !important; border-top: 3px solid #64B5F6 !important; box-shadow: 0 0 22px rgba(100,181,246,0.25), inset 0 1px 0 rgba(100,181,246,0.20) !important; }
         body.solar-mode .day-cell.weekend { background: rgba(25,18,2,0.95); border: 1px solid rgba(212,175,55,0.35); border-top: 2px solid rgba(212,175,55,0.55); box-shadow: 0 0 8px rgba(212,175,55,0.15), inset 0 0 12px rgba(212,175,55,0.06); }
@@ -582,19 +582,19 @@
             .week-title { font-size: 0.62em; }
             .week-details { display: none; }
             .moon-icon { font-size: 0.7em; }
-            .days-container { grid-template-columns: repeat(auto-fill, minmax(var(--day-cell-grid-min, 70px), 1fr)); gap: var(--day-cell-gap, 3px); }
+            .days-container { grid-template-columns: var(--day-cell-grid-cols, repeat(auto-fill, minmax(70px, 1fr))); gap: var(--day-cell-gap, 2px); }
             .lunar-week > div:not(.week-header) { gap: 2px; }
-            .day-cell { min-width: var(--day-cell-min-width, 0); min-height: var(--day-cell-min-height, 85px); font-size: var(--day-cell-font-size, 0.7em); padding: var(--day-cell-padding, 4px); overflow: visible; }
+            .day-cell { min-width: 0; min-height: var(--day-cell-min-height, 85px); font-size: var(--day-cell-font-size, 0.7em); padding: var(--day-cell-padding, 3px); overflow: hidden; word-break: break-word; }
             .day-number { font-size: 1em; }
             .day-date { font-size: 0.62em; }
             .day-weekday { font-size: 0.52em; }
-            .day-content { font-size: 0.5em; overflow: visible; }
+            .day-content { font-size: 0.5em; overflow: hidden; word-break: break-word; }
             .lunar-weeks { gap: 2px; margin-bottom: 5px; }
             .lunar-week { padding: 2px 4px; gap: 2px; }
             
             /* ── Solar/Gregorian ── */
             body.solar-mode .lunar-week { min-width: unset; }
-            body.solar-mode .day-cell { min-width: var(--day-cell-min-width, 0); min-height: var(--day-cell-min-height, 85px); }
+            body.solar-mode .day-cell { min-width: 0; min-height: var(--day-cell-min-height, 85px); overflow: hidden; word-break: break-word; }
             /* Gregorian mobile: horizontally scrollable with larger cells */
             body.gregorian-mode .gregorian-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; }
             body.gregorian-mode .gregorian-header-row { min-width: 750px; }
@@ -5254,90 +5254,180 @@ function shareReading(reading) {
         });
     }
 }
-function openSavedReadingsModal() {
+function openSavedReadingsModal(tab) {
     var modal = document.getElementById('savedReadingsModal');
     var titleEl = document.getElementById('savedReadingsTitle');
     var bodyEl = document.getElementById('savedReadingsBody');
     var L = currentLang === 'es';
-    titleEl.textContent = L ? '📚 Lecturas Guardadas' : '📚 Saved Readings';
-    var readings = getSavedReadings();
-    var html = '';
-    if (readings.length === 0) {
-        html = '<div style="text-align:center;padding:40px 20px;color:rgba(255,255,255,0.4);">'
-            + '<div style="font-size:3em;margin-bottom:15px;">📚</div>'
-            + '<p style="font-size:1.1em;margin-bottom:8px;">' + (L ? 'No tienes lecturas guardadas aún' : 'No saved readings yet') + '</p>'
-            + '<p style="font-size:0.85em;">' + (L ? 'Cuando consultes una interpretación, presiona el botón 💾 para guardarla aquí.' : 'When you view an AI interpretation, press the 💾 button to save it here.') + '</p>'
-            + '</div>';
-    } else {
-        html += '<div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">';
-        html += '<span style="color:rgba(255,255,255,0.5);font-size:0.85em;">' + readings.length + (L ? ' lecturas' : ' readings') + '</span>';
-        html += '<button onclick="exportAllReadings()" style="padding:6px 14px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.3);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;">' + (L ? '📥 Exportar Todo' : '📥 Export All') + '</button>';
-        html += '</div>';
-        readings.forEach(function(r) {
-            var d = new Date(r.date);
-            var dateStr = d.toLocaleDateString(L ? 'es' : 'en', {year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-            var preview = r.text.substring(0, 120).replace(/\n/g,' ') + (r.text.length > 120 ? '...' : '');
-            html += '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,64,0.15);border-radius:10px;padding:14px;margin-bottom:10px;">';
-            html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">';
-            html += '<div style="flex:1;"><div style="font-weight:700;color:#c9a840;font-size:0.95em;">' + (r.starred ? '⭐ ' : '') + r.title + '</div>';
-            html += '<div style="color:rgba(255,255,255,0.35);font-size:0.75em;margin-top:3px;">' + dateStr + '</div></div>';
-            html += '<div style="display:flex;gap:4px;flex-shrink:0;">';
-            html += '<button onclick="toggleStarReading(\'' + r.id + '\');openSavedReadingsModal();" style="background:transparent;border:none;cursor:pointer;font-size:1.1em;padding:2px 4px;" title="' + (L?'Favorito':'Star') + '">' + (r.starred ? '⭐' : '☆') + '</button>';
-            html += '<button onclick="shareReadingById(\'' + r.id + '\')" style="background:transparent;border:none;cursor:pointer;font-size:1.1em;padding:2px 4px;" title="' + (L?'Compartir':'Share') + '">📤</button>';
-            html += '<button onclick="if(confirm(\'' + (L?'¿Eliminar esta lectura?':'Delete this reading?') + '\')){deleteReading(\'' + r.id + '\');openSavedReadingsModal();}" style="background:transparent;border:none;cursor:pointer;font-size:1.1em;padding:2px 4px;" title="' + (L?'Eliminar':'Delete') + '">🗑️</button>';
-            html += '</div></div>';
-            html += '<div style="color:rgba(255,255,255,0.55);font-size:0.83em;line-height:1.5;margin-bottom:8px;">' + preview + '</div>';
-            html += '<button onclick="viewFullReading(\'' + r.id + '\')" style="padding:5px 14px;background:rgba(201,168,64,0.12);border:1px solid rgba(201,168,64,0.25);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;">' + (L ? 'Leer completa' : 'Read full') + '</button>';
-            html += '</div>';
-        });
-    }
-    // === DIARY / REFLECTIONS SECTION ===
-    html += '<div style="margin-top:20px;border-top:1px solid rgba(201,168,64,0.2);padding-top:16px;">';
-    html += '<h3 style="color:#9b59b6;font-size:1em;margin-bottom:12px;">📝 ' + (L ? 'Diario y Reflexiones' : 'Diary & Reflections') + '</h3>';
+    var activeTab = tab || 'lecturas';
+    titleEl.textContent = L ? '📚 Lecturas y Diario' : '📚 Readings & Diary';
 
-    // Gather all diary entries from both storage systems
+    // Gather diary entries
     var diaryEntries = [];
-    // From journals object (lunarCalendarJournals)
     var journalsData = {};
     try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
     Object.keys(journalsData).forEach(function(key) {
-        if (journalsData[key] && journalsData[key].trim()) {
-            diaryEntries.push({ date: key, text: journalsData[key] });
-        }
+        if (journalsData[key] && journalsData[key].trim()) diaryEntries.push({ date: key, text: journalsData[key], source: 'journals' });
     });
-    // From individual diary_ keys
     for (var si = 0; si < localStorage.length; si++) {
         var skey = localStorage.key(si);
         if (skey && skey.startsWith('diary_')) {
             var dkey = skey.replace('diary_', '');
             var dtext = localStorage.getItem(skey);
-            if (dtext && dtext.trim() && !journalsData[dkey]) {
-                diaryEntries.push({ date: dkey, text: dtext });
-            }
+            if (dtext && dtext.trim() && !journalsData[dkey]) diaryEntries.push({ date: dkey, text: dtext, source: 'diary' });
         }
     }
-    // Sort by date descending
     diaryEntries.sort(function(a, b) { return b.date.localeCompare(a.date); });
 
-    if (diaryEntries.length === 0) {
-        html += '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.85em;">' + (L ? 'Sin entradas de diario aún' : 'No diary entries yet') + '</div>';
-    } else {
-        html += '<div style="color:rgba(255,255,255,0.4);font-size:0.8em;margin-bottom:8px;">' + diaryEntries.length + (L ? ' entradas' : ' entries') + '</div>';
-        diaryEntries.forEach(function(entry) {
-            var preview = entry.text.substring(0, 100).replace(/\n/g, ' ') + (entry.text.length > 100 ? '...' : '');
-            html += '<div style="background:rgba(155,89,182,0.08);border:1px solid rgba(155,89,182,0.2);border-radius:8px;padding:10px;margin-bottom:8px;">';
-            html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
-            html += '<span style="color:#9b59b6;font-weight:600;font-size:0.85em;">📝 ' + entry.date + '</span>';
-            html += '<span style="color:rgba(255,255,255,0.3);font-size:0.7em;">' + entry.text.split(/\s+/).length + (L ? ' palabras' : ' words') + '</span>';
-            html += '</div>';
-            html += '<div style="color:rgba(255,255,255,0.5);font-size:0.8em;line-height:1.4;">' + preview + '</div>';
-            html += '</div>';
-        });
-    }
+    var readings = getSavedReadings();
+    var html = '';
+
+    // Tab buttons
+    var lecturasActive = activeTab === 'lecturas';
+    var diarioActive = activeTab === 'diario';
+    html += '<div style="display:flex;gap:0;margin-bottom:14px;border-bottom:2px solid rgba(201,168,64,0.2);">';
+    html += '<button onclick="openSavedReadingsModal(\'lecturas\')" style="flex:1;padding:10px;font-size:0.9em;font-weight:700;cursor:pointer;border:none;border-bottom:3px solid ' + (lecturasActive ? '#c9a840' : 'transparent') + ';background:' + (lecturasActive ? 'rgba(201,168,64,0.1)' : 'transparent') + ';color:' + (lecturasActive ? '#c9a840' : 'rgba(255,255,255,0.4)') + ';">📚 ' + (L ? 'Lecturas' : 'Readings') + ' (' + readings.length + ')</button>';
+    html += '<button onclick="openSavedReadingsModal(\'diario\')" style="flex:1;padding:10px;font-size:0.9em;font-weight:700;cursor:pointer;border:none;border-bottom:3px solid ' + (diarioActive ? '#9b59b6' : 'transparent') + ';background:' + (diarioActive ? 'rgba(155,89,182,0.1)' : 'transparent') + ';color:' + (diarioActive ? '#9b59b6' : 'rgba(255,255,255,0.4)') + ';">📝 ' + (L ? 'Diario' : 'Diary') + ' (' + diaryEntries.length + ')</button>';
     html += '</div>';
+
+    if (lecturasActive) {
+        if (readings.length === 0) {
+            html += '<div style="text-align:center;padding:40px 20px;color:rgba(255,255,255,0.4);">'
+                + '<div style="font-size:3em;margin-bottom:15px;">📚</div>'
+                + '<p style="font-size:1.1em;margin-bottom:8px;">' + (L ? 'No tienes lecturas guardadas aún' : 'No saved readings yet') + '</p></div>';
+        } else {
+            html += '<div style="margin-bottom:12px;display:flex;justify-content:flex-end;">';
+            html += '<button onclick="exportAllReadings()" style="padding:6px 14px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.3);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;">' + (L ? '📥 Exportar Todo' : '📥 Export All') + '</button>';
+            html += '</div>';
+            readings.forEach(function(r) {
+                var d = new Date(r.date);
+                var dateStr = d.toLocaleDateString(L ? 'es' : 'en', {year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+                var preview = r.text.substring(0, 120).replace(/\n/g,' ') + (r.text.length > 120 ? '...' : '');
+                html += '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,64,0.15);border-radius:10px;padding:14px;margin-bottom:10px;">';
+                html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">';
+                html += '<div style="flex:1;"><div style="font-weight:700;color:#c9a840;font-size:0.95em;">' + (r.starred ? '⭐ ' : '') + r.title + '</div>';
+                html += '<div style="color:rgba(255,255,255,0.35);font-size:0.75em;margin-top:3px;">' + dateStr + '</div></div>';
+                html += '<div style="display:flex;gap:4px;flex-shrink:0;">';
+                html += '<button onclick="toggleStarReading(\'' + r.id + '\');openSavedReadingsModal(\'lecturas\');" style="background:transparent;border:none;cursor:pointer;font-size:1.1em;padding:2px 4px;">' + (r.starred ? '⭐' : '☆') + '</button>';
+                html += '<button onclick="shareReadingById(\'' + r.id + '\')" style="background:transparent;border:none;cursor:pointer;font-size:1.1em;padding:2px 4px;">📤</button>';
+                html += '<button onclick="if(confirm(\'' + (L?'¿Eliminar?':'Delete?') + '\')){deleteReading(\'' + r.id + '\');openSavedReadingsModal(\'lecturas\');}" style="background:transparent;border:none;cursor:pointer;font-size:1.1em;padding:2px 4px;">🗑️</button>';
+                html += '</div></div>';
+                html += '<div style="color:rgba(255,255,255,0.55);font-size:0.83em;line-height:1.5;margin-bottom:8px;">' + preview + '</div>';
+                html += '<button onclick="viewFullReading(\'' + r.id + '\')" style="padding:5px 14px;background:rgba(201,168,64,0.12);border:1px solid rgba(201,168,64,0.25);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;">' + (L ? 'Leer completa' : 'Read full') + '</button>';
+                html += '</div>';
+            });
+        }
+    } else {
+        // DIARY TAB
+        if (diaryEntries.length === 0) {
+            html += '<div style="text-align:center;padding:40px 20px;color:rgba(255,255,255,0.4);">'
+                + '<div style="font-size:3em;margin-bottom:15px;">📝</div>'
+                + '<p>' + (L ? 'Sin entradas de diario aún' : 'No diary entries yet') + '</p></div>';
+        } else {
+            html += '<div style="margin-bottom:12px;display:flex;justify-content:flex-end;">';
+            html += '<button onclick="exportAllDiaryEntries()" style="padding:6px 14px;background:rgba(155,89,182,0.15);border:1px solid rgba(155,89,182,0.3);border-radius:6px;color:#9b59b6;font-size:0.8em;cursor:pointer;">' + (L ? '📥 Exportar Todo' : '📥 Export All') + '</button>';
+            html += '</div>';
+            diaryEntries.forEach(function(entry) {
+                var safeDate = entry.date.replace(/'/g, "\\'");
+                var preview = entry.text.substring(0, 120).replace(/\n/g, ' ') + (entry.text.length > 120 ? '...' : '');
+                html += '<div style="background:rgba(155,89,182,0.08);border:1px solid rgba(155,89,182,0.2);border-radius:10px;padding:14px;margin-bottom:10px;">';
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+                html += '<span style="color:#9b59b6;font-weight:700;font-size:0.9em;">📝 ' + entry.date + '</span>';
+                html += '<div style="display:flex;gap:4px;">';
+                html += '<button onclick="shareDiaryEntry(\'' + safeDate + '\')" style="background:transparent;border:none;cursor:pointer;font-size:1em;padding:2px 4px;" title="' + (L?'Compartir':'Share') + '">📤</button>';
+                html += '<button onclick="if(confirm(\'' + (L?'¿Eliminar?':'Delete?') + '\')){deleteDiaryEntry(\'' + safeDate + '\');openSavedReadingsModal(\'diario\');}" style="background:transparent;border:none;cursor:pointer;font-size:1em;padding:2px 4px;" title="' + (L?'Eliminar':'Delete') + '">🗑️</button>';
+                html += '</div></div>';
+                html += '<div style="color:rgba(255,255,255,0.55);font-size:0.83em;line-height:1.5;margin-bottom:8px;">' + preview + '</div>';
+                html += '<div style="display:flex;gap:6px;">';
+                html += '<button onclick="viewDiaryEntry(\'' + safeDate + '\')" style="padding:5px 14px;background:rgba(155,89,182,0.12);border:1px solid rgba(155,89,182,0.25);border-radius:6px;color:#9b59b6;font-size:0.8em;cursor:pointer;">' + (L ? 'Leer' : 'Read') + '</button>';
+                html += '<button onclick="editDiaryEntry(\'' + safeDate + '\')" style="padding:5px 14px;background:rgba(78,205,196,0.12);border:1px solid rgba(78,205,196,0.25);border-radius:6px;color:#4ecdc4;font-size:0.8em;cursor:pointer;">' + (L ? 'Editar' : 'Edit') + '</button>';
+                html += '</div></div>';
+            });
+        }
+    }
 
     bodyEl.innerHTML = html;
     modal.classList.add('show');
+}
+
+// --- Diary entry functions ---
+function getDiaryText(dateKey) {
+    var journalsData = {};
+    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
+    if (journalsData[dateKey]) return journalsData[dateKey];
+    return localStorage.getItem('diary_' + dateKey) || '';
+}
+function saveDiaryText(dateKey, text) {
+    var journalsData = {};
+    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
+    journalsData[dateKey] = text;
+    localStorage.setItem('lunarCalendarJournals', JSON.stringify(journalsData));
+    localStorage.setItem('diary_' + dateKey, text);
+}
+function deleteDiaryEntry(dateKey) {
+    var journalsData = {};
+    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
+    delete journalsData[dateKey];
+    localStorage.setItem('lunarCalendarJournals', JSON.stringify(journalsData));
+    localStorage.removeItem('diary_' + dateKey);
+}
+function viewDiaryEntry(dateKey) {
+    var L = currentLang === 'es';
+    var text = getDiaryText(dateKey);
+    var bodyEl = document.getElementById('savedReadingsBody');
+    var html = '<div style="margin-bottom:15px;">';
+    html += '<button onclick="openSavedReadingsModal(\'diario\')" style="padding:6px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:rgba(255,255,255,0.7);font-size:0.85em;cursor:pointer;">← ' + (L ? 'Volver' : 'Back') + '</button>';
+    html += '</div>';
+    html += '<h3 style="color:#9b59b6;margin-bottom:10px;">📝 ' + dateKey + '</h3>';
+    html += '<div style="line-height:1.8;font-size:0.92em;color:rgba(255,255,255,0.88);background:rgba(155,89,182,0.05);border-radius:10px;padding:16px;white-space:pre-wrap;">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+    html += '<div style="display:flex;gap:10px;margin-top:16px;justify-content:center;">';
+    html += '<button onclick="editDiaryEntry(\'' + dateKey.replace(/'/g,"\\'") + '\')" style="padding:8px 20px;background:rgba(78,205,196,0.15);border:1px solid rgba(78,205,196,0.3);border-radius:8px;color:#4ecdc4;font-size:0.9em;cursor:pointer;">✏️ ' + (L ? 'Editar' : 'Edit') + '</button>';
+    html += '<button onclick="shareDiaryEntry(\'' + dateKey.replace(/'/g,"\\'") + '\')" style="padding:8px 20px;background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);border-radius:8px;color:#25d366;font-size:0.9em;cursor:pointer;">📤 ' + (L ? 'Compartir' : 'Share') + '</button>';
+    html += '</div>';
+    bodyEl.innerHTML = html;
+}
+function editDiaryEntry(dateKey) {
+    var L = currentLang === 'es';
+    var text = getDiaryText(dateKey);
+    var bodyEl = document.getElementById('savedReadingsBody');
+    var html = '<div style="margin-bottom:15px;">';
+    html += '<button onclick="openSavedReadingsModal(\'diario\')" style="padding:6px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:rgba(255,255,255,0.7);font-size:0.85em;cursor:pointer;">← ' + (L ? 'Volver' : 'Back') + '</button>';
+    html += '</div>';
+    html += '<h3 style="color:#9b59b6;margin-bottom:10px;">✏️ ' + (L ? 'Editar' : 'Edit') + ' — ' + dateKey + '</h3>';
+    html += '<textarea id="diaryEditArea" style="width:100%;min-height:250px;background:rgba(155,89,182,0.05);border:1px solid rgba(155,89,182,0.3);border-radius:10px;padding:16px;color:rgba(255,255,255,0.9);font-size:0.92em;line-height:1.7;resize:vertical;font-family:inherit;">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>';
+    html += '<div style="display:flex;gap:10px;margin-top:12px;justify-content:center;">';
+    html += '<button onclick="saveDiaryText(\'' + dateKey.replace(/'/g,"\\'") + '\', document.getElementById(\'diaryEditArea\').value); openSavedReadingsModal(\'diario\');" style="padding:8px 24px;background:rgba(201,168,64,0.2);border:1px solid rgba(201,168,64,0.4);border-radius:8px;color:#c9a840;font-size:0.9em;cursor:pointer;font-weight:700;">💾 ' + (L ? 'Guardar' : 'Save') + '</button>';
+    html += '<button onclick="openSavedReadingsModal(\'diario\')" style="padding:8px 24px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.5);font-size:0.9em;cursor:pointer;">' + (L ? 'Cancelar' : 'Cancel') + '</button>';
+    html += '</div>';
+    bodyEl.innerHTML = html;
+}
+function shareDiaryEntry(dateKey) {
+    var text = getDiaryText(dateKey);
+    var shareText = '📝 ' + (currentLang==='es'?'Diario':'Diary') + ' — ' + dateKey + '\n\n' + text + '\n\n— Moon Sync 🌙';
+    if (navigator.share) {
+        navigator.share({ title: 'Moon Sync — ' + dateKey, text: shareText }).catch(function(){});
+    } else {
+        navigator.clipboard.writeText(shareText).then(function() { alert(currentLang==='es'?'Copiado al portapapeles':'Copied to clipboard'); });
+    }
+}
+function exportAllDiaryEntries() {
+    var L = currentLang === 'es';
+    var diaryEntries = [];
+    var journalsData = {};
+    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
+    Object.keys(journalsData).forEach(function(key) { if (journalsData[key] && journalsData[key].trim()) diaryEntries.push({ date: key, text: journalsData[key] }); });
+    for (var si = 0; si < localStorage.length; si++) {
+        var skey = localStorage.key(si);
+        if (skey && skey.startsWith('diary_')) { var dk = skey.replace('diary_',''); var dt = localStorage.getItem(skey); if (dt && dt.trim() && !journalsData[dk]) diaryEntries.push({ date: dk, text: dt }); }
+    }
+    diaryEntries.sort(function(a, b) { return b.date.localeCompare(a.date); });
+    var text = '📝 Moon Sync — ' + (L ? 'Diario y Reflexiones' : 'Diary & Reflections') + '\n' + '═'.repeat(50) + '\n\n';
+    diaryEntries.forEach(function(e, i) { text += '━━━ ' + e.date + ' ━━━\n' + e.text + '\n\n'; });
+    text += '\n— Moon Sync 🌙\n';
+    var blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = 'moon-sync-diary-' + new Date().toISOString().split('T')[0] + '.txt';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 function closeSavedReadingsModal() {
     document.getElementById('savedReadingsModal').classList.remove('show');
@@ -9610,7 +9700,7 @@ function updateCurrentDayInfoForMode(mode) {
                                 const asp = event.data;
                                 const color = asp.class==='conjunction'?'#ff6b6b':asp.class==='sextile'?'#4ecdc4':asp.class==='square'?'#ff9f43':asp.class==='trine'?'#7c4dff':'#ee5a6f';
                                 const aspText = ('☽ ' + asp.symbol + ' ' + tp(asp.planetName) + ' (' + (asp.class||'') + ')').replace(/'/g, "\\'");
-                                return `<div onclick="showBannerAspectDetail('${aspText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;border-left:2px solid ${color};border-right:2px solid ${color};text-align:center;width:100%;cursor:pointer;"><span style="color:#e8eaf6">${asp.symbol} ${tp(asp.planetName)}</span></div>`;
+                                return `<div onclick="showBannerAspectDetail('${aspText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;border-left:2px solid ${color};border-right:2px solid ${color};text-align:center;width:100%;cursor:pointer;"><span style="color:#e8eaf6">☽ ${asp.symbol} ${tp(asp.planetName)}</span></div>`;
                             }
                             return '';
                         }).join('')}
@@ -11932,10 +12022,9 @@ function renderPersonalCalendar() {
         ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const dayNames = L ? ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'] : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-    // Navigation
+    // Hide top navigation — month nav goes inside calendar
     const nav = document.querySelector('.navigation');
-    nav.style.display = '';
-    nav.innerHTML = `<div class="cycle-info"><div class="cycle-number" id="cycleNumber">${monthNames[month]} ${year}</div><div class="cycle-dates" id="cycleDates">${natal.cityName} · ${natal.date}</div></div>`;
+    nav.style.display = 'none';
 
     // Calendar container
     let container = document.getElementById('personalCalendar');
@@ -11983,6 +12072,14 @@ function renderPersonalCalendar() {
         <div id="natalCalendarGrid">
         <!-- Monthly Calendar Grid -->
         <div class="personal-natal-card" style="padding:10px;">
+            <!-- Month navigation inside calendar -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <button onclick="personalPrevMonth()" style="background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.3);border-radius:6px;color:#c9a840;padding:5px 12px;cursor:pointer;font-size:0.85em;">◀</button>
+                <div style="text-align:center;">
+                    <div style="font-family:'Cinzel',serif;font-size:1.1em;font-weight:700;color:#c9a840;letter-spacing:1px;">${monthNames[month]} ${year}</div>
+                </div>
+                <button onclick="personalNextMonth()" style="background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.3);border-radius:6px;color:#c9a840;padding:5px 12px;cursor:pointer;font-size:0.85em;">▶</button>
+            </div>
             <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px;">
                 ${dayNames.map((d,i) => `<div style="text-align:center;font-size:0.75em;font-weight:600;color:${i>=5?'#c9a840':'rgba(255,255,255,0.4)'};padding:4px;">${d}</div>`).join('')}
             </div>
@@ -12033,11 +12130,18 @@ function renderPersonalCalendar() {
             }
         } catch(e) { solarDay = ''; }
 
+        // Moon phase icon (new moon / full moon)
+        const moonEvent = getMoonEventForDate(date);
+        const moonIcon = moonEvent ? (moonEvent.type === 'full' ? '🌕' : moonEvent.type === 'new' ? '🌑' : '') : '';
+
         calendarHTML += `
             <div class="${classes}" onclick="showPersonalDayDetail(${year},${month},${day})" title="${isBirthday ? '🎂 ' : ''}${date.toLocaleDateString(L?'es':'en')}">
-                <div class="personal-day-num" style="font-size:1.3em;font-weight:800;color:#e8c84a;">${isBirthday ? '🎂 ' : ''}${personalDay}</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+                    <div class="personal-day-num" style="font-size:1.3em;font-weight:800;color:#e8c84a;">${isBirthday ? '🎂 ' : ''}${personalDay}</div>
+                    ${moonIcon ? `<span style="font-size:1em;">${moonIcon}</span>` : ''}
+                </div>
                 <div style="font-size:0.6em;color:rgba(255,255,255,0.4);margin-top:1px;">${day}/${month+1}</div>
-                <div style="display:flex;justify-content:space-between;margin-top:2px;font-size:0.55em;line-height:1;">
+                <div style="display:flex;justify-content:space-between;width:100%;margin-top:2px;font-size:0.55em;line-height:1;">
                     <span style="color:rgba(192,192,255,0.5);" title="${L?'Día lunar':'Lunar day'}">☽${lunarDay}</span>
                     <span style="color:rgba(212,175,55,0.6);" title="${L?'Día solar':'Solar day'}">☉${solarDay}</span>
                 </div>
@@ -14334,12 +14438,19 @@ function renderSubsolarGlobe(lat, lon) {
 // ── Refresh sublunar position on tab click ──────────
 function refreshAllLiveData() {
     const now = new Date();
-    const lat = parseFloat(getAstroData(now).sublunarLat);
+    const astroNow = getAstroData(now);
+    const lat = parseFloat(astroNow.sublunarLat);
     const lon = getSublunaryLonDeg(now);
     const mapEl = document.getElementById('sublunaryMapContainer');
     if (mapEl) mapEl.innerHTML = renderSublunaryMap(lat, lon, ASTRO_USER_LAT, ASTRO_USER_LON);
     const infoEl = document.getElementById('sublunaryInfoBox');
     if (infoEl) infoEl.innerHTML = renderSublunaryInfoBox(lat, lon, ASTRO_USER_LAT, ASTRO_USER_LON);
+    // Update header coords text
+    const coordsEl = document.getElementById('sublunaryHeaderCoords');
+    if (coordsEl) {
+        var L = currentLang === 'es';
+        coordsEl.textContent = (L?'Lat':'Lat') + ': ' + astroNow.sublunarLat + '°' + astroNow.sublunarDir + ' · ' + (L?'Lon':'Lon') + ': ' + lon.toFixed(1) + '°';
+    }
     renderSublunaryGlobe(lat, lon);
 }
 
@@ -14577,7 +14688,7 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
         <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(74,158,255,0.15);">
             <div style="font-family:'Cinzel',serif;color:#7ec8ff;font-size:0.78em;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
                 📍 ${currentLang==='es'?'Posición Sublunar — Punto sobre la Tierra':'Sublunar Point — Position over Earth'}
-                <span style="font-size:0.78em;color:#8899cc;font-weight:400;margin-left:8px;">${currentLang==='es'?'Lat':'Lat'}: ${astro.sublunarLat}°${astro.sublunarDir} · ${currentLang==='es'?'Lon':'Lon'}: ${getSublunaryLon(today)}</span>
+                <span id="sublunaryHeaderCoords" style="font-size:0.78em;color:#8899cc;font-weight:400;margin-left:8px;">${currentLang==='es'?'Lat':'Lat'}: ${astro.sublunarLat}°${astro.sublunarDir} · ${currentLang==='es'?'Lon':'Lon'}: ${getSublunaryLon(today)}</span>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <!-- Mapa 2D SVG -->
@@ -14895,7 +15006,7 @@ function renderCalendar() {
                                 const asp = event.data;
                                 const color = asp.class==='conjunction'?'#ff6b6b':asp.class==='sextile'?'#4ecdc4':asp.class==='square'?'#ff9f43':asp.class==='trine'?'#7c4dff':'#ee5a6f';
                                 const aspText = ('Luna ' + asp.symbol + ' ' + tp(asp.planetName) + ' (' + (asp.class||'') + ')').replace(/'/g, "\\'");
-                                return `<div onclick="showBannerAspectDetail('${aspText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${color};border-right:2px solid ${color};"><span style="color:#e8eaf6">${asp.symbol} ${tp(asp.planetName)}</span></div>`;
+                                return `<div onclick="showBannerAspectDetail('${aspText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${color};border-right:2px solid ${color};"><span style="color:#e8eaf6">☽ ${asp.symbol} ${tp(asp.planetName)}</span></div>`;
                             }
                         }).join('')}
                         ${allPlanetaryEvents.length > 6 ? `<div style="font-size:0.6em;text-align:center;color:#8899cc;">+${allPlanetaryEvents.length - 6}</div>` : ''}
@@ -16066,33 +16177,29 @@ async function handleNotifToggle(enable) {
 }
 
 function setCellSize(size) {
-    const dims = { small: '55px', medium: '110px', large: '160px' };
-    const fonts = { small: '0.55em', medium: '0.82em', large: '1em' };
-    const gridMins = { small: '40px', medium: '90px', large: '120px' };
-    const gaps = { small: '2px', medium: '4px', large: '5px' };
-    const paddings = { small: '3px', medium: '6px', large: '8px' };
+    // S = whole week in 1 line (7 cols), M = 2 lines (4 cols), L = 3 lines (3 cols)
+    const dims = { small: '50px', medium: '100px', large: '140px' };
+    const fonts = { small: '0.5em', medium: '0.75em', large: '0.95em' };
+    const gridCols = { small: 'repeat(8, 1fr)', medium: 'repeat(auto-fill, minmax(90px, 1fr))', large: 'repeat(auto-fill, minmax(120px, 1fr))' };
+    const gaps = { small: '2px', medium: '3px', large: '4px' };
+    const paddings = { small: '2px', medium: '5px', large: '8px' };
     localStorage.setItem('dayCellSize', size);
-    document.documentElement.style.setProperty('--day-cell-min-height', dims[size] || '110px');
-    document.documentElement.style.setProperty('--day-cell-min-width', dims[size] || '0');
-    document.documentElement.style.setProperty('--day-cell-font-size', fonts[size] || '0.82em');
-    document.documentElement.style.setProperty('--day-cell-grid-min', gridMins[size] || '90px');
-    document.documentElement.style.setProperty('--day-cell-gap', gaps[size] || '4px');
-    document.documentElement.style.setProperty('--day-cell-padding', paddings[size] || '6px');
+    document.documentElement.style.setProperty('--day-cell-min-height', dims[size] || '100px');
+    document.documentElement.style.setProperty('--day-cell-min-width', '0');
+    document.documentElement.style.setProperty('--day-cell-font-size', fonts[size] || '0.75em');
+    document.documentElement.style.setProperty('--day-cell-grid-cols', gridCols[size] || gridCols.medium);
+    document.documentElement.style.setProperty('--day-cell-gap', gaps[size] || '3px');
+    document.documentElement.style.setProperty('--day-cell-padding', paddings[size] || '5px');
     // Apply to existing cells directly for immediate effect
     document.querySelectorAll('.day-cell').forEach(function(cell) {
-        cell.style.minHeight = dims[size] || '110px';
-        cell.style.minWidth = dims[size] || '0';
-        cell.style.fontSize = fonts[size] || '0.82em';
-        cell.style.padding = paddings[size] || '6px';
+        cell.style.minHeight = dims[size] || '100px';
+        cell.style.fontSize = fonts[size] || '0.75em';
+        cell.style.padding = paddings[size] || '5px';
     });
     // Apply grid settings to containers
     document.querySelectorAll('.days-container').forEach(function(container) {
-        if (size === 'small') {
-            container.style.gridTemplateColumns = 'repeat(7, 1fr)';
-        } else {
-            container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(' + (gridMins[size] || '90px') + ', 1fr))';
-        }
-        container.style.gap = gaps[size] || '4px';
+        container.style.gridTemplateColumns = gridCols[size] || gridCols.medium;
+        container.style.gap = gaps[size] || '3px';
     });
 }
 
@@ -16950,7 +17057,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v209';
+const APP_VERSION = 'v210';
 var _pendingSW = null;
 
 function showUpdateBanner() {
