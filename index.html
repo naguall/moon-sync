@@ -16134,7 +16134,7 @@ DOMTokenList.prototype.add = function() {
     </div>
     <div class="ai-chat-messages" id="aiChatMessages"></div>
     <div class="ai-chat-input-bar">
-        <button id="aiVoiceBtn" onclick="toggleVoiceInput()" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.2em;cursor:pointer;flex-shrink:0;" title="Voice input">🎙️</button>
+        <button id="aiVoiceBtn" onclick="toggleAIChatVoice()" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.2em;cursor:pointer;flex-shrink:0;" title="Voice input">🎙️</button>
         <textarea id="aiChatInput" rows="1" placeholder="Pregunta sobre ciclos lunares, mareas, aspectos..." oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}"></textarea>
         <button id="aiTTSToggle" onclick="toggleTTS()" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;flex-shrink:0;" title="Voice responses">🔇</button>
         <button onclick="sendAIMessage()">➤</button>
@@ -16150,53 +16150,56 @@ let aiTTSEnabled = false;
 let aiVoiceRecognition = null;
 let aiVoiceIsListening = false;
 
-// ===== VOICE INPUT (Speech-to-Text) =====
-function toggleVoiceInput() {
+// ===== AI CHAT VOICE INPUT (Speech-to-Text) =====
+function toggleAIChatVoice() {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         alert(currentLang === 'es' ? 'Tu navegador no soporta reconocimiento de voz. Usa Chrome o Safari.' : 'Your browser does not support speech recognition. Use Chrome or Safari.');
         return;
     }
     if (aiVoiceIsListening) {
-        stopVoiceInput();
+        stopAIChatVoice();
         return;
     }
     var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     aiVoiceRecognition = new SpeechRecognition();
     aiVoiceRecognition.continuous = true;
-    aiVoiceRecognition.interimResults = true;
+    aiVoiceRecognition.interimResults = false; // Only final results — avoids word repetition
     aiVoiceRecognition.lang = currentLang === 'es' ? 'es-ES' : 'en-US';
-    var finalTranscript = '';
     var input = document.getElementById('aiChatInput');
     var btn = document.getElementById('aiVoiceBtn');
 
     aiVoiceRecognition.onstart = function() {
         aiVoiceIsListening = true;
+        input.value = ''; // Clear for fresh input
         btn.style.background = 'rgba(255,59,48,0.3)';
         btn.style.borderColor = '#ff3b30';
         btn.innerHTML = '⏹️';
         btn.title = currentLang === 'es' ? 'Detener' : 'Stop';
     };
     aiVoiceRecognition.onresult = function(event) {
-        var interim = '';
+        // Only process final results — append each new phrase
         for (var i = event.resultIndex; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript + ' ';
-            } else {
-                interim += event.results[i][0].transcript;
+                var transcript = event.results[i][0].transcript;
+                var cursorPos = input.selectionStart;
+                var before = input.value.substring(0, cursorPos);
+                var after = input.value.substring(cursorPos);
+                input.value = before + transcript + ' ' + after;
+                var newPos = cursorPos + transcript.length + 1;
+                input.setSelectionRange(newPos, newPos);
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight, 100) + 'px';
             }
         }
-        input.value = finalTranscript + interim;
-        input.style.height = 'auto';
-        input.style.height = Math.min(input.scrollHeight, 100) + 'px';
     };
     aiVoiceRecognition.onerror = function(event) {
         console.warn('Voice error:', event.error);
-        stopVoiceInput();
+        stopAIChatVoice();
     };
     aiVoiceRecognition.onend = function() {
         // If still supposed to be listening (can stop due to silence), auto-stop
         if (aiVoiceIsListening) {
-            stopVoiceInput();
+            stopAIChatVoice();
             // Auto-send if we have content
             if (input.value.trim()) {
                 sendAIMessage();
@@ -16205,14 +16208,16 @@ function toggleVoiceInput() {
     };
     aiVoiceRecognition.start();
 }
-function stopVoiceInput() {
+function stopAIChatVoice() {
     aiVoiceIsListening = false;
     if (aiVoiceRecognition) { try { aiVoiceRecognition.stop(); } catch(e) {} }
     var btn = document.getElementById('aiVoiceBtn');
-    btn.style.background = 'rgba(255,255,255,0.08)';
-    btn.style.borderColor = 'rgba(255,255,255,0.15)';
-    btn.innerHTML = '🎙️';
-    btn.title = currentLang === 'es' ? 'Entrada de voz' : 'Voice input';
+    if (btn) {
+        btn.style.background = 'rgba(255,255,255,0.08)';
+        btn.style.borderColor = 'rgba(255,255,255,0.15)';
+        btn.innerHTML = '🎙️';
+        btn.title = currentLang === 'es' ? 'Entrada de voz' : 'Voice input';
+    }
 }
 
 // ===== TEXT-TO-SPEECH (Voice Responses) =====
