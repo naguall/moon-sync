@@ -5361,13 +5361,13 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
         var astroCtx = gatherAstroContext();
         // Short summary prompt — transpersonal evolutionary approach
         var systemPrompt = L
-            ? 'Eres un astrólogo transpersonal evolutivo. Tu enfoque integra la astrología evolutiva de Jeff Green y Steven Forrest, la perspectiva transpersonal de Dane Rudhyar, la astrología arquetipal de Richard Tarnas, y la psicología profunda de Liz Greene. Interpretas la carta natal como un mapa del viaje del alma: cada posición revela lecciones kármicas, propósito evolutivo y potencial de transformación. Da una interpretación PERSONALIZADA y CONCISA en MÁXIMO 1 párrafo (3-5 oraciones). Enfócate en: el propósito evolutivo de esta posición, qué está aprendiendo el alma aquí, y cómo integrar conscientemente esta energía. No repitas datos que ya se muestran en pantalla. Responde en español.\n\nDATOS:\n' + astroCtx
-            : 'You are a transpersonal evolutionary astrologer. Your approach integrates Jeff Green and Steven Forrest\'s evolutionary astrology, Dane Rudhyar\'s transpersonal perspective, Richard Tarnas\'s archetypal astrology, and Liz Greene\'s depth psychology. You interpret the natal chart as a map of the soul\'s journey: each position reveals karmic lessons, evolutionary purpose and transformation potential. Give a PERSONALIZED and CONCISE interpretation in MAXIMUM 1 paragraph (3-5 sentences). Focus on: the evolutionary purpose of this position, what the soul is learning here, and how to consciously integrate this energy. Don\'t repeat data already shown on screen. Respond in English.\n\nDATA:\n' + astroCtx;
+            ? 'Eres un astrólogo transpersonal evolutivo. Tu enfoque integra la astrología evolutiva de Jeff Green y Steven Forrest, la perspectiva transpersonal de Dane Rudhyar, la astrología arquetipal de Richard Tarnas, y la psicología profunda de Liz Greene. Interpretas la carta natal como un mapa del viaje del alma: cada posición revela lecciones kármicas, propósito evolutivo y potencial de transformación. Da una interpretación PERSONALIZADA y COMPLETA de 3-5 párrafos. Enfócate en: el propósito evolutivo de esta posición, qué está aprendiendo el alma aquí, cómo integrar conscientemente esta energía, y un consejo práctico. No repitas datos que ya se muestran en pantalla. Sé sobrio, sabio y directo. Usa datos reales de la carta. Responde en español.\n\nDATOS:\n' + astroCtx
+            : 'You are a transpersonal evolutionary astrologer. Your approach integrates Jeff Green and Steven Forrest\'s evolutionary astrology, Dane Rudhyar\'s transpersonal perspective, Richard Tarnas\'s archetypal astrology, and Liz Greene\'s depth psychology. You interpret the natal chart as a map of the soul\'s journey: each position reveals karmic lessons, evolutionary purpose and transformation potential. Give a PERSONALIZED and COMPLETE interpretation of 3-5 paragraphs. Focus on: the evolutionary purpose of this position, what the soul is learning here, how to consciously integrate this energy, and practical advice. Don\'t repeat data already shown on screen. Be sober, wise and direct. Use real chart data. Respond in English.\n\nDATA:\n' + astroCtx;
 
         var requestBody = {
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [{ role: 'user', parts: [{ text: specificPrompt }] }],
-            generationConfig: { temperature: 0.8, maxOutputTokens: 512 }
+            generationConfig: { temperature: 0.8, maxOutputTokens: 4096 }
         };
 
         var apiUrl;
@@ -5410,10 +5410,10 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
             var readingKey = '_aiReading_' + Date.now();
             window[readingKey] = { title: _readingTitle, text: text, html: '<p>' + formattedHtml + '</p>', prompt: specificPrompt };
             div.innerHTML = '<div style="line-height:1.7;font-size:0.9em;color:rgba(255,255,255,0.88);"><p>' + formattedHtml + '</p></div>'
-                + '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:flex-end;border-top:1px solid rgba(201,168,64,0.15);padding-top:10px;">'
-                + '<button onclick="expandAIReading(\'' + readingKey + '\',this)" style="padding:6px 14px;background:rgba(102,126,234,0.12);border:1px solid rgba(102,126,234,0.3);border-radius:6px;color:#667eea;font-size:0.8em;cursor:pointer;">🔮 ' + (L ? 'Ver más' : 'Expand') + '</button>'
-                + '<button onclick="var d=window[\'' + readingKey + '\'];if(d){saveReading(d.title,d.text,d.html);this.disabled=true;this.innerHTML=\'' + (L ? '✅ Guardada' : '✅ Saved') + '\';}" style="padding:6px 14px;background:rgba(201,168,64,0.12);border:1px solid rgba(201,168,64,0.25);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;">💾 ' + (L ? 'Guardar' : 'Save') + '</button>'
-                + '<button onclick="var d=window[\'' + readingKey + '\'];if(d)shareReading(d);" style="padding:6px 14px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2);border-radius:6px;color:#25d366;font-size:0.8em;cursor:pointer;">📤 ' + (L ? 'Compartir' : 'Share') + '</button>'
+                + '<div style="display:flex;gap:8px;margin-top:14px;justify-content:center;border-top:1px solid rgba(201,168,64,0.15);padding-top:10px;">'
+                + '<button onclick="expandAIReading(\'' + readingKey + '\',this)" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.12);border:1px solid rgba(201,168,64,0.25);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;">🔮 ' + (L ? 'Ver más' : 'Expand') + '</button>'
+                + '<button onclick="var d=window[\'' + readingKey + '\'];if(d){saveReading(d.title,d.text,d.html);this.disabled=true;this.innerHTML=\'' + (L ? '✅ Guardada' : '✅ Saved') + '\';}" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.12);border:1px solid rgba(201,168,64,0.25);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;">💾 ' + (L ? 'Guardar' : 'Save') + '</button>'
+                + '<button onclick="var d=window[\'' + readingKey + '\'];if(d)shareReading(d);" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.12);border:1px solid rgba(201,168,64,0.25);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;">📤 ' + (L ? 'Compartir' : 'Share') + '</button>'
                 + '</div>';
         } else {
             div.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.85em;">' + (L ? 'No se pudo generar interpretación.' : 'Could not generate interpretation.') + '</p>';
@@ -10363,13 +10363,8 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
                 </button>
         </div>`;
 
-    // ===== TAB: CALENDAR (transits + monthly grid injected later) =====
-    const calendarTransitsTab = `
-        <div class="personal-natal-card">
-            <h3>🌟 ${L ? 'Tránsitos de Hoy' : "Today's Transits"} — ${today.toLocaleDateString(L?'es':'en', {day:'numeric',month:'long'})}</h3>
-            ${majorTransits.length > 0 ? '<div style="margin-bottom:8px;"><div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">' + (L ? 'Aspectos Mayores' : 'Major Aspects') + '</div>' + majorTransits.map(function(t, idx){ return '<div class="transit-aspect-row ' + t.class + '" onclick="showNatalDetail(\'transit\', ' + idx + ')" style="cursor:pointer;" onmouseover="this.style.opacity=\'0.7\'" onmouseout="this.style.opacity=\'1\'"><span style="font-size:1.1em;">' + t.transitSymbol + '</span><span style="color:' + t.color + ';">' + t.symbol + '</span><span style="font-size:1.1em;">' + t.natalSymbol + '</span><span style="color:rgba(255,255,255,0.5);margin-left:4px;">' + (planetNms[t.transitPlanet]||t.transitPlanet) + ' ' + t.symbol + ' natal ' + (planetNms[t.natalPlanet]||t.natalPlanet) + '</span></div>'; }).join('') + '</div>' : '<div style="font-size:0.8em;color:rgba(255,255,255,0.3);padding:8px;">' + (L ? 'Sin aspectos mayores hoy' : 'No major aspects today') + '</div>'}
-            ${moonTransits.length > 0 ? '<div><div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">☽ ' + (L ? 'Luna transitando' : 'Moon transiting') + '</div>' + moonTransits.map(function(t, idx){ var gIdx = majorTransits.length + idx; return '<div class="transit-aspect-row ' + t.class + '" onclick="showNatalDetail(\'transit\', ' + gIdx + ')" style="opacity:0.7;cursor:pointer;" onmouseover="this.style.opacity=\'0.5\'" onmouseout="this.style.opacity=\'0.7\'"><span>☽</span><span style="color:' + t.color + ';">' + t.symbol + '</span><span>' + t.natalSymbol + '</span><span style="color:rgba(255,255,255,0.4);margin-left:4px;">' + t.symbol + ' natal ' + (planetNms[t.natalPlanet]||t.natalPlanet) + '</span></div>'; }).join('') + '</div>' : ''}
-        </div>`;
+    // ===== TAB: CALENDAR (monthly grid only — transits moved to Hoy tab) =====
+    const calendarTransitsTab = ``;
 
     // ===== TAB: TABLES =====
     // Store natal chart for detail modal
@@ -10554,25 +10549,12 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
             </div>
         </div>`;
 
-    // ===== TAB: HOY (Today's transits - rich view) =====
-    const allTransits = [...majorTransits, ...moonTransits];
-
-    function buildHoyTransitCard(t, idx, isMoon) {
-        var tName = planetNms[t.transitPlanet]||t.transitPlanet;
-        var nName = planetNms[t.natalPlanet]||t.natalPlanet;
-        var aspName = t.type === 'conjunction' ? (L?'Conjunción':'Conjunction') : t.type === 'opposition' ? (L?'Oposición':'Opposition') : t.type === 'trine' ? (L?'Trígono':'Trine') : t.type === 'square' ? (L?'Cuadratura':'Square') : t.type === 'sextile' ? (L?'Sextil':'Sextile') : t.type;
-        if (isMoon) {
-            return '<div onclick="aiInterpretHoyTransit(' + idx + ')" style="background:rgba(0,0,0,0.2);padding:8px 10px;border-radius:6px;border-left:2px solid rgba(126,200,255,0.4);cursor:pointer;opacity:0.75;transition:all 0.2s;" onmouseover="this.style.opacity=0.5" onmouseout="this.style.opacity=0.75"><div style="display:flex;align-items:center;gap:6px;"><span>☽</span><span style="color:' + t.color + ';">' + t.symbol + '</span><span>' + t.natalSymbol + '</span><span style="color:rgba(255,255,255,0.4);margin-left:4px;font-size:0.85em;">' + aspName + ' natal ' + nName + '</span></div></div>';
-        }
-        return '<div onclick="aiInterpretHoyTransit(' + idx + ')" style="background:rgba(0,0,0,0.3);padding:10px 12px;border-radius:8px;border-left:3px solid ' + t.color + ';cursor:pointer;transition:all 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:1.3em;">' + t.transitSymbol + '</span><span style="color:' + t.color + ';font-size:1.2em;font-weight:bold;">' + t.symbol + '</span><span style="font-size:1.3em;">' + t.natalSymbol + '</span><div style="flex:1;margin-left:6px;"><div style="font-size:0.9em;font-weight:600;color:rgba(255,255,255,0.85);">' + tName + ' <span style="color:' + t.color + ';">' + t.symbol + ' ' + aspName + '</span> ' + nName + ' <span style="font-size:0.75em;color:rgba(255,255,255,0.3);">(natal)</span></div><div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-top:2px;">' + (L?'Orbe':'Orb') + ': ' + (t.orb||'?') + '°</div></div></div></div>';
-    }
-
+    // ===== TAB: HOY (Today's transits - same compact format as old calendar tab) =====
     const hoyTab = `
-        <div class="personal-natal-card" style="border-top:2px solid #c9a840;">
-            <h3 style="color:#c9a840;">🌟 ${L ? 'Tránsitos de Hoy' : "Today's Transits"} — ${today.toLocaleDateString(L?'es':'en', {weekday:'long',day:'numeric',month:'long'})}</h3>
-            <div style="font-size:0.75em;color:rgba(255,255,255,0.35);margin-bottom:10px;">${L ? 'Click en cualquier tránsito para que el AI lo interprete' : 'Click any transit for AI interpretation'}</div>
-            ${majorTransits.length > 0 ? '<div style="margin-bottom:12px;"><div style="font-size:0.72em;color:rgba(201,168,64,0.7);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">' + (L ? '🪐 Aspectos Planetarios Mayores' : '🪐 Major Planetary Aspects') + '</div><div style="display:flex;flex-direction:column;gap:6px;">' + majorTransits.map(function(t, idx){ return buildHoyTransitCard(t, idx, false); }).join('') + '</div></div>' : '<div style="text-align:center;padding:16px;color:rgba(255,255,255,0.3);font-style:italic;">' + (L ? 'Sin aspectos planetarios mayores hoy' : 'No major planetary aspects today') + '</div>'}
-            ${moonTransits.length > 0 ? '<div><div style="font-size:0.72em;color:rgba(126,200,255,0.7);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">☽ ' + (L ? 'Luna Transitando' : 'Moon Transiting') + '</div><div style="display:flex;flex-direction:column;gap:4px;">' + moonTransits.map(function(t, idx){ return buildHoyTransitCard(t, majorTransits.length + idx, true); }).join('') + '</div></div>' : ''}
+        <div class="personal-natal-card">
+            <h3>🌟 ${L ? 'Tránsitos de Hoy' : "Today's Transits"} — ${today.toLocaleDateString(L?'es':'en', {day:'numeric',month:'long'})}</h3>
+            ${majorTransits.length > 0 ? '<div style="margin-bottom:8px;"><div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">' + (L ? 'Aspectos Mayores' : 'Major Aspects') + '</div>' + majorTransits.map(function(t, idx){ return '<div class="transit-aspect-row ' + t.class + '" onclick="showNatalDetail(\'transit\', ' + idx + ')" style="cursor:pointer;" onmouseover="this.style.opacity=\'0.7\'" onmouseout="this.style.opacity=\'1\'"><span style="font-size:1.1em;">' + t.transitSymbol + '</span><span style="color:' + t.color + ';">' + t.symbol + '</span><span style="font-size:1.1em;">' + t.natalSymbol + '</span><span style="color:rgba(255,255,255,0.5);margin-left:4px;">' + (planetNms[t.transitPlanet]||t.transitPlanet) + ' ' + t.symbol + ' natal ' + (planetNms[t.natalPlanet]||t.natalPlanet) + '</span></div>'; }).join('') + '</div>' : '<div style="font-size:0.8em;color:rgba(255,255,255,0.3);padding:8px;">' + (L ? 'Sin aspectos mayores hoy' : 'No major aspects today') + '</div>'}
+            ${moonTransits.length > 0 ? '<div><div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">☽ ' + (L ? 'Luna transitando' : 'Moon transiting') + '</div>' + moonTransits.map(function(t, idx){ var gIdx = majorTransits.length + idx; return '<div class="transit-aspect-row ' + t.class + '" onclick="showNatalDetail(\'transit\', ' + gIdx + ')" style="opacity:0.7;cursor:pointer;" onmouseover="this.style.opacity=\'0.5\'" onmouseout="this.style.opacity=\'0.7\'"><span>☽</span><span style="color:' + t.color + ';">' + t.symbol + '</span><span>' + t.natalSymbol + '</span><span style="color:rgba(255,255,255,0.4);margin-left:4px;">' + t.symbol + ' natal ' + (planetNms[t.natalPlanet]||t.natalPlanet) + '</span></div>'; }).join('') + '</div>' : ''}
         </div>`;
 
     // ===== COMBINE WITH TABS =====
@@ -16447,26 +16429,18 @@ function forceAppUpdate() {
     const cachePromise = caches ?
         caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))) :
         Promise.resolve();
-    // 3. Re-register SW and show success (no reload)
+    // 3. Clear cache, re-register SW, then reload to show new version
     Promise.all([swPromise, cachePromise]).then(() => {
         console.log('🔄 All caches cleared, all SWs unregistered.');
-        // Re-register service worker
-        if (navigator.serviceWorker) {
-            navigator.serviceWorker.register('/moon-sync/sw.js').then(() => {
-                console.log('🔄 SW re-registered');
-            });
-        }
         if (btn) {
-            btn.textContent = currentLang === 'es' ? '✅ Caché limpiado — recarga cuando quieras' : '✅ Cache cleared — reload when ready';
+            btn.textContent = currentLang === 'es' ? '✅ Recargando...' : '✅ Reloading...';
             btn.style.color = '#66bb6a';
             btn.style.borderColor = 'rgba(102,187,106,0.45)';
-            setTimeout(() => {
-                btn.textContent = '🔄 ' + (currentLang === 'es' ? 'Forzar Actualización' : 'Force Update');
-                btn.style.color = '#ffb347';
-                btn.style.borderColor = 'rgba(255,165,0,0.45)';
-                btn.style.pointerEvents = '';
-            }, 5000);
         }
+        // Small delay so user sees the message, then reload
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 800);
     }).catch(err => {
         console.error('Force update error:', err);
         if (btn) {
@@ -16478,7 +16452,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v189';
+const APP_VERSION = 'v192';
 var _pendingSW = null;
 
 function showUpdateBanner() {
