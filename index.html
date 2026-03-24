@@ -4682,12 +4682,36 @@ function getEventsForDate(date) {
 
 function getJournalForDate(date) {
     const key = getDateKey(date);
+    // Profile-specific storage: check active profile first, then fallback to global
+    var profileId = getActiveProfileId() || 'default';
+    var profileJournals = {};
+    try { profileJournals = JSON.parse(localStorage.getItem('lunarCalendarJournals_' + profileId) || '{}'); } catch(e) {}
+    if (profileJournals[key]) return profileJournals[key];
+
+    // Fallback to global for migration
+    var globalJournals = {};
+    try { globalJournals = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
+    if (globalJournals[key]) return globalJournals[key];
+
     // Check both storage systems: journals object AND direct diary_ key
     return journals[key] || localStorage.getItem('diary_' + key) || '';
 }
 
 function saveJournalForDate(date, text) {
     const key = getDateKey(date);
+    // Save to profile-specific storage
+    var profileId = getActiveProfileId() || 'default';
+    var profileJournals = {};
+    try { profileJournals = JSON.parse(localStorage.getItem('lunarCalendarJournals_' + profileId) || '{}'); } catch(e) {}
+
+    if (text.trim()) {
+        profileJournals[key] = text;
+    } else {
+        delete profileJournals[key];
+    }
+    localStorage.setItem('lunarCalendarJournals_' + profileId, JSON.stringify(profileJournals));
+
+    // Also save to in-memory journals for current session
     if (text.trim()) {
         journals[key] = text;
     } else {
@@ -5205,11 +5229,13 @@ function closeNatalDetailModal() {
 // SAVED READINGS SYSTEM
 // ============================================
 function getSavedReadings() {
-    try { return JSON.parse(localStorage.getItem('moonsync_saved_readings') || '[]'); }
+    var profileId = getActiveProfileId() || 'default';
+    try { return JSON.parse(localStorage.getItem('moonsync_saved_readings_' + profileId) || '[]'); }
     catch(e) { return []; }
 }
 function setSavedReadings(readings) {
-    localStorage.setItem('moonsync_saved_readings', JSON.stringify(readings));
+    var profileId = getActiveProfileId() || 'default';
+    localStorage.setItem('moonsync_saved_readings_' + profileId, JSON.stringify(readings));
     if (typeof scheduleAutoBackup === 'function') scheduleAutoBackup();
 }
 function saveReading(title, textContent, htmlContent) {
@@ -5220,6 +5246,7 @@ function saveReading(title, textContent, htmlContent) {
         text: textContent,
         html: htmlContent,
         date: new Date().toISOString(),
+        profileId: getActiveProfileId() || 'default',
         starred: false
     });
     // Keep max 100 readings
@@ -5262,10 +5289,20 @@ function openSavedReadingsModal(tab) {
     var activeTab = tab || 'lecturas';
     titleEl.textContent = L ? '📚 Lecturas y Diario' : '📚 Readings & Diary';
 
-    // Gather diary entries
+    // Gather diary entries (profile-specific)
     var diaryEntries = [];
+    var profileId = getActiveProfileId() || 'default';
     var journalsData = {};
-    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
+    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals_' + profileId) || '{}'); } catch(e) {}
+
+    // Also include global journals for migration purposes
+    try {
+        var globalJournals = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}');
+        Object.keys(globalJournals).forEach(function(key) {
+            if (!journalsData[key]) journalsData[key] = globalJournals[key];
+        });
+    } catch(e) {}
+
     Object.keys(journalsData).forEach(function(key) {
         if (journalsData[key] && journalsData[key].trim()) diaryEntries.push({ date: key, text: journalsData[key], source: 'journals' });
     });
@@ -5352,23 +5389,33 @@ function openSavedReadingsModal(tab) {
 
 // --- Diary entry functions ---
 function getDiaryText(dateKey) {
+    var profileId = getActiveProfileId() || 'default';
     var journalsData = {};
-    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
+    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals_' + profileId) || '{}'); } catch(e) {}
     if (journalsData[dateKey]) return journalsData[dateKey];
+
+    // Fallback to global (migration)
+    try {
+        var globalJournals = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}');
+        if (globalJournals[dateKey]) return globalJournals[dateKey];
+    } catch(e) {}
+
     return localStorage.getItem('diary_' + dateKey) || '';
 }
 function saveDiaryText(dateKey, text) {
+    var profileId = getActiveProfileId() || 'default';
     var journalsData = {};
-    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
+    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals_' + profileId) || '{}'); } catch(e) {}
     journalsData[dateKey] = text;
-    localStorage.setItem('lunarCalendarJournals', JSON.stringify(journalsData));
+    localStorage.setItem('lunarCalendarJournals_' + profileId, JSON.stringify(journalsData));
     localStorage.setItem('diary_' + dateKey, text);
 }
 function deleteDiaryEntry(dateKey) {
+    var profileId = getActiveProfileId() || 'default';
     var journalsData = {};
-    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
+    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals_' + profileId) || '{}'); } catch(e) {}
     delete journalsData[dateKey];
-    localStorage.setItem('lunarCalendarJournals', JSON.stringify(journalsData));
+    localStorage.setItem('lunarCalendarJournals_' + profileId, JSON.stringify(journalsData));
     localStorage.removeItem('diary_' + dateKey);
 }
 function viewDiaryEntry(dateKey) {
@@ -5413,8 +5460,18 @@ function shareDiaryEntry(dateKey) {
 function exportAllDiaryEntries() {
     var L = currentLang === 'es';
     var diaryEntries = [];
+    var profileId = getActiveProfileId() || 'default';
     var journalsData = {};
-    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}'); } catch(e) {}
+    try { journalsData = JSON.parse(localStorage.getItem('lunarCalendarJournals_' + profileId) || '{}'); } catch(e) {}
+
+    // Also include global journals for migration purposes
+    try {
+        var globalJournals = JSON.parse(localStorage.getItem('lunarCalendarJournals') || '{}');
+        Object.keys(globalJournals).forEach(function(key) {
+            if (!journalsData[key]) journalsData[key] = globalJournals[key];
+        });
+    } catch(e) {}
+
     Object.keys(journalsData).forEach(function(key) { if (journalsData[key] && journalsData[key].trim()) diaryEntries.push({ date: key, text: journalsData[key] }); });
     for (var si = 0; si < localStorage.length; si++) {
         var skey = localStorage.key(si);
@@ -5496,10 +5553,10 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
         }
 
         var astroCtx = gatherAstroContext();
-        // Summary prompt — ~12 short paragraphs, complete sentences, no user names
+        // Summary prompt — ~6-8 bullets, user can ask for details via chat
         var systemPrompt = L
-            ? 'Eres un astrólogo transpersonal evolutivo. Interpretas la carta natal como mapa del viaje del alma. REGLAS ESTRICTAS:\n- Formato DIRECTO: usa bullets cortos (•) con los puntos clave. Cada bullet 1-2 frases máximo.\n- Agrupa por temas: Esencia, Desafíos, Potencial, Consejo práctico.\n- Ve AL GRANO. NUNCA empieces con introducciones como "Aquí tienes..." o "Te presento..." o "Veamos..." — empieza DIRECTAMENTE con el primer bullet.\n- Aproximadamente 10-15 bullets en total.\n- NUNCA uses el nombre del usuario. Usa "tú", "tu carta", "tu alma".\n- SIEMPRE termina cada frase completa.\n- Usa datos reales de la carta. No repitas datos ya en pantalla.\n- Responde en español.\n\nDATOS:\n' + astroCtx
-            : 'You are a transpersonal evolutionary astrologer. You interpret the natal chart as a map of the soul\'s journey. STRICT RULES:\n- DIRECT format: use short bullets (•) with key points. Each bullet 1-2 sentences max.\n- Group by themes: Essence, Challenges, Potential, Practical advice.\n- Get TO THE POINT. NEVER start with introductions like "Here is..." or "Let me present..." — start DIRECTLY with the first bullet.\n- Approximately 10-15 bullets total.\n- NEVER use the user\'s name. Use "you", "your chart", "your soul".\n- ALWAYS finish every sentence completely.\n- Use real chart data. Don\'t repeat data already on screen.\n- Respond in English.\n\nDATA:\n' + astroCtx;
+            ? 'Eres un astrólogo transpersonal evolutivo. Interpretas la carta natal como mapa del viaje del alma. REGLAS ESTRICTAS:\n- Formato DIRECTO: usa bullets cortos (•) con los puntos clave. Cada bullet 1-2 frases máximo.\n- Agrupa por temas: Esencia, Desafíos, Potencial, Consejo práctico.\n- Ve AL GRANO. NUNCA empieces con introducciones como "Aquí tienes..." o "Te presento..." o "Veamos..." — empieza DIRECTAMENTE con el primer bullet.\n- Aproximadamente 5-8 bullets en total. Sé BREVE. El usuario podrá preguntar más detalles en el chat.\n- NUNCA uses el nombre del usuario. Usa "tú", "tu carta", "tu alma".\n- SIEMPRE termina cada frase completa.\n- Usa datos reales de la carta. No repitas datos ya en pantalla.\n- Responde en español.\n\nDATOS:\n' + astroCtx
+            : 'You are a transpersonal evolutionary astrologer. You interpret the natal chart as a map of the soul\'s journey. STRICT RULES:\n- DIRECT format: use short bullets (•) with key points. Each bullet 1-2 sentences max.\n- Group by themes: Essence, Challenges, Potential, Practical advice.\n- Get TO THE POINT. NEVER start with introductions like "Here is..." or "Let me present..." — start DIRECTLY with the first bullet.\n- Approximately 5-8 bullets total. Be BRIEF. The user can ask for more details in the chat.\n- NEVER use the user\'s name. Use "you", "your chart", "your soul".\n- ALWAYS finish every sentence completely.\n- Use real chart data. Don\'t repeat data already on screen.\n- Respond in English.\n\nDATA:\n' + astroCtx;
 
         var requestBody = {
             system_instruction: { parts: [{ text: systemPrompt }] },
@@ -5545,12 +5602,13 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
                 .replace(/\n/g, '<br>');
             // Store reading data globally for safe button access
             var readingKey = '_aiReading_' + Date.now();
+            var chatId = 'ic_' + Date.now().toString(36);
             window[readingKey] = { title: _readingTitle, text: text, html: '<p>' + formattedHtml + '</p>', prompt: specificPrompt };
             div.innerHTML = '<div style="line-height:1.7;font-size:0.9em;color:rgba(255,255,255,0.88);"><p>' + formattedHtml + '</p></div>'
                 + '<div style="display:flex;gap:8px;margin-top:14px;justify-content:center;border-top:1px solid rgba(201,168,64,0.15);padding-top:10px;">'
-                + '<button onclick="expandAIReading(\'' + readingKey + '\',this)" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.35);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">' + (L ? 'Ver más' : 'Expand') + '</button>'
-                + '<button onclick="var d=window[\'' + readingKey + '\'];if(d){saveReading(d.title,d.text,d.html);this.disabled=true;this.innerHTML=\'' + (L ? '✅ Guardada' : '✅ Saved') + '\';}" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.35);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">' + (L ? 'Guardar' : 'Save') + '</button>'
-                + '<button onclick="var d=window[\'' + readingKey + '\'];if(d)shareReading(d);" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.35);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">' + (L ? 'Compartir' : 'Share') + '</button>'
+                + '<button onclick="openInterpretationChat(\'' + readingKey + '\',\'' + chatId + '\',this)" style="flex:1;padding:6px 10px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.35);border-radius:6px;color:#667eea;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">💬 ' + (L ? 'Chat' : 'Chat') + '</button>'
+                + '<button onclick="var d=window[\'' + readingKey + '\'];if(d){saveReading(d.title,d.text,d.html);this.disabled=true;this.innerHTML=\'' + (L ? '✅ Guardada' : '✅ Saved') + '\';}" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.35);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">💾 ' + (L ? 'Guardar' : 'Save') + '</button>'
+                + '<button onclick="var d=window[\'' + readingKey + '\'];if(d)shareReading(d);" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.35);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">📤 ' + (L ? 'Compartir' : 'Share') + '</button>'
                 + '</div>';
         } else {
             div.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.85em;">' + (L ? 'No se pudo generar interpretación.' : 'Could not generate interpretation.') + '</p>';
@@ -5636,6 +5694,196 @@ async function expandAIReading(readingKey, btn) {
         console.warn('Expand error:', e);
         btn.disabled = false;
         btn.innerHTML = (L ? 'Reintentar' : 'Retry');
+    }
+}
+
+// ========== INTERPRETATION CHAT SYSTEM ==========
+// Store for interpretation chats
+var interpretationChats = {};
+
+function getInterpChatKey(chatId) {
+    return 'interp_chat_' + chatId;
+}
+
+function getInterpChat(chatId) {
+    try { return JSON.parse(localStorage.getItem(getInterpChatKey(chatId)) || 'null'); } catch(e) { return null; }
+}
+
+function saveInterpChat(chatId, chatData) {
+    localStorage.setItem(getInterpChatKey(chatId), JSON.stringify(chatData));
+}
+
+function openInterpretationChat(readingKey, chatId, btn) {
+    var data = window[readingKey];
+    if (!data) return;
+    var L = currentLang === 'es';
+    var parentDiv = btn.closest('[id]') || btn.parentElement.parentElement;
+
+    // Get or create chat
+    var chat = getInterpChat(chatId);
+    if (!chat) {
+        chat = {
+            chatId: chatId,
+            profileId: getActiveProfileId() || 'default',
+            title: data.title,
+            initialPrompt: data.prompt,
+            initialResponse: data.text,
+            messages: [],
+            createdAt: new Date().toISOString()
+        };
+        saveInterpChat(chatId, chat);
+    }
+
+    // Build chat UI
+    var html = '<div id="interpChat_' + chatId + '" style="margin-top:12px;border-top:1px solid rgba(201,168,64,0.2);padding-top:12px;">';
+
+    // Chat history
+    html += '<div id="interpChatMessages_' + chatId + '" style="max-height:300px;overflow-y:auto;margin-bottom:10px;">';
+    chat.messages.forEach(function(msg) {
+        var isUser = msg.role === 'user';
+        html += '<div style="margin-bottom:8px;text-align:' + (isUser ? 'right' : 'left') + ';">';
+        html += '<div style="display:inline-block;max-width:85%;padding:8px 12px;border-radius:12px;font-size:0.85em;line-height:1.5;' +
+            (isUser ? 'background:rgba(201,168,64,0.15);color:#c9a840;' : 'background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85);') + '">';
+        html += msg.text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
+        html += '</div></div>';
+    });
+    html += '</div>';
+
+    // Input area
+    html += '<div style="display:flex;gap:6px;">';
+    html += '<input type="text" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\')sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;">';
+    html += '<button onclick="sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="padding:8px 14px;background:rgba(201,168,64,0.2);border:1px solid rgba(201,168,64,0.4);border-radius:20px;color:#c9a840;font-size:0.85em;cursor:pointer;font-weight:600;">→</button>';
+    html += '</div>';
+
+    // Action buttons
+    html += '<div style="display:flex;gap:6px;margin-top:8px;justify-content:center;">';
+    html += '<button onclick="saveInterpChatAsReading(\'' + chatId + '\')" style="padding:4px 10px;background:rgba(201,168,64,0.1);border:1px solid rgba(201,168,64,0.2);border-radius:6px;color:#c9a840;font-size:0.75em;cursor:pointer;">' + (L ? '💾 Guardar' : '💾 Save') + '</button>';
+    html += '<button onclick="shareInterpChat(\'' + chatId + '\')" style="padding:4px 10px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2);border-radius:6px;color:#25d366;font-size:0.75em;cursor:pointer;">' + (L ? '📤 Compartir' : '📤 Share') + '</button>';
+    html += '</div>';
+
+    html += '</div>';
+
+    // Insert chat after the content div
+    var existingChat = document.getElementById('interpChat_' + chatId);
+    if (existingChat) {
+        existingChat.remove(); // toggle off
+    } else {
+        parentDiv.insertAdjacentHTML('beforeend', html);
+        document.getElementById('interpChatInput_' + chatId).focus();
+    }
+}
+
+async function sendInterpChatMessage(chatId, readingKey) {
+    var input = document.getElementById('interpChatInput_' + chatId);
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text || !aiIsConfigured()) return;
+
+    input.value = '';
+    var L = currentLang === 'es';
+    var chat = getInterpChat(chatId);
+    var data = window[readingKey];
+
+    // Add user message to UI
+    var msgsDiv = document.getElementById('interpChatMessages_' + chatId);
+    msgsDiv.innerHTML += '<div style="margin-bottom:8px;text-align:right;"><div style="display:inline-block;max-width:85%;padding:8px 12px;border-radius:12px;font-size:0.85em;line-height:1.5;background:rgba(201,168,64,0.15);color:#c9a840;">' + text.replace(/</g,'&lt;') + '</div></div>';
+
+    // Add typing indicator
+    msgsDiv.innerHTML += '<div id="interpTyping_' + chatId + '" style="margin-bottom:8px;"><div style="display:inline-block;padding:8px 12px;border-radius:12px;font-size:0.8em;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.03);">✨ ' + (L ? 'Consultando...' : 'Consulting...') + '</div></div>';
+    msgsDiv.scrollTop = msgsDiv.scrollHeight;
+
+    // Save user message
+    chat.messages.push({ role: 'user', text: text, timestamp: new Date().toISOString() });
+    saveInterpChat(chatId, chat);
+
+    try {
+        var astroCtx = gatherAstroContext();
+        // Build conversation context with original interpretation
+        var systemPrompt = L
+            ? 'Eres un astrólogo transpersonal evolutivo. El usuario te hizo una consulta y le diste esta interpretación inicial:\n\n"' + (data ? data.text : chat.initialResponse) + '"\n\nAhora el usuario quiere profundizar con preguntas de seguimiento. REGLAS:\n- Responde de forma CONCISA y DIRECTA.\n- Usa bullets cortos (•) cuando sea útil.\n- Mantén el contexto de la interpretación original.\n- NUNCA uses el nombre del usuario.\n- Responde en español.\n\nDATOS ASTROLÓGICOS:\n' + astroCtx
+            : 'You are a transpersonal evolutionary astrologer. The user asked a question and you gave this initial interpretation:\n\n"' + (data ? data.text : chat.initialResponse) + '"\n\nNow the user wants to go deeper with follow-up questions. RULES:\n- Respond CONCISELY and DIRECTLY.\n- Use short bullets (•) when useful.\n- Keep context of original interpretation.\n- NEVER use user\'s name.\n- Respond in English.\n\nASTROLOGICAL DATA:\n' + astroCtx;
+
+        // Build contents with previous chat messages
+        var contents = [];
+        chat.messages.forEach(function(msg) {
+            contents.push({ role: msg.role === 'user' ? 'user' : 'model', parts: [{ text: msg.text }] });
+        });
+
+        var requestBody = {
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: contents,
+            generationConfig: { temperature: 0.8, maxOutputTokens: 4096 }
+        };
+
+        var apiUrl;
+        var personalKey = getGeminiKey();
+        if (personalKey) {
+            apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + personalKey;
+        } else {
+            apiUrl = AI_PROXY_URL;
+        }
+
+        var response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
+
+        // Remove typing indicator
+        var typingEl = document.getElementById('interpTyping_' + chatId);
+        if (typingEl) typingEl.remove();
+
+        if (!response.ok) throw new Error('API error: ' + response.status);
+
+        var result = await response.json();
+        var aiText = '';
+        if (result.candidates && result.candidates[0] && result.candidates[0].content) {
+            aiText = result.candidates[0].content.parts.map(function(p) { return p.text || ''; }).join('');
+        }
+
+        if (aiText) {
+            var formatted = aiText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
+            msgsDiv.innerHTML += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:85%;padding:8px 12px;border-radius:12px;font-size:0.85em;line-height:1.5;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85);">' + formatted + '</div></div>';
+
+            // Save AI response
+            chat.messages.push({ role: 'model', text: aiText, timestamp: new Date().toISOString() });
+            saveInterpChat(chatId, chat);
+        }
+
+        msgsDiv.scrollTop = msgsDiv.scrollHeight;
+
+    } catch(e) {
+        var typingEl2 = document.getElementById('interpTyping_' + chatId);
+        if (typingEl2) typingEl2.remove();
+        msgsDiv.innerHTML += '<div style="margin-bottom:8px;"><div style="display:inline-block;padding:8px 12px;border-radius:12px;font-size:0.8em;color:#ff6b6b;background:rgba(255,107,107,0.1);">❌ ' + e.message + '</div></div>';
+    }
+}
+
+function saveInterpChatAsReading(chatId) {
+    var chat = getInterpChat(chatId);
+    if (!chat) return;
+    var L = currentLang === 'es';
+    var fullText = chat.initialResponse + '\n\n' + (L ? '--- Conversación ---' : '--- Conversation ---') + '\n';
+    chat.messages.forEach(function(msg) {
+        fullText += '\n' + (msg.role === 'user' ? '👤 ' : '✨ ') + msg.text;
+    });
+    var fullHtml = '<p>' + fullText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+    saveReading(chat.title + ' (Chat)', fullText, fullHtml);
+    alert(L ? '✅ Chat guardado en Lecturas' : '✅ Chat saved to Readings');
+}
+
+function shareInterpChat(chatId) {
+    var chat = getInterpChat(chatId);
+    if (!chat) return;
+    var L = currentLang === 'es';
+    var text = '✨ ' + chat.title + '\n\n' + chat.initialResponse;
+    if (chat.messages.length > 0) {
+        text += '\n\n' + (L ? '--- Conversación ---' : '--- Conversation ---');
+        chat.messages.forEach(function(msg) {
+            text += '\n\n' + (msg.role === 'user' ? '👤 ' : '✨ ') + msg.text;
+        });
+    }
+    text += '\n\n— Moon Sync 🌙';
+    if (navigator.share) {
+        navigator.share({ title: chat.title, text: text }).catch(function(){});
+    } else {
+        navigator.clipboard.writeText(text).then(function() { alert(L ? 'Copiado al portapapeles' : 'Copied to clipboard'); });
     }
 }
 
@@ -17074,7 +17322,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v211';
+const APP_VERSION = 'v212';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -17604,6 +17852,8 @@ function gatherAstroContext() {
             const activeId = localStorage.getItem('activeProfileId');
             const profile = natal.find(p => p.id === activeId) || natal[0];
             if (profile) {
+                ctx += 'PERFIL ACTIVO: ' + (profile.name || 'Principal') + '\n';
+                ctx += 'IMPORTANTE: Todas las interpretaciones deben enfocarse EXCLUSIVAMENTE en este perfil.\n\n';
                 ctx += 'DATOS DE NACIMIENTO DEL USUARIO:\n';
                 ctx += 'Nombre: ' + (profile.name || 'Usuario') + '\n';
                 ctx += 'Fecha: ' + (profile.date || localStorage.getItem('natalBirthDate') || '?') + '\n';
@@ -17705,14 +17955,17 @@ function gatherAstroContext() {
         }
     } catch(e) {}
 
-    // Diary entries (last 7 days + today)
+    // Diary entries (last 7 days + today) — profile-specific
     try {
+        var profileId = getActiveProfileId() || 'default';
+        var profileJournals = {};
+        try { profileJournals = JSON.parse(localStorage.getItem('lunarCalendarJournals_' + profileId) || '{}'); } catch(e2) {}
         var diaryEntries = [];
         for (var di = -7; di <= 0; di++) {
             var dd = new Date();
             dd.setDate(dd.getDate() + di);
             var dk = dd.toISOString().split('T')[0];
-            var entry = localStorage.getItem('diary_' + dk);
+            var entry = profileJournals[dk] || localStorage.getItem('diary_' + dk);
             if (entry && entry.trim()) {
                 diaryEntries.push({ date: dk, text: entry.trim().substring(0, 300) });
             }
