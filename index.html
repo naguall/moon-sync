@@ -663,18 +663,13 @@
         </header>
 
         <div class="navigation" id="lunarNavigation">
-            <button class="nav-btn" onclick="previousCycle()" id="prevCycleBtn">← Previous</button>
             <div class="cycle-info">
                 <div class="cycle-number" id="cycleNumber">Lunar Cycle</div>
                 <div class="cycle-dates" id="cycleDates"></div>
             </div>
-            <button class="nav-btn" onclick="nextCycle()" id="nextCycleBtn">Next →</button>
         </div>
         <script>
-            // Initialize cycle button text in current language
             if (typeof t === 'function') {
-                document.getElementById('prevCycleBtn').textContent = t('previousCycle');
-                document.getElementById('nextCycleBtn').textContent = t('nextCycle');
                 document.getElementById('cycleNumber').textContent = t('lunarCycle');
             }
         </script>
@@ -684,6 +679,21 @@
         <div class="lunar-weeks" id="lunarWeeks"></div>
 
         <div id="lunarInfoBanner" style="display:none; margin-bottom: 6px;"></div>
+
+        <script>
+            // Hide non-active mode elements immediately on load to prevent flash
+            (function() {
+                var savedMode = localStorage.getItem('calendarMode') || 'lunar';
+                if (savedMode !== 'lunar') {
+                    var lw = document.getElementById('lunarWeeks');
+                    if (lw) lw.style.display = 'none';
+                    var cdi = document.getElementById('currentDayInfo');
+                    if (cdi) cdi.style.display = 'none';
+                    var nav = document.querySelector('.navigation');
+                    if (nav) nav.style.display = 'none';
+                }
+            })();
+        </script>
 
         <div class="legend" id="planetaryAspectsSection">
             <h3 id="planetaryAspectsTitle">🪐 Aspectos Planetarios 2026</h3>
@@ -3487,11 +3497,7 @@ function updateUILanguage() {
     const gregorianLabel = document.getElementById('gregorianButtonLabel');
     if (gregorianLabel) gregorianLabel.textContent = t('gregorianButton');
 
-    // Update cycle navigation buttons
-    const prevCycleBtn = document.getElementById('prevCycleBtn');
-    if (prevCycleBtn) prevCycleBtn.textContent = t('previousCycle');
-    const nextCycleBtn = document.getElementById('nextCycleBtn');
-    if (nextCycleBtn) nextCycleBtn.textContent = t('nextCycle');
+    // Update cycle navigation
     const cycleNumber = document.getElementById('cycleNumber');
     if (cycleNumber) cycleNumber.textContent = t('lunarCycle');
 
@@ -8156,6 +8162,7 @@ function switchToEarthMode() {
 
     // Navigation: empty for Earth mode
     const nav = document.querySelector('.navigation');
+    nav.style.display = '';
     nav.innerHTML = '<div class="cycle-info"><div class="cycle-number" id="cycleNumber">' + (currentLang==='es'?'Datos de la Tierra en Tiempo Real':'Real-Time Earth Data') + '</div><div class="cycle-dates" id="cycleDates">' + ASTRO_USER_NAME + '</div></div>';
 
     updateModeButtons();
@@ -8205,15 +8212,16 @@ function switchToLunarMode() {
     
     // RESTORE LUNAR NAVIGATION
     const nav = document.querySelector('.navigation');
+    nav.style.display = '';
     nav.innerHTML = `
-        <button class="nav-btn" onclick="previousCycle()" id="prevCycleBtn">${t('previousCycle')}</button>
         <div class="cycle-info">
             <div class="cycle-number" id="cycleNumber">${t('lunarCycle')}</div>
             <div class="cycle-dates" id="cycleDates"></div>
         </div>
-        <button class="nav-btn" onclick="nextCycle()" id="nextCycleBtn">${t('nextCycle')}</button>
     `;
-    
+    const cdi = document.getElementById('currentDayInfo');
+    if (cdi) cdi.style.display = '';
+
     updateModeButtons();
     renderCalendar();
     // Force refresh moon position, tide data, and astro info
@@ -8258,6 +8266,7 @@ function switchToSolarSystemMode() {
 
     // Navigation
     const nav = document.querySelector('.navigation');
+    nav.style.display = '';
     nav.innerHTML = '<div class="cycle-info"><div class="cycle-number" id="cycleNumber">' + (currentLang==='es'?'Explorador del Sistema Solar':'Solar System Explorer') + '</div><div class="cycle-dates" id="cycleDates">' + ASTRO_USER_NAME + '</div></div>';
 
     updateModeButtons();
@@ -9903,6 +9912,7 @@ function renderPersonalSetupForm() {
 
     // Navigation area: info text
     const nav = document.querySelector('.navigation');
+    nav.style.display = '';
     nav.innerHTML = `<div class="cycle-info"><div class="cycle-number" id="cycleNumber">${L ? 'Configuración Inicial' : 'Initial Setup'}</div><div class="cycle-dates" id="cycleDates">${L ? 'Ingresa tus datos de nacimiento' : 'Enter your birth data'}</div></div>`;
 
     let container = document.getElementById('personalCalendar');
@@ -11255,13 +11265,12 @@ function renderPersonalCalendar() {
 
     // Navigation
     const nav = document.querySelector('.navigation');
+    nav.style.display = '';
     nav.innerHTML = `
-        <button class="nav-btn" onclick="personalPrevMonth()">◀ ${L ? 'Mes Anterior' : 'Previous'}</button>
         <div class="cycle-info">
             <div class="cycle-number" id="cycleNumber">${monthNames[month]} ${year}</div>
             <div class="cycle-dates" id="cycleDates">${natal.cityName} · ${natal.date}</div>
         </div>
-        <button class="nav-btn" onclick="personalNextMonth()">${L ? 'Siguiente' : 'Next'} ▶</button>
     `;
 
     // Calendar container
@@ -12197,12 +12206,11 @@ function renderGregorianCalendar() {
     document.getElementById('calendarTitle').innerHTML = (currentLang === 'es' ? 'Gregoriano' : 'Gregorian');
 
     const nav = document.querySelector('.navigation');
+    nav.style.display = '';
     nav.innerHTML = `
-        <button class="nav-btn" onclick="previousGregorianMonth()">← ${prevText}</button>
         <div class="cycle-info" style="text-align: center;">
             <div class="cycle-number" style="font-size: 1.2em; font-weight: bold;">${monthNames[currentGregorianMonth]} ${currentGregorianYear}</div>
         </div>
-        <button class="nav-btn" onclick="nextGregorianMonth()">${nextText} →</button>
     `;
 
     gregorianCal.innerHTML = generateGregorianMonth();
@@ -12351,13 +12359,12 @@ function renderSolarCalendar() {
 
     // Update navigation
     const nav = document.querySelector('.navigation');
+    nav.style.display = '';
     nav.innerHTML = `
-        <button class="nav-btn" onclick="previousSign()">${t('previousSign')}</button>
         <div class="cycle-info">
             <div class="cycle-number" style="color: ${sign.color}; font-size: 1.5em;">${ts(sign.name)}</div>
             <div class="cycle-dates">${formatDate(sign.start)} - ${formatDate(sign.end)}</div>
         </div>
-        <button class="nav-btn" onclick="nextSign()">${t('nextSign')}</button>
     `;
 
     // Generate solar calendar
@@ -14843,6 +14850,56 @@ window.stopVoiceInput = stopVoiceInput;
 window.openAstroModal = openAstroModal;
 
 // ==============================================
+// SWIPE NAVIGATION — horizontal swipe to change cycle/sign
+// ==============================================
+(function initSwipeNavigation() {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    const MIN_SWIPE_DIST = 60;
+    const MAX_SWIPE_TIME = 400;
+    const MAX_VERTICAL_RATIO = 1.5; // horizontal must be > vertical * ratio
+
+    document.addEventListener('touchstart', function(e) {
+        if (e.touches.length !== 1) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+        if (!touchStartX) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+        const dt = Date.now() - touchStartTime;
+        touchStartX = 0;
+
+        // Must be a quick, mostly-horizontal swipe
+        if (dt > MAX_SWIPE_TIME) return;
+        if (Math.abs(dx) < MIN_SWIPE_DIST) return;
+        if (Math.abs(dy) * MAX_VERTICAL_RATIO > Math.abs(dx)) return;
+
+        // Don't swipe inside modals or AI chat
+        const target = e.target;
+        if (target.closest && (target.closest('.modal-content') || target.closest('#aiChatPanel') || target.closest('.preferences-modal') || target.closest('input') || target.closest('textarea'))) return;
+
+        if (dx < 0) {
+            // Swipe LEFT → next
+            if (calendarMode === 'lunar') nextCycle();
+            else if (calendarMode === 'solar') nextSign();
+            else if (calendarMode === 'personal') personalNextMonth();
+            else if (calendarMode === 'gregorian') nextGregorianMonth();
+        } else {
+            // Swipe RIGHT → previous
+            if (calendarMode === 'lunar') previousCycle();
+            else if (calendarMode === 'solar') previousSign();
+            else if (calendarMode === 'personal') personalPrevMonth();
+            else if (calendarMode === 'gregorian') previousGregorianMonth();
+        }
+    }, { passive: true });
+})();
+
+// ==============================================
 // LUNAS 2026 - MODAL COMPLETO
 // ==============================================
 
@@ -16100,7 +16157,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v181';
+const APP_VERSION = 'v182';
 var _pendingSW = null;
 
 function showUpdateBanner() {
