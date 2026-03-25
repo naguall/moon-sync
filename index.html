@@ -13672,13 +13672,16 @@ function generateGregorianMonth() {
         planetaryEvents.signChanges.slice(0,2).forEach(sc => {
             const planetInit = getPlanetInitial(sc.planet);
             const signInit = sc.toSign.substring(0, 3);
-            html += `<div onclick="event.stopPropagation(); showSignChangeModal('${sc.planet}', '${sc.symbol}', '${sc.toSign}', '${sc.meaning}', '${date.getTime()}')" style="color:#7ec8ff;font-size:0.65em;cursor:pointer;font-weight:bold;text-align:right;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
+            const scClickTxt = (tp(sc.planet) + ' → ' + ts(sc.toSign) + (sc.time ? ' ' + sc.time : '')).replace(/'/g, "\\'");
+            html += `<div onclick="event.stopPropagation(); showBannerAspectDetail('${scClickTxt}')" style="color:#7ec8ff;font-size:0.65em;cursor:pointer;font-weight:bold;text-align:right;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
         });
 
         // Retrogrades (limit 2)
         planetaryEvents.retrogrades.slice(0,2).forEach(r => {
             const planetInit = getPlanetInitial(r.planet);
-            html += `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${date.toDateString()}')" style="color:#7ec8ff;font-size:0.65em;cursor:pointer;font-weight:bold;text-align:right;" title="${r.planet} ${r.isStart ? t('startsRetrograde') : t('turnsDirect')}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
+            const retLabel = r.isStart ? (currentLang==='es'?'inicia Retrógrado':'starts Retrograde') : (currentLang==='es'?'se pone Directo':'turns Direct');
+            const retClickTxt = (tp(r.planet) + ' ' + retLabel + (r.sign ? ' en ' + r.sign : '')).replace(/'/g, "\\'");
+            html += `<div onclick="event.stopPropagation(); showBannerAspectDetail('${retClickTxt}')" style="color:#7ec8ff;font-size:0.65em;cursor:pointer;font-weight:bold;text-align:right;" title="${r.planet} ${r.isStart ? t('startsRetrograde') : t('turnsDirect')}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
         });
         
         html += '</div></div></div>';
@@ -14231,7 +14234,7 @@ function generateSolarWeeks(sign) {
                         <div style="display: flex; flex-direction: column; gap: 2px; font-size: 1.2em; flex-shrink: 0; margin-left: auto; padding-top: ${Math.min(dayEvents.length, 3) * 13 + (dayEvents.length > 3 ? 10 : 0)}px;">
                             ${astronomicalEvent ? `<div style="color: #e8c84a; font-weight: bold; line-height: 1; font-size: 0.9em; text-align: right; cursor: default;" title="${astronomicalEvent[currentLang]}">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>` : ''}
                             ${moonEvent ? `<div onclick="event.stopPropagation(); navigateToLunar2026Moon(${dayDate.getTime()}, '${moonEvent.type}')" style="color:${moonEvent.type==='full'?'#FFD700':'#ccc'};font-weight:bold;font-size:0.65em;text-align:right;line-height:1.2;overflow:visible;cursor:pointer;"><span style="font-size:0.9em;">${moonEvent.type==='full'?'🌕':moonEvent.icon}</span></div>` : ''}
-                            ${eclipse ? `<div onclick="event.stopPropagation(); showEclipseModal('${eclipse.type}', '${eclipse.name}', '${dayDate.getTime()}')" style="cursor: pointer; line-height: 1.2; font-size:0.7em; font-weight:bold; color:#FFD700;" title="${eclipse.name}">${eclipse.type === 'solar' ? '☀️' : '🌒'} ${currentLang==='es'?'Eclipse':'Eclipse'}</div>` : ''}
+                            ${eclipse ? (() => { const eclLbl = eclipse.type==='solar'?(currentLang==='es'?'Eclipse Solar':'Solar Eclipse'):(currentLang==='es'?'Eclipse Lunar':'Lunar Eclipse'); const eclTxt = (eclLbl + ' ' + eclipse.name).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${eclTxt}')" style="cursor: pointer; line-height: 1.2; font-size:0.7em; font-weight:bold; color:#FFD700;" title="${eclipse.name}">${eclipse.type === 'solar' ? '☀️' : '🌒'} ${currentLang==='es'?'Eclipse':'Eclipse'}</div>`; })() : ''}
                             ${interAspects.map(asp => {
                                 const p1 = getPlanetInitial(asp.planet1);
                                 const p2 = getPlanetInitial(asp.planet2);
@@ -14240,15 +14243,18 @@ function generateSolarWeeks(sign) {
                             }).join('')}
                             ${retrogrades.map(r => {
                                 const planetInit = getPlanetInitial(r.planet);
-                                return `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${dayDate.toDateString()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.7em;text-align:right;" title="${r.planet} ${r.isStart ? t('startsRetrograde') : t('turnsDirect')}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
+                                const retLabel = r.isStart ? (currentLang==='es'?'inicia Retrógrado':'starts Retrograde') : (currentLang==='es'?'se pone Directo':'turns Direct');
+                                const retTxt = (tp(r.planet) + ' ' + retLabel + (r.sign ? ' en ' + r.sign : '')).replace(/'/g, "\\'");
+                                return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${retTxt}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.7em;text-align:right;" title="${r.planet} ${r.isStart ? t('startsRetrograde') : t('turnsDirect')}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
                             }).join('')}
                             ${signChanges.map(sc => {
                                 const planetInit = getPlanetInitial(sc.planet);
                                 const signInit = sc.toSign.substring(0, 3);
-                                return `<div onclick="event.stopPropagation(); showSignChangeModal('${sc.planet}', '${sc.symbol}', '${sc.toSign}', '${sc.meaning}', '${dayDate.getTime()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.7em;text-align:right;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
+                                const scTxt = (tp(sc.planet) + ' → ' + ts(sc.toSign) + (sc.time ? ' ' + sc.time : '')).replace(/'/g, "\\'");
+                                return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${scTxt}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.7em;text-align:right;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
                             }).join('')}
-                            ${stellium ? `<div onclick="event.stopPropagation(); showStelliumModal('${stellium.sign}', '${stellium.planets.join('|')}', ${stellium.count}, '${dayDate.getTime()}')" style="color: ${stellium.count === 3 ? '#FFD700' : stellium.count === 4 ? '#f39c12' : '#e74c3c'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.1em;" title="Stellium en ${stellium.sign}">★</div>` : ''}
-                            ${majorAspect ? `<div onclick="event.stopPropagation(); showMajorAspectModal('${majorAspect.type}', '${majorAspect.planets.join('|')}', '${majorAspect.meaning}', '${majorAspect.impact}', '${dayDate.getTime()}')" style="color: ${majorAspect.type === 'T-Square' ? '#ff6b6b' : majorAspect.type === 'Kite' ? '#9b59b6' : '#4ecdc4'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.5em;" title="${majorAspect.type}">${majorAspect.type === 'T-Square' ? '⊥' : majorAspect.type === 'Kite' ? '🪁' : '▭'}</div>` : ''}
+                            ${stellium ? (() => { const stTxt = ('Stellium en ' + stellium.sign + ' — ' + stellium.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${stTxt}')" style="color: ${stellium.count === 3 ? '#FFD700' : stellium.count === 4 ? '#f39c12' : '#e74c3c'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.1em;" title="Stellium en ${stellium.sign}">★</div>`; })() : ''}
+                            ${majorAspect ? (() => { const maTxt = (majorAspect.type + ' — ' + majorAspect.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${maTxt}')" style="color: ${majorAspect.type === 'T-Square' ? '#ff6b6b' : majorAspect.type === 'Kite' ? '#9b59b6' : '#4ecdc4'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.5em;" title="${majorAspect.type}">${majorAspect.type === 'T-Square' ? '⊥' : majorAspect.type === 'Kite' ? '🪁' : '▭'}</div>`; })() : ''}
                         </div>
                         ` : ''}
                     </div>
@@ -15746,7 +15752,7 @@ function renderCalendar() {
                         ${(eclipse || retrogrades.length > 0 || signChanges.length > 0 || interAspects.length > 0 || stellium || majorAspect || astronomicalEvent || moonEvent) ? `
                         <div style="display: flex; flex-direction: column; gap: 2px; font-size: 1.2em; flex-shrink: 0; margin-left: auto; padding-top: ${Math.min(dayEvents.length, 3) * 13 + (dayEvents.length > 3 ? 10 : 0)}px;">
                             ${astronomicalEvent ? `<div style="color: #e8c84a; font-weight: bold; line-height: 1; font-size: 0.9em; text-align: right; cursor: default;" title="${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}">${astronomicalEvent[currentLang === 'es' ? 'es' : 'en']}</div>` : ''}
-                            ${eclipse ? `<div onclick="event.stopPropagation(); showEclipseModal('${eclipse.type}', '${eclipse.name}', '${day.date.getTime()}')" style="cursor: pointer; line-height: 1.2; font-size:0.7em; font-weight:bold; color:#FFD700; text-align:right;" title="${eclipse.name}">${eclipse.type === 'solar' ? '☀️' : '🌒'} Eclipse</div>` : ''}
+                            ${eclipse ? (() => { const eclLbl = eclipse.type==='solar'?(currentLang==='es'?'Eclipse Solar':'Solar Eclipse'):(currentLang==='es'?'Eclipse Lunar':'Lunar Eclipse'); const eclTxt = (eclLbl + ' ' + eclipse.name).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${eclTxt}')" style="cursor: pointer; line-height: 1.2; font-size:0.7em; font-weight:bold; color:#FFD700; text-align:right;" title="${eclipse.name}">${eclipse.type === 'solar' ? '☀️' : '🌒'} Eclipse</div>`; })() : ''}
                             ${interAspects.map(asp => {
                                 const p1 = getPlanetInitial(asp.planet1);
                                 const p2 = getPlanetInitial(asp.planet2);
@@ -15755,15 +15761,18 @@ function renderCalendar() {
                             }).join('')}
                             ${retrogrades.map(r => {
                                 const planetInit = getPlanetInitial(r.planet);
-                                return `<div onclick="event.stopPropagation(); showRetrogradeModal('${r.planet}', '${r.symbol}', ${r.isStart}, '${day.date.toDateString()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.85em;white-space:nowrap;text-align:right;" title="${r.planet} ${r.isStart ? t('startsRetrograde') : t('turnsDirect')}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
+                                const retLabel = r.isStart ? (currentLang==='es'?'inicia Retrógrado':'starts Retrograde') : (currentLang==='es'?'se pone Directo':'turns Direct');
+                                const retTxt = (tp(r.planet) + ' ' + retLabel + (r.sign ? ' en ' + r.sign : '')).replace(/'/g, "\\'");
+                                return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${retTxt}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.85em;white-space:nowrap;text-align:right;" title="${r.planet} ${r.isStart ? t('startsRetrograde') : t('turnsDirect')}">${planetInit}${r.isStart ? 'R' : 'D'}</div>`;
                             }).join('')}
                             ${signChanges.map(sc => {
                                 const planetInit = getPlanetInitial(sc.planet);
                                 const signInit = sc.toSign.substring(0, 3);
-                                return `<div onclick="event.stopPropagation(); showSignChangeModal('${sc.planet}', '${sc.symbol}', '${sc.toSign}', '${sc.meaning}', '${day.date.getTime()}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.85em;white-space:nowrap;text-align:right;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
+                                const scTxt = (tp(sc.planet) + ' → ' + ts(sc.toSign) + (sc.time ? ' ' + sc.time : '')).replace(/'/g, "\\'");
+                                return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${scTxt}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.85em;white-space:nowrap;text-align:right;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
                             }).join('')}
-                            ${stellium ? `<div onclick="event.stopPropagation(); showStelliumModal('${stellium.sign}', '${stellium.planets.join('|')}', ${stellium.count}, '${day.date.getTime()}')" style="color: ${stellium.count === 3 ? '#FFD700' : stellium.count === 4 ? '#f39c12' : '#e74c3c'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.1em;" title="Stellium en ${stellium.sign}">★</div>` : ''}
-                            ${majorAspect ? `<div onclick="event.stopPropagation(); showMajorAspectModal('${majorAspect.type}', '${majorAspect.planets.join('|')}', '${majorAspect.meaning}', '${majorAspect.impact}', '${day.date.getTime()}')" style="color: ${majorAspect.type === 'T-Square' ? '#ff6b6b' : majorAspect.type === 'Kite' ? '#9b59b6' : '#4ecdc4'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.5em;" title="${majorAspect.type}">${majorAspect.type === 'T-Square' ? '⊥' : majorAspect.type === 'Kite' ? '🪁' : '▭'}</div>` : ''}
+                            ${stellium ? (() => { const stTxt = ('Stellium en ' + stellium.sign + ' — ' + stellium.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${stTxt}')" style="color: ${stellium.count === 3 ? '#FFD700' : stellium.count === 4 ? '#f39c12' : '#e74c3c'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.1em;" title="Stellium en ${stellium.sign}">★</div>`; })() : ''}
+                            ${majorAspect ? (() => { const maTxt = (majorAspect.type + ' — ' + majorAspect.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${maTxt}')" style="color: ${majorAspect.type === 'T-Square' ? '#ff6b6b' : majorAspect.type === 'Kite' ? '#9b59b6' : '#4ecdc4'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.5em;" title="${majorAspect.type}">${majorAspect.type === 'T-Square' ? '⊥' : majorAspect.type === 'Kite' ? '🪁' : '▭'}</div>`; })() : ''}
                         </div>
                         ` : ''}
                     </div>
@@ -17968,7 +17977,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v267';
+const APP_VERSION = 'v268';
 var _pendingSW = null;
 
 function showUpdateBanner() {
