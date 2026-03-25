@@ -18291,7 +18291,7 @@ openLocationSelector = function() {
         setTimeout(initLocMap, 100);
     });
     // Load Google Places if key exists
-    var gKey = localStorage.getItem('googlePlacesKey');
+    var gKey = localStorage.getItem('googlePlacesKey') || 'AIzaSyAedPie2Vi9ZqiTOsZMZHyQPKI-nyUMoSE';
     if (gKey) {
         document.getElementById('googleApiKeyInput').value = gKey;
         loadGooglePlaces(gKey);
@@ -18399,7 +18399,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v287';
+const APP_VERSION = 'v288';
 var _pendingSW = null;
 
 function showUpdateBanner() {
