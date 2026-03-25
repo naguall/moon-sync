@@ -2106,28 +2106,23 @@ function openTideCycleModal() {
 
     titleEl.textContent = L ? 'Ciclo Lunar de Mareas' : 'Lunar Tide Cycle';
 
-    // Find the most recent New Moon (weekIndex 0) scanning backwards
-    var startDate = new Date(today);
-    var prevPD = getPhaseData(startDate);
-    // Go back until we find when it entered weekIndex 0, then find the first day of that phase
-    for (var b = 1; b <= 30; b++) {
-        var bDate = new Date(today);
-        bDate.setDate(bDate.getDate() - b);
-        var bPD = getPhaseData(bDate);
-        if (bPD.weekIndex !== 0) {
-            // Previous day was NOT new moon, so startDate = today - (b-1)
-            startDate = new Date(today);
-            startDate.setDate(startDate.getDate() - (b - 1));
+    // Find first new moon of 2026 and first new moon of 2027 from newMoonsLocal
+    var startDate = null, endDate = null;
+    for (var nm = 0; nm < newMoonsLocal.length; nm++) {
+        var nmDate = new Date(newMoonsLocal[nm]);
+        nmDate.setHours(0,0,0,0);
+        if (!startDate && nmDate.getFullYear() === 2026) {
+            startDate = nmDate;
+        }
+        if (startDate && nmDate.getFullYear() === 2027) {
+            endDate = nmDate;
             break;
         }
-        if (b === 30) {
-            startDate = new Date(today);
-            startDate.setDate(startDate.getDate() - 29);
-        }
     }
+    if (!startDate) { startDate = new Date(2026, 0, 1); startDate.setHours(0,0,0,0); }
+    if (!endDate) { endDate = new Date(2027, 0, 15); endDate.setHours(0,0,0,0); }
 
-    // Calculate how many days from startDate to today (for scroll target)
-    var todayOffset = Math.round((today - startDate) / 86400000);
+    var totalDays = Math.round((endDate - startDate) / 86400000) + 1;
 
     // Current info header
     var html = '';
@@ -2141,32 +2136,34 @@ function openTideCycleModal() {
     // Forecast title with location on the right
     var locationName = ASTRO_USER_NAME ? ASTRO_USER_NAME.split(',')[0] : '';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
-    html += '<h3 style="color:#c9a840;font-size:0.95em;margin:0;font-family:Cinzel,serif;">' + (L ? 'Pronóstico Ciclo Lunar' : 'Lunar Cycle Forecast') + '</h3>';
+    html += '<h3 style="color:#c9a840;font-size:0.95em;margin:0;font-family:Cinzel,serif;">' + (L ? 'Mareas 2026' : 'Tides 2026') + '</h3>';
     if (locationName) {
-        html += '<span onclick="closeTideCycleModal();setTimeout(function(){openLocationSelector();window._reopenTideAfterLoc=true;},250);" style="font-size:0.75em;color:rgba(255,255,255,0.4);cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">📍 ' + locationName + ' ▾</span>';
+        html += '<span onclick="closeTideCycleModal();setTimeout(function(){openLocationSelector();window._reopenTideAfterLoc=true;},250);" style="font-size:0.75em;color:rgba(255,255,255,0.4);cursor:pointer;">' + locationName + ' ▾</span>';
     }
     html += '</div>';
 
-    // Generate full lunar cycle from New Moon (~30 days)
+    // Generate full year: first new moon 2026 to first new moon 2027
     var prevWeekIndex = -1;
     var phaseLabels = L ? {0:'Luna Nueva', 1:'Cuarto Creciente', 2:'Luna Llena', 3:'Cuarto Menguante'} : {0:'New Moon', 1:'First Quarter', 2:'Full Moon', 3:'Last Quarter'};
     var phaseColors = {0:'#a0a0a0', 1:'#c9a840', 2:'#fffbe6', 3:'#7ec8ff'};
-    // Moon phase SVG icons by weekIndex (elongation degrees)
     var phaseElongations = {0: 0, 1: 90, 2: 180, 3: 270};
 
-    for (var d = 0; d < 30; d++) {
+    for (var d = 0; d < totalDays; d++) {
         var fDate = new Date(startDate);
         fDate.setDate(fDate.getDate() + d);
+        fDate.setHours(0,0,0,0);
         var fExtremes = getTideExtremes(getTideCurveForLocation(fDate, ASTRO_USER_LAT, ASTRO_USER_LON));
         var fAstro = getAstroData(fDate);
         var fPhaseData = getPhaseData(fDate);
-        var fElongation = calculateLunarPhase(fDate);
-        var isToday = (d === todayOffset);
+        var isToday = (fDate.getTime() === today.getTime());
         var dayLabel = isToday ? (L ? 'HOY' : 'TODAY') : fDate.toLocaleDateString(L ? 'es' : 'en', {weekday:'short', day:'numeric', month:'short'});
         var strengthColor = fAstro.tidePct > 70 ? '#FF6B6B' : fAstro.tidePct > 45 ? '#f0e68c' : '#4FC3F7';
 
-        // Insert phase marker when phase changes
-        if (prevWeekIndex !== -1 && fPhaseData.weekIndex !== prevWeekIndex) {
+        // Is this the first day of a new phase? (phase perfection day)
+        var isPhaseDay = (prevWeekIndex !== -1 && fPhaseData.weekIndex !== prevWeekIndex);
+
+        // Insert phase marker banner when phase changes
+        if (isPhaseDay) {
             var pColor = phaseColors[fPhaseData.weekIndex] || '#c9a840';
             var pSvg = getMoonSVG(phaseElongations[fPhaseData.weekIndex], 18);
             html += '<div style="text-align:center;padding:6px 0;margin:4px 0;">';
@@ -2176,15 +2173,19 @@ function openTideCycleModal() {
         }
         prevWeekIndex = fPhaseData.weekIndex;
 
-        // Day row — with moon SVG icon, no tide curve graphic
+        // Day row
         var todayBorder = isToday ? 'border:1px solid #c9a840;' : '';
         var todayId = isToday ? ' id="tideCycleToday"' : '';
         html += '<div' + todayId + ' style="background:rgba(0,0,0,0.25);border-radius:8px;padding:8px 10px;margin-bottom:4px;border-left:3px solid ' + strengthColor + ';' + todayBorder + '">';
 
-        // Top row: moon icon + day label | strength %
-        var moonSvg = getMoonSVG(fElongation, 16);
+        // Top row: phase icon only on perfection day, otherwise just day label | strength %
         html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
-        html += '<span style="display:inline-flex;align-items:center;gap:6px;font-weight:bold;color:' + (isToday?'#c9a840':'rgba(255,255,255,0.85)') + ';font-size:0.88em;">' + moonSvg + ' ' + dayLabel + '</span>';
+        if (isPhaseDay) {
+            var daySvg = getMoonSVG(phaseElongations[fPhaseData.weekIndex], 16);
+            html += '<span style="display:inline-flex;align-items:center;gap:6px;font-weight:bold;color:' + (isToday?'#c9a840':'rgba(255,255,255,0.85)') + ';font-size:0.88em;">' + daySvg + ' ' + dayLabel + '</span>';
+        } else {
+            html += '<span style="font-weight:bold;color:' + (isToday?'#c9a840':'rgba(255,255,255,0.85)') + ';font-size:0.88em;">' + dayLabel + '</span>';
+        }
         html += '<span style="color:' + strengthColor + ';font-weight:bold;font-size:0.78em;">' + fAstro.tidePct + '%</span>';
         html += '</div>';
 
@@ -2208,9 +2209,9 @@ function openTideCycleModal() {
     setTimeout(function() {
         var todayEl = document.getElementById('tideCycleToday');
         if (todayEl) {
-            todayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            todayEl.scrollIntoView({ behavior: 'instant', block: 'center' });
         }
-    }, 100);
+    }, 50);
 }
 
 function closeTideCycleModal() {
@@ -15464,7 +15465,7 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
                 <span style="color:#7ec8ff;font-size:0.78em;font-weight:bold;">🌙↑ ${headerRise} &nbsp; 🌙↓ ${headerSet}</span>
-                <span onclick="openLocationSelector()" style="color:#8899cc;font-size:0.68em;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">· ${ASTRO_USER_NAME.split(',')[0]} ▾</span>
+                <span onclick="openLocationSelector()" style="color:#8899cc;font-size:0.68em;cursor:pointer;">· ${ASTRO_USER_NAME.split(',')[0]} ▾</span>
             </div>
         </div>
 
@@ -18121,7 +18122,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v277';
+const APP_VERSION = 'v278';
 var _pendingSW = null;
 
 function showUpdateBanner() {
