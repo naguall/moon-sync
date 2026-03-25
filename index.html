@@ -13986,7 +13986,7 @@ function renderSolarInfoPanel() {
         + '<span style="font-family:\'Cinzel\',serif;color:#ff9500;font-weight:600;letter-spacing:1px;font-size:0.85em;">'
         + (currentLang==='es' ? 'Info Solar' : 'Solar Info')
         + '</span>'
-        + '<span style="color:#ff9500;font-size:0.78em;font-weight:bold;">· ☀️↑ ' + sunRiseStr + ' &nbsp; ☀️↓ ' + sunSetStr + '</span>'
+        + '<span style="margin-left:auto;color:#ff9500;font-size:0.78em;font-weight:bold;">☀️↑ ' + sunRiseStr + ' &nbsp; ☀️↓ ' + sunSetStr + '</span>'
         + '<span style="color:#a08040;font-size:0.68em;">· 📍 ' + ASTRO_USER_NAME.split(',')[0] + '</span>'
         + '</div>';
 
@@ -15275,8 +15275,8 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
             <span style="font-family:'Cinzel',serif;color:#7ec8ff;font-weight:600;letter-spacing:1px;font-size:0.85em;">
                 ${currentLang==='es' ? 'Info Lunar' : 'Lunar Info'}
             </span>
-            <span style="color:#7ec8ff;font-size:0.78em;font-weight:bold;">· 🌙↑ ${headerRise} &nbsp; 🌙↓ ${headerSet}</span>
-            <span style="color:#8899cc;font-size:0.68em;">· ${tideStationName} · 📍 ${ASTRO_USER_NAME.split(',')[0]}</span>
+            <span style="margin-left:auto;color:#7ec8ff;font-size:0.78em;font-weight:bold;">🌙↑ ${headerRise} &nbsp; 🌙↓ ${headerSet}</span>
+            <span style="color:#8899cc;font-size:0.68em;">· 📍 ${ASTRO_USER_NAME.split(',')[0]}</span>
         </div>
 
         <!-- Posición Sublunar: Mapa 2D + Globo 3D (arriba, como en solar) -->
@@ -17667,7 +17667,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v256';
+const APP_VERSION = 'v257';
 var _pendingSW = null;
 
 function showUpdateBanner() {
