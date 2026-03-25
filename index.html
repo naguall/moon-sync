@@ -17731,15 +17731,44 @@ let _allCities = [...CITIES_DB];
 // Fix GPS-set location names that are just coordinates (e.g. "9.31°N, 83.74°W") → find nearest city
 (function fixGpsLocationName() {
     if (ASTRO_USER_NAME && /^\d+\.?\d*°[NS]/.test(ASTRO_USER_NAME)) {
-        let nearest = null, minD = Infinity;
-        for (const c of _allCities) {
-            const d = (c.lat - ASTRO_USER_LAT) ** 2 + (c.lon - ASTRO_USER_LON) ** 2;
-            if (d < minD) { minD = d; nearest = c; }
-        }
-        if (nearest && minD < 4) {
-            ASTRO_USER_NAME = nearest.n;
-            localStorage.setItem('userName', nearest.n);
-        }
+        // Try reverse geocoding first, fallback to CITIES_DB
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${ASTRO_USER_LAT}&lon=${ASTRO_USER_LON}&format=json&zoom=14&addressdetails=1`, {
+            headers: { 'Accept-Language': currentLang === 'es' ? 'es' : 'en' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            let name = '';
+            if (data && data.address) {
+                const a = data.address;
+                const place = a.village || a.town || a.city || a.hamlet || a.suburb || a.municipality || a.county || '';
+                const country = a.country || '';
+                name = place ? (place + (country ? ', ' + country : '')) : '';
+            }
+            if (!name) {
+                let nearest = null, minD = Infinity;
+                for (const c of _allCities) {
+                    const d = (c.lat - ASTRO_USER_LAT) ** 2 + (c.lon - ASTRO_USER_LON) ** 2;
+                    if (d < minD) { minD = d; nearest = c; }
+                }
+                if (nearest && minD < 4) name = nearest.n;
+            }
+            if (name) {
+                ASTRO_USER_NAME = name;
+                localStorage.setItem('userName', name);
+            }
+        })
+        .catch(() => {
+            // Offline — fallback to local DB
+            let nearest = null, minD = Infinity;
+            for (const c of _allCities) {
+                const d = (c.lat - ASTRO_USER_LAT) ** 2 + (c.lon - ASTRO_USER_LON) ** 2;
+                if (d < minD) { minD = d; nearest = c; }
+            }
+            if (nearest && minD < 4) {
+                ASTRO_USER_NAME = nearest.n;
+                localStorage.setItem('userName', nearest.n);
+            }
+        });
     }
 })();
 
@@ -17789,18 +17818,40 @@ function requestGPS() {
         pos => {
             const lat = Math.round(pos.coords.latitude * 100) / 100;
             const lon = Math.round(pos.coords.longitude * 100) / 100;
-            // Find nearest city from database
-            let nearestCity = null;
-            let nearestDist = Infinity;
-            for (const city of _allCities) {
-                const dLat = city.lat - lat;
-                const dLon = city.lon - lon;
-                const dist = dLat * dLat + dLon * dLon;
-                if (dist < nearestDist) { nearestDist = dist; nearestCity = city; }
+            // Helper: fallback to CITIES_DB
+            function fallbackCityName() {
+                let nearestCity = null, nearestDist = Infinity;
+                for (const city of _allCities) {
+                    const dLat = city.lat - lat;
+                    const dLon = city.lon - lon;
+                    const dist = dLat * dLat + dLon * dLon;
+                    if (dist < nearestDist) { nearestDist = dist; nearestCity = city; }
+                }
+                return (nearestCity && nearestDist < 4) ? nearestCity.n : `${lat.toFixed(2)}°${lat>=0?'N':'S'}, ${Math.abs(lon).toFixed(2)}°${lon>=0?'E':'W'}`;
             }
-            const name = (nearestCity && nearestDist < 4) ? nearestCity.n : `${lat.toFixed(2)}°${lat>=0?'N':'S'}, ${Math.abs(lon).toFixed(2)}°${lon>=0?'E':'W'}`;
-            setUserLocation(lat, lon, name);
-            closeLocationSelector();
+            // Try reverse geocoding via Nominatim (OpenStreetMap) — free, no API key
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&zoom=14&addressdetails=1`, {
+                headers: { 'Accept-Language': currentLang === 'es' ? 'es' : 'en' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                let name = '';
+                if (data && data.address) {
+                    const a = data.address;
+                    // Try city/town/village/hamlet in order of specificity
+                    const place = a.village || a.town || a.city || a.hamlet || a.suburb || a.municipality || a.county || '';
+                    const country = a.country || '';
+                    name = place ? (place + (country ? ', ' + country : '')) : '';
+                }
+                if (!name) name = fallbackCityName();
+                setUserLocation(lat, lon, name);
+                closeLocationSelector();
+            })
+            .catch(() => {
+                // Offline or API error — use local database
+                setUserLocation(lat, lon, fallbackCityName());
+                closeLocationSelector();
+            });
         },
         err => {
             btn.textContent = currentLang==='es'?`Error: ${err.message}`:`Error: ${err.message}`;
@@ -17909,7 +17960,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v264';
+const APP_VERSION = 'v265';
 var _pendingSW = null;
 
 function showUpdateBanner() {
