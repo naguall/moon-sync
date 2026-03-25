@@ -18334,7 +18334,7 @@ function confirmMapLocation() {
     var lon = Math.round(center.lng() * 100) / 100;
     var lang = currentLang === 'es' ? 'es' : 'en';
     document.getElementById('locMapConfirm').textContent = currentLang==='es' ? 'Buscando...' : 'Searching...';
-    // Use Google Geocoder for reverse geocoding
+    // Use Google Geocoder for reverse geocoding (with fallback if Geocoding API not enabled)
     var geocoder = new google.maps.Geocoder();
     geocoder.geocode({ location: { lat: center.lat(), lng: center.lng() } }, function(results, status) {
         var name = '';
@@ -18352,6 +18352,11 @@ function confirmMapLocation() {
             if (locality) name = locality + (country ? ', ' + country : '');
         }
         if (!name) name = lat.toFixed(2) + '\u00b0' + (lat>=0?'N':'S') + ', ' + Math.abs(lon).toFixed(2) + '\u00b0' + (lon>=0?'E':'W');
+        setUserLocation(lat, lon, name);
+        closeLocationSelector();
+    }).catch(function() {
+        // Geocoding API not enabled fallback - use coordinates as name
+        var name = lat.toFixed(2) + '\u00b0' + (lat>=0?'N':'S') + ', ' + Math.abs(lon).toFixed(2) + '\u00b0' + (lon>=0?'E':'W');
         setUserLocation(lat, lon, name);
         closeLocationSelector();
     });
@@ -18407,10 +18412,11 @@ function searchGooglePlaces(q) {
 window.selectGooglePlace = function(index) {
     var prediction = window._gpPredictions && window._gpPredictions[index];
     if (!prediction) return;
-    var geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ placeId: prediction.place_id }, function(results, status) {
-        if (status === 'OK' && results[0]) {
-            var loc = results[0].geometry.location;
+    // Use PlacesService.getDetails instead of Geocoder (Geocoding API may not be enabled)
+    var service = new google.maps.places.PlacesService(document.createElement('div'));
+    service.getDetails({ placeId: prediction.place_id, fields: ['geometry', 'name'] }, function(place, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK && place && place.geometry) {
+            var loc = place.geometry.location;
             var lat = Math.round(loc.lat() * 100) / 100;
             var lon = Math.round(loc.lng() * 100) / 100;
             var name = prediction.structured_formatting ?
@@ -18422,6 +18428,15 @@ window.selectGooglePlace = function(index) {
             setUserLocation(lat, lon, name);
             document.getElementById('googlePlacesResults').style.display = 'none';
             closeLocationSelector();
+        } else {
+            console.warn('Places getDetails failed:', status);
+            // Fallback: use prediction description as name, try to extract coords from structured data
+            var name = prediction.description || 'Unknown';
+            var parts = name.split(',');
+            if (parts.length > 3) name = parts[0].trim() + ', ' + parts[parts.length - 1].trim();
+            // Close the dropdown even on failure so user isn't stuck
+            document.getElementById('googlePlacesResults').style.display = 'none';
+            alert(currentLang === 'es' ? 'No se pudo obtener la ubicación. Intenta con el mapa.' : 'Could not get location. Try using the map.');
         }
     });
 };
@@ -18542,7 +18557,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v291';
+const APP_VERSION = 'v292';
 var _pendingSW = null;
 
 function showUpdateBanner() {
