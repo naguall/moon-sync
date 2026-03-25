@@ -4984,11 +4984,21 @@ function openAspectsModal(date, lunarDay, dayData) {
     }
     
     if (htmlContent) {
+        // Add "Interpret full day" button at bottom
+        var allDayTexts = [];
+        if (eclipse) allDayTexts.push((eclipse.type === 'solar' ? 'Eclipse Solar' : 'Eclipse Lunar') + (eclipse.sign ? ' en ' + eclipse.sign : ''));
+        signChanges.forEach(function(ch) { allDayTexts.push(tp(ch.planet) + ' → ' + ts(ch.toSign)); });
+        retrogrades.forEach(function(ret) { allDayTexts.push(tp(ret.planet) + (ret.isStart ? ' Retrógrado INICIA' : ' Directo') + (ret.sign ? ' en ' + ret.sign : '')); });
+        interAspects.forEach(function(asp) { allDayTexts.push(tp(asp.planet1) + ' ' + asp.symbol + ' ' + (asp.aspect||'') + ' ' + tp(asp.planet2) + (asp.signs ? ' ' + asp.signs : '')); });
+        if (dayData.aspects) dayData.aspects.forEach(function(a) { allDayTexts.push('Luna ' + a.symbol + ' ' + (a.planetName||a.planet)); });
+        var safeDayTexts = allDayTexts.join('\\n').replace(/'/g, "\\'");
+        var dateLabel = date.toLocaleDateString(currentLang==='es'?'es':'en',{weekday:'long',day:'numeric',month:'long'});
+        htmlContent += `<div onclick="closeAspectsModal(); showDayInterpretation('${safeDayTexts}', '${dateLabel.replace(/'/g, "\\'")}')" style="margin-top:14px;padding:12px;background:linear-gradient(135deg,rgba(201,168,64,0.15),rgba(201,168,64,0.05));border:1px solid rgba(201,168,64,0.35);border-radius:10px;text-align:center;cursor:pointer;color:#c9a840;font-weight:bold;font-size:0.95em;">✦ ${currentLang==='es'?'Interpretar día entero':'Interpret full day'}</div>`;
         aspectsDetails.innerHTML = htmlContent;
     } else {
         aspectsDetails.innerHTML = `<div class="no-aspects">${t('noAspects')}</div>`;
     }
-    
+
     modal.classList.add('show');
 }
 
@@ -9756,12 +9766,13 @@ function renderAspects2026Panel() {
                 const safeWith = translatedWith.replace(/'/g, "\\'");
                 const safeDate = dateStr.replace(/'/g, "\\'");
                 const safeMeaning = meaning.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeLastTime = (asp.lastTime || '').replace(/'/g, "\\'");
 
                 const aspBadge = asp.isGenerational ? '<span onclick="event.stopPropagation();showCategoryPanel(\'generational\')" style="background:rgba(155,89,182,0.25);color:#d4a5f5;padding:1px 5px;border-radius:3px;font-size:0.7em;margin-left:5px;cursor:pointer;border:1px solid rgba(155,89,182,0.4);">' + (es?'GENERACIONAL':'GENERATIONAL') + '</span>' :
                     asp.isMajor ? '<span onclick="event.stopPropagation();showCategoryPanel(\'major\')" style="background:rgba(231,76,60,0.2);color:#ff8a80;padding:1px 5px;border-radius:3px;font-size:0.7em;margin-left:5px;cursor:pointer;border:1px solid rgba(231,76,60,0.35);">' + (es?'MAYOR':'MAJOR') + '</span>' :
                     (asp.isImportant || asp.isCritical) ? '<span onclick="event.stopPropagation();showCategoryPanel(\'notable\')" style="background:rgba(78,205,196,0.15);color:#80cbc4;padding:1px 5px;border-radius:3px;font-size:0.7em;margin-left:5px;cursor:pointer;border:1px solid rgba(78,205,196,0.35);">' + (es?'NOTABLE':'NOTABLE') + '</span>' : '';
 
-                html += '<div onclick="showAspect2026Detail(\'' + safePlanet + '\',\'' + safeType + '\',\'' + safeSymbol + '\',\'' + safeWith + '\',\'' + safeDate + '\',\'' + safeMeaning + '\')" style="background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;border-left:3px solid ' + aspectColor + ';cursor:pointer;' + (isPast ? 'opacity:0.55;' : '') + '">'
+                html += '<div onclick="showAspect2026Detail(\'' + safePlanet + '\',\'' + safeType + '\',\'' + safeSymbol + '\',\'' + safeWith + '\',\'' + safeDate + '\',\'' + safeMeaning + '\',\'' + safeLastTime + '\')" style="background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;border-left:3px solid ' + aspectColor + ';cursor:pointer;' + (isPast ? 'opacity:0.55;' : '') + '">'
                     + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
                     + '<div style="font-size:0.9em;flex:1;">'
                     + timeStr + '<strong style="color:' + p.color + ';">' + (es ? tp(pName) : pName) + '</strong> '
@@ -9809,7 +9820,7 @@ function toggleAspect2026Details(idx) {
     }
 }
 
-function showAspect2026Detail(planetName, aspectType, aspectSymbol, withPlanet, dateStr, meaning) {
+function showAspect2026Detail(planetName, aspectType, aspectSymbol, withPlanet, dateStr, meaning, lastTime) {
     const modal = document.getElementById('natalDetailModal');
     const titleEl = document.getElementById('natalDetailTitle');
     const bodyEl = document.getElementById('natalDetailBody');
@@ -9822,6 +9833,7 @@ function showAspect2026Detail(planetName, aspectType, aspectSymbol, withPlanet, 
     html += '<div style="font-size:0.9em;margin-bottom:8px;"><strong>' + (L ? 'Aspecto:' : 'Aspect:') + '</strong> <span style="color:#e91e63;font-weight:700;">' + (aspectSymbol || '') + ' ' + (aspectType || '') + '</span></div>';
     html += '<div style="font-size:0.9em;margin-bottom:8px;"><strong>' + (L ? 'Con:' : 'With:') + '</strong> ' + withPlanet + '</div>';
     if (dateStr) html += '<div style="font-size:0.9em;margin-bottom:8px;"><strong>' + (L ? 'Fecha:' : 'Date:') + '</strong> ' + dateStr + '</div>';
+    if (lastTime) html += '<div style="font-size:0.85em;margin-bottom:8px;color:rgba(126,200,255,0.7);">🔄 ' + (L ? 'Última vez' : 'Last time') + ': ' + lastTime + '</div>';
     if (meaning) html += '<div style="font-size:0.85em;color:rgba(255,255,255,0.6);margin-top:8px;line-height:1.5;">' + meaning + '</div>';
     html += '</div>';
 
@@ -9958,6 +9970,35 @@ function showAllAspectsInterpretation() {
     setTimeout(function() { fetchAIInterpretation(prompt, 'aiInterpDiv', readingTitle); }, 100);
 }
 window.showAllAspectsInterpretation = showAllAspectsInterpretation;
+
+function showDayInterpretation(aspectsText, dateLabel) {
+    var modal = document.getElementById('natalDetailModal');
+    var titleEl = document.getElementById('natalDetailTitle');
+    var bodyEl = document.getElementById('natalDetailBody');
+    var L = currentLang === 'es';
+
+    titleEl.textContent = L ? '✦ Aspectos del Día' : '✦ Day Aspects';
+
+    var aspectLines = aspectsText.split('\n').filter(function(t) { return t.trim(); });
+    var html = '<div style="margin-bottom:15px;">';
+    html += '<div style="font-size:0.85em;color:rgba(255,255,255,0.5);margin-bottom:8px;">' + dateLabel + '</div>';
+    aspectLines.forEach(function(txt) {
+        var safeTxt = txt.replace(/'/g, "\\'");
+        html += '<div onclick="showBannerAspectDetail(\'' + safeTxt + '\')" style="font-size:0.85em;padding:6px 10px;margin-bottom:4px;background:rgba(201,168,64,0.08);border:1px solid rgba(201,168,64,0.15);border-radius:6px;cursor:pointer;color:rgba(255,255,255,0.75);transition:all 0.2s;" onmouseover="this.style.borderColor=\'rgba(201,168,64,0.4)\'" onmouseout="this.style.borderColor=\'rgba(201,168,64,0.15)\'">' + txt + '</div>';
+    });
+    html += '</div>';
+    html += '<div style="border-top:2px solid #c9a840;padding-top:12px;"><h4 style="color:#c9a840;margin-bottom:8px;">✦ ' + (L ? 'Interpretación del Día' : 'Day Interpretation') + '</h4><div id="aiInterpDiv"></div></div>';
+
+    bodyEl.innerHTML = html;
+    modal.classList.add('show');
+
+    var prompt = L
+        ? 'Interpreta los siguientes aspectos astrológicos de ' + dateLabel + ' EN CONJUNTO, como un panorama energético del día, y cómo me afectan según mi carta natal:\n' + aspectsText
+        : 'Interpret the following astrological aspects of ' + dateLabel + ' AS A WHOLE, as an energetic overview of the day, and how they affect me based on my natal chart:\n' + aspectsText;
+    var readingTitle = L ? 'Aspectos — ' + dateLabel : 'Aspects — ' + dateLabel;
+    setTimeout(function() { fetchAIInterpretation(prompt, 'aiInterpDiv', readingTitle); }, 100);
+}
+window.showDayInterpretation = showDayInterpretation;
 
 function showAI2026Summary(type) {
     var modal = document.getElementById('natalDetailModal');
@@ -17575,7 +17616,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v245';
+const APP_VERSION = 'v246';
 var _pendingSW = null;
 
 function showUpdateBanner() {
