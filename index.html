@@ -10385,18 +10385,23 @@ function updateCurrentDayInfoForMode(mode) {
                 <!-- HOY Centro -->
                 <div onclick="goToToday()" style="display:flex;flex-direction:column;justify-content:flex-start;align-items:center;text-align:center;cursor:pointer;transition:all 0.2s;padding:6px 4px;border-radius:10px;border:1px solid ${bannerHoyBorder2}50;background:${bannerHoyBg2};box-shadow:0 0 20px ${bannerHoyBorder2}25;">
                     <div style="font-size: 0.50em; font-weight: 800; letter-spacing: 3px; color: ${bannerHoyText2}; text-transform: uppercase; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid ${bannerHoyBorder2}30;">— HOY —</div>
+                    ${mode === 'lunar' ? `
                     <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;">
                         <span style="font-size:${String(displayDay).length > 4 ? '1.2em' : '1.8em'};font-weight:800;color:#e8c84a;text-shadow:0 0 18px rgba(232,200,74,0.65);">${displayDay}</span>
                     </div>
-                    ${mode === 'lunar' ? `
                     <div style="margin: 3px 0; display:flex; justify-content:center; font-size: 2em;">${displayEmoji}</div>
                     <div style="font-size: 0.75em; margin: 2px 0; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.5px;">${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} ${currentLang === 'es' ? 'Día' : 'Day'} ${displayDay}</div>
                     <div style="font-size: 0.55em; color: #ffffff; opacity: 0.85;">${lunarCycleLine}</div>
                     <div style="margin-top:auto;font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; letter-spacing: 0.5px;">${currentLang === 'es' ? today.getDate() + ' ' + t('monthsLong')[today.getMonth()] : t('monthsLong')[today.getMonth()] + ' ' + today.getDate()}</div>
                     ` : `
-                    <div style="font-size: 0.47em; color: #8899cc; opacity: 0.6; line-height:1.2;">${displayInfo}</div>
-                    ${hoyBottomHTML}
-                    <div style="margin-top:auto;font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; letter-spacing: 0.5px;">${currentLang === 'es' ? today.getDate() + ' ' + t('monthsLong')[today.getMonth()] : t('monthsLong')[today.getMonth()] + ' ' + today.getDate()}</div>
+                    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+                        <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;">
+                            <span style="font-size:${String(displayDay).length > 4 ? '1.2em' : '1.8em'};font-weight:800;color:#e8c84a;text-shadow:0 0 18px rgba(232,200,74,0.65);">${displayDay}</span>
+                        </div>
+                        <div style="font-size: 0.47em; color: #8899cc; opacity: 0.6; line-height:1.2;">${displayInfo}</div>
+                        ${hoyBottomHTML}
+                    </div>
+                    <div style="font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; letter-spacing: 0.5px;">${currentLang === 'es' ? today.getDate() + ' ' + t('monthsLong')[today.getMonth()] : t('monthsLong')[today.getMonth()] + ' ' + today.getDate()}</div>
                     `}
                 </div>
                 <!-- Info según modo -->
@@ -18628,7 +18633,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v306';
+const APP_VERSION = 'v307';
 var _pendingSW = null;
 
 function showUpdateBanner() {
