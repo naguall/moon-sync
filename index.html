@@ -557,8 +557,8 @@
             }
             .modal-header { margin-bottom: 10px !important; padding-bottom: 8px !important; }
             /* Long-content modals: scroll from top */
-            #aspectsModal, #majorAspectsModal, #historicAspectsModal { justify-content: flex-start !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; padding: 0 !important; }
-            #aspectsModal .modal-content, #majorAspectsModal .modal-content, #historicAspectsModal .modal-content { max-height: none !important; overflow: visible !important; margin: 0 auto !important; margin-top: max(env(safe-area-inset-top, 8px), 8px) !important; margin-bottom: 8px !important; }
+            #aspectsModal, #majorAspectsModal, #historicAspectsModal { justify-content: center !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; padding: 10px !important; }
+            #aspectsModal .modal-content, #majorAspectsModal .modal-content, #historicAspectsModal .modal-content { max-height: 90vh !important; overflow-y: auto !important; margin: auto !important; }
             .modal-header h2 { font-size: 0.9em !important; line-height: 1.2; }
             
             /* ── Planet buttons: 2 per row ── */
@@ -17968,7 +17968,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v266';
+const APP_VERSION = 'v267';
 var _pendingSW = null;
 
 function showUpdateBanner() {
