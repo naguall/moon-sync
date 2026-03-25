@@ -842,7 +842,7 @@
                 📝 Diario Personal y Reflexiones
             </button>
             <button id="interpretDayBtn" onclick="selectDayOption('interpretacion')" style="width: 100%; padding: 15px; margin-bottom: 10px; background: linear-gradient(135deg,#667eea,#764ba2); border: none; border-radius: 8px; color: white; font-size: 1em; cursor: pointer; transition: all 0.2s; font-weight: bold;">
-                ✨ Interpretación de este día
+                ✨ Interpretar día
             </button>
             <button onclick="closeDayOptionsModal()" style="width: 100%; padding: 15px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; font-size: 1em; cursor: pointer; transition: all 0.2s;">
                 ❌ Cancelar
@@ -2159,7 +2159,7 @@ function openTideCycleModal() {
     var html = '';
     var locationName = ASTRO_USER_NAME ? ASTRO_USER_NAME.split(',')[0] : '';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
-    html += '<h3 style="color:#c9a840;font-size:0.95em;margin:0;font-family:Cinzel,serif;">' + (L ? 'Mareas 2026' : 'Tides 2026') + '</h3>';
+    html += '<h3 style="color:#c9a840;font-size:0.95em;margin:0;font-family:Cinzel,serif;">' + (L ? 'Próximas Mareas' : 'Upcoming Tides') + '</h3>';
     if (locationName) {
         html += '<span onclick="closeTideCycleModal();setTimeout(function(){openLocationSelector();window._reopenTideAfterLoc=true;},250);" style="font-size:0.75em;color:rgba(255,255,255,0.4);cursor:pointer;">📍 ' + locationName + ' ▾</span>';
     }
@@ -2200,9 +2200,16 @@ function openTideCycleModal() {
         }
     }
 
-    // Generate full year: first new moon 2026 to first new moon 2027
-    for (var d = 0; d < totalDays; d++) {
-        var fDate = new Date(startDate);
+    // Generate 15-day rolling window centered around today
+    var rollingStart = new Date(today);
+    rollingStart.setDate(rollingStart.getDate() - 3); // 3 days back
+    rollingStart.setHours(0,0,0,0);
+    var rollingEnd = new Date(today);
+    rollingEnd.setDate(rollingEnd.getDate() + 11); // 11 days forward = 15 total
+    rollingEnd.setHours(0,0,0,0);
+
+    for (var d = 0; d < 15; d++) {
+        var fDate = new Date(rollingStart);
         fDate.setDate(fDate.getDate() + d);
         fDate.setHours(0,0,0,0);
         var fDateStr = getDateStr(fDate);
@@ -2234,7 +2241,7 @@ function openTideCycleModal() {
         var todayId = isToday ? ' id="tideCycleToday"' : '';
         html += '<div' + todayId + ' style="background:rgba(0,0,0,0.25);border-radius:8px;padding:8px 10px;margin-bottom:4px;border-left:3px solid ' + strengthColor + ';' + todayBorder + '">';
 
-        // Top row: phase icon only on perfection day, otherwise just day label | strength %
+        // Top row: day label | check mark (if real data) | strength %
         html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
         if (isPhaseDay) {
             var daySvg = getMoonSVG(phaseElongations[perfPhase], 16);
@@ -2242,21 +2249,21 @@ function openTideCycleModal() {
         } else {
             html += '<span style="font-weight:bold;color:' + (isToday?'#c9a840':'rgba(255,255,255,0.85)') + ';font-size:0.88em;">' + dayLabel + '</span>';
         }
+        if (fIsReal) {
+            html += '<span style="color:#4CAF50;font-size:1.05em;font-weight:bold;">✓</span>';
+        }
         html += '<span style="color:' + strengthColor + ';font-weight:bold;font-size:0.78em;">' + fAstro.tidePct + '%</span>';
         html += '</div>';
 
-        // Tide extremes with distance
-        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;font-size:0.75em;">';
+        // Tide extremes with distance (always right-aligned)
+        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;font-size:0.75em;align-items:center;">';
         fExtremes.forEach(function(e) {
             var icon = e.type === 'alta' ? '▲' : '▼';
             var col = e.type === 'alta' ? '#4FC3F7' : '#01579B';
             var timeLabel = e.timeStr ? e.timeStr : ((e.hour < 10 ? '0' : '') + e.hour + ':00');
             html += '<span style="color:' + col + ';">' + icon + ' ' + timeLabel + ' (' + e.level.toFixed(1) + 'm)</span>';
         });
-        if (fIsReal) {
-            html += '<span style="color:rgba(78,205,196,0.5);margin-left:auto;font-size:0.85em;">✓</span>';
-        }
-        html += '<span style="color:rgba(255,255,255,0.35);margin-left:' + (fIsReal ? '4px' : 'auto') + ';font-size:0.92em;">' + fAstro.distance.toLocaleString() + ' km</span>';
+        html += '<span style="color:rgba(255,255,255,0.35);margin-left:auto;font-size:0.92em;">' + fAstro.distance.toLocaleString() + ' km</span>';
         html += '</div>';
 
         html += '</div>';
@@ -5278,7 +5285,7 @@ function handleDayClick(element) {
         // Update interpretation button
         const interpretBtn = document.getElementById('interpretDayBtn');
         if (interpretBtn) {
-            interpretBtn.innerHTML = currentLang === 'es' ? '✨ Interpretación de este día' : '✨ Interpretation of this day';
+            interpretBtn.innerHTML = currentLang === 'es' ? '✨ Interpretar día' : '✨ Interpret day';
         }
 
         // IMPORTANTE: Mostrar botón de aspectos SIEMPRE (incluso si es 0)
@@ -18359,6 +18366,11 @@ function openLocationSelector() {
 
 function closeLocationSelector() {
     document.getElementById('locationModal').classList.remove('show');
+    // If opened from tide modal and no location was selected, reopen tide modal
+    if (window._reopenTideAfterLoc) {
+        window._reopenTideAfterLoc = false;
+        setTimeout(function() { openTideCycleModal(); }, 300);
+    }
 }
 
 var _locSearchTimer = null;
@@ -18851,7 +18863,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v317';
+const APP_VERSION = 'v318';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -19287,6 +19299,26 @@ function openAIChat() {
     }
     // Don't auto-focus to prevent keyboard from pushing buttons off screen
 }
+
+// Keep AI chat quick action buttons visible when mobile keyboard opens
+(function() {
+    function scrollAIChatToBottom() {
+        var msgs = document.getElementById('aiChatMessages');
+        if (msgs && document.getElementById('aiChatModal').classList.contains('show')) {
+            setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 150);
+        }
+    }
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', scrollAIChatToBottom);
+    }
+    // Also scroll on input focus
+    var chatInput = document.getElementById('aiChatInput');
+    if (chatInput) {
+        chatInput.addEventListener('focus', function() {
+            setTimeout(scrollAIChatToBottom, 300);
+        });
+    }
+})();
 
 function closeAIChat() {
     document.getElementById('aiChatModal').classList.remove('show');
