@@ -556,9 +556,9 @@
                 -webkit-overflow-scrolling: touch;
             }
             .modal-header { margin-bottom: 10px !important; padding-bottom: 8px !important; }
-            /* Long-content modals: scroll from top */
-            #aspectsModal, #majorAspectsModal, #historicAspectsModal { justify-content: center !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; padding: 10px !important; }
-            #aspectsModal .modal-content, #majorAspectsModal .modal-content, #historicAspectsModal .modal-content { max-height: 90vh !important; overflow-y: auto !important; margin: auto !important; }
+            /* Long-content modals: centered via auto margins, scrolls internally */
+            #aspectsModal, #majorAspectsModal, #historicAspectsModal { justify-content: center !important; align-items: center !important; overflow: hidden !important; padding: 15px !important; padding-top: max(env(safe-area-inset-top, 15px), 15px) !important; padding-bottom: max(env(safe-area-inset-bottom, 15px), 15px) !important; }
+            #aspectsModal .modal-content, #majorAspectsModal .modal-content, #historicAspectsModal .modal-content { max-height: calc(100vh - 40px) !important; overflow-y: auto !important; margin: auto !important; width: 95% !important; }
             .modal-header h2 { font-size: 0.9em !important; line-height: 1.2; }
             
             /* ── Planet buttons: 2 per row ── */
@@ -17977,7 +17977,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v268';
+const APP_VERSION = 'v269';
 var _pendingSW = null;
 
 function showUpdateBanner() {
