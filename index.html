@@ -10173,7 +10173,7 @@ function updateCurrentDayInfoForMode(mode) {
                 </div>
                 <!-- HOY Centro -->
                 <div onclick="goToToday()" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;cursor:pointer;transition:all 0.2s;padding:6px 4px;border-radius:10px;border:1px solid ${bannerHoyBorder2}50;background:${bannerHoyBg2};box-shadow:0 0 20px ${bannerHoyBorder2}25;">
-                    <div style="font-size: 0.50em; font-weight: 800; letter-spacing: 3px; color: ${bannerHoyText2}; text-transform: uppercase; margin-bottom: 1px;">— HOY —</div>
+                    <div style="font-size: 0.50em; font-weight: 800; letter-spacing: 3px; color: ${bannerHoyText2}; text-transform: uppercase; margin-bottom: ${calendarMode === 'solar' ? '6px; padding-bottom: 5px; border-bottom: 1px solid ' + bannerHoyBorder2 + '30' : '1px'};">— HOY —</div>
                     <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;">
                         <span style="font-size:${String(displayDay).length > 4 ? '1.2em' : '1.8em'};font-weight:800;color:#e8c84a;text-shadow:0 0 18px rgba(232,200,74,0.65);">${displayDay}</span>
                     </div>
@@ -15551,7 +15551,7 @@ function renderCalendar() {
                 <div onclick="goToCurrentCycle()" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;cursor:pointer;transition:all 0.2s;padding:6px 4px;border-radius:10px;border:1px solid ${bannerHoyBorder}50;background:${bannerHoyBg};box-shadow:0 0 20px ${bannerHoyBorder}25;"
                      onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 28px ${bannerHoyBorder}40';"
                      onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px ${bannerHoyBorder}25';">
-                    <div style="font-size: 0.50em; font-weight: 800; letter-spacing: 3px; color: ${bannerHoyText}; text-transform: uppercase; margin-bottom: 1px;">— HOY —</div>
+                    <div style="font-size: 0.50em; font-weight: 800; letter-spacing: 3px; color: ${bannerHoyText}; text-transform: uppercase; margin-bottom: ${calendarMode === 'solar' ? '6px; padding-bottom: 5px; border-bottom: 1px solid ' + bannerHoyBorder + '30' : '1px'};">— HOY —</div>
                     <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;">
                         <span style="font-size:${String(displayDay).length > 4 ? '1.2em' : '1.8em'};font-weight:800;color:#e8c84a;text-shadow:0 0 18px rgba(232,200,74,0.65);">${displayDay}</span>
                     </div>
@@ -17658,7 +17658,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v253';
+const APP_VERSION = 'v254';
 var _pendingSW = null;
 
 function showUpdateBanner() {
