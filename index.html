@@ -11716,7 +11716,7 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
 
     // --- Natal Aspects Table ---
     let aspectsTableRows = '';
-    const signGlyphs = {'Aries':'♈','Taurus':'♉','Gemini':'♊','Cancer':'♋','Leo':'♌','Virgo':'♍','Libra':'♎','Scorpio':'♏','Sagittarius':'♐','Capricorn':'♑','Aquarius':'♒','Pisces':'♓'};
+    const signGlyphs = {'Aries':'♈','Taurus':'♉','Gemini':'♊','Cancer':'♋','Leo':'♌','Virgo':'♍','Libra':'♎','Scorpio':'♏','Sagittarius':'♐','Capricorn':'♑','Aquarius':'♒','Pisces':'♓','Tauro':'♉','Géminis':'♊','Cáncer':'♋','Escorpio':'♏','Sagitario':'♐','Capricornio':'♑','Acuario':'♒','Piscis':'♓'};
     function getSignForKey(key) {
         if (!natalChart.planets) return '';
         var p = natalChart.planets[key.toLowerCase()];
@@ -12281,8 +12281,8 @@ function drawNatalWheel(canvasId) {
                 var a = L2A(cusp);
                 var isAxis = (idx===0||idx===3||idx===6||idx===9);
                 if (isAxis) {
-                    // Axis cusps: bold, from zodiac ring through everything to center
-                    svg += line(R_signInner,a,0.01,a,'#333',1.8);
+                    // Axis cusps: bold, from zodiac ring to house ring inner (no cross through center)
+                    svg += line(R_signInner,a,R_houseInner,a,'#333',1.8);
                 } else {
                     // Regular cusps: from zodiac ring inner boundary to house ring inner circle
                     svg += line(R_signInner,a,R_houseInner,a,'#999',0.6);
@@ -13859,16 +13859,19 @@ function showPersonalDayDetail(year, month, day) {
             <!-- Major Transits to Natal -->
             <div style="margin-bottom:12px;">
                 <div style="font-size:0.75em;font-weight:700;color:#c39bd3;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">${L ? 'Tránsitos a tu Carta Natal' : 'Transits to your Natal Chart'} (${majorTransits.length})</div>
-                ${majorTransits.length > 0 ? majorTransits.map(t => `
-                    <div class="transit-aspect-row ${t.class}">
+                ${majorTransits.length > 0 ? majorTransits.map(t => {
+                    const aspDesc = (planetNames[t.transitPlanet]||t.transitPlanet) + ' ' + (aspectNames[t.type]||t.type) + ' ' + (L?'natal ':'natal ') + (planetNames[t.natalPlanet]||t.natalPlanet);
+                    return `
+                    <div class="transit-aspect-row ${t.class}" onclick="interpretTransitAspect('${t.transitPlanet}','${t.type}','${t.natalPlanet}','${dateStr.replace(/'/g,"\\'")}')" style="cursor:pointer;" title="${L?'Click para interpretar':'Click to interpret'}">
                         <span style="font-size:1.1em;">${t.transitSymbol}</span>
                         <span style="color:${t.color};font-weight:700;">${t.symbol}</span>
                         <span style="font-size:1.1em;">${t.natalSymbol}</span>
                         <span style="flex:1;color:rgba(255,255,255,0.5);margin-left:6px;font-size:0.9em;">
-                            ${planetNames[t.transitPlanet] || t.transitPlanet} ${aspectNames[t.type] || t.type} ${L?'natal':'natal'} ${planetNames[t.natalPlanet] || t.natalPlanet}
+                            ${aspDesc}
                         </span>
-                    </div>
-                `).join('') : `<div style="font-size:0.8em;color:rgba(255,255,255,0.3);padding:6px;">${L?'Sin aspectos mayores':'No major aspects'}</div>`}
+                        <span style="font-size:0.7em;color:rgba(201,168,64,0.5);">✨</span>
+                    </div>`;
+                }).join('') : `<div style="font-size:0.8em;color:rgba(255,255,255,0.3);padding:6px;">${L?'Sin aspectos mayores':'No major aspects'}</div>`}
             </div>
 
             <!-- Moon Transits -->
@@ -13876,13 +13879,22 @@ function showPersonalDayDetail(year, month, day) {
             <div>
                 <div style="font-size:0.75em;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">☽ ${L ? 'Luna' : 'Moon'}</div>
                 ${moonTransits.map(t => `
-                    <div class="transit-aspect-row ${t.class}" style="opacity:0.7;">
+                    <div class="transit-aspect-row ${t.class}" onclick="interpretTransitAspect('moon','${t.type}','${t.natalPlanet}','${dateStr.replace(/'/g,"\\'")}')" style="opacity:0.7;cursor:pointer;" title="${L?'Click para interpretar':'Click to interpret'}">
                         <span>☽</span>
                         <span style="color:${t.color};">${t.symbol}</span>
                         <span>${t.natalSymbol}</span>
                         <span style="color:rgba(255,255,255,0.35);margin-left:4px;">${planetNames[t.natalPlanet] || t.natalPlanet}</span>
+                        <span style="font-size:0.7em;color:rgba(201,168,64,0.4);">✨</span>
                     </div>
                 `).join('')}
+            </div>` : ''}
+
+            <!-- Interpretar el día button -->
+            ${(majorTransits.length > 0 || moonTransits.length > 0) ? `
+            <div style="margin-top:14px;text-align:center;">
+                <button onclick="interpretCalendarDay(${year},${month},${day})" style="padding:12px 20px;background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.5);border-radius:12px;color:#ffd54f;font-size:0.9em;font-weight:700;cursor:pointer;width:90%;max-width:400px;">
+                    ✨ ${L ? 'Interpretar el día' : 'Interpret the day'}
+                </button>
             </div>` : ''}
         </div>
     `;
@@ -13899,6 +13911,79 @@ function showPersonalDayDetail(year, month, day) {
     }
     document.getElementById('personalDayModalContent').innerHTML = html;
     modal.classList.add('show');
+}
+
+// ===== INTERPRET CALENDAR DAY (full day) =====
+function interpretCalendarDay(year, month, day) {
+    var L = currentLang === 'es';
+    var date = new Date(year, month, day);
+    var dateStr = date.toLocaleDateString(L?'es':'en', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+    // Close the day detail modal
+    var dayModal = document.getElementById('personalDayModal');
+    if (dayModal) dayModal.classList.remove('show');
+
+    // Open the interpretation chat modal (reuse hoyInterpModal)
+    var modal = document.getElementById('hoyInterpModal');
+    modal.classList.add('show');
+    document.getElementById('hoyInterpTitle').textContent = L ? 'Interpretación del Día' : 'Day Interpretation';
+    document.getElementById('hoyInterpDate').textContent = dateStr;
+
+    // Reset chat
+    hoyInterpHistory = [];
+    hoyInterpTyping = false;
+    var container = document.getElementById('hoyInterpMessages');
+    container.innerHTML = '<div class="ai-msg loading">✨ ' + (L ? 'Analizando los cielos para ese día...' : 'Analyzing the skies for that day...') + '</div>';
+
+    // Build context about that specific day
+    var natal = getNatalData();
+    var natalChart;
+    try {
+        var profileChart = localStorage.getItem('natalChart_' + natal.id);
+        natalChart = profileChart ? JSON.parse(profileChart) : JSON.parse(localStorage.getItem('natalChart'));
+    } catch(e) { return; }
+    var transits = calculateTransitsToNatal(date, natalChart);
+    var transitDesc = transits.map(function(t) {
+        return (planetNames[t.transitPlanet]||t.transitPlanet) + ' ' + (aspectNames[t.type]||t.type) + ' natal ' + (planetNames[t.natalPlanet]||t.natalPlanet);
+    }).join(', ');
+
+    var prompt = L
+        ? 'Dame una interpretación completa y personalizada del día ' + dateStr + ' para mi perfil natal. Los tránsitos activos ese día son: ' + (transitDesc || 'ninguno significativo') + '. Incluye: 1) Cómo me afectan personalmente estos tránsitos, 2) La energía general del día, 3) Consejos prácticos, 4) Cualquier advertencia importante.'
+        : 'Give me a complete personalized interpretation of ' + dateStr + ' for my natal profile. Active transits that day are: ' + (transitDesc || 'none significant') + '. Include: 1) How these transits affect me personally, 2) General energy of the day, 3) Practical advice, 4) Any important warnings.';
+
+    hoyInterpHistory.push({role: 'user', parts: [{text: prompt}]});
+    sendHoyInterpRequest();
+}
+
+// ===== INTERPRET SINGLE TRANSIT ASPECT =====
+function interpretTransitAspect(transitPlanet, aspectType, natalPlanet, dateStr) {
+    var L = currentLang === 'es';
+    var tName = planetNames[transitPlanet] || transitPlanet;
+    var nName = planetNames[natalPlanet] || natalPlanet;
+    var aName = aspectNames[aspectType] || aspectType;
+
+    // Close the day detail modal
+    var dayModal = document.getElementById('personalDayModal');
+    if (dayModal) dayModal.classList.remove('show');
+
+    // Open the interpretation chat modal
+    var modal = document.getElementById('hoyInterpModal');
+    modal.classList.add('show');
+    document.getElementById('hoyInterpTitle').textContent = tName + ' ' + aName + ' ' + nName;
+    document.getElementById('hoyInterpDate').textContent = dateStr;
+
+    // Reset chat
+    hoyInterpHistory = [];
+    hoyInterpTyping = false;
+    var container = document.getElementById('hoyInterpMessages');
+    container.innerHTML = '<div class="ai-msg loading">✨ ' + (L ? 'Interpretando este aspecto...' : 'Interpreting this aspect...') + '</div>';
+
+    var prompt = L
+        ? 'Interpreta en detalle el tránsito de ' + tName + ' haciendo ' + aName + ' a mi ' + nName + ' natal (' + dateStr + '). Explica: 1) Qué significa este aspecto en mi carta natal, 2) Cómo me puede afectar emocionalmente, profesionalmente y en relaciones, 3) Cuánto dura aproximadamente este tránsito, 4) Consejos para aprovechar o manejar esta energía, 5) Si hay algo que deba tener especial cuidado.'
+        : 'Interpret in detail the transit of ' + tName + ' making a ' + aName + ' to my natal ' + nName + ' (' + dateStr + '). Explain: 1) What this aspect means in my natal chart, 2) How it may affect me emotionally, professionally and in relationships, 3) Approximate duration of this transit, 4) Advice to harness or manage this energy, 5) Anything I should be especially careful about.';
+
+    hoyInterpHistory.push({role: 'user', parts: [{text: prompt}]});
+    sendHoyInterpRequest();
 }
 
 // Aspect name translations
@@ -18837,7 +18922,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v333';
+const APP_VERSION = 'v334';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -19475,6 +19560,8 @@ window.closeHoyInterp = closeHoyInterp;
 window.sendHoyInterpMessage = sendHoyInterpMessage;
 window.shareHoyInterp = shareHoyInterp;
 window.saveHoyInterp = saveHoyInterp;
+window.interpretCalendarDay = interpretCalendarDay;
+window.interpretTransitAspect = interpretTransitAspect;
 
 function getLunarPhaseSVG(date) {
     var phase = calculateLunarPhase(date);
