@@ -2100,8 +2100,8 @@ function openTideCycleModal() {
     var bodyEl = document.getElementById('tideCycleBody');
     var today = new Date();
     var astro = getAstroData(today);
-    var phase = calculateLunarPhase(today);
-    var phaseName = getLunarPhaseName(phase);
+    var phaseData = getPhaseData(today);
+    var phaseName = phaseData.phaseName;
 
     titleEl.textContent = '🌊 ' + (L ? 'Ciclo Lunar de Mareas' : 'Lunar Tide Cycle');
 
@@ -14047,7 +14047,7 @@ function renderSolarInfoPanel() {
     const infoHTML = '<div class="astro-info-grid" style="margin-top:8px;">'
         // Box 1: Distancia Tierra-Sol
         + '<div class="astro-card" style="margin-bottom:0;border-color:rgba(255,149,0,0.25);border-top-color:rgba(255,149,0,0.5);">'
-        + '<h4 style="font-size:0.75em;color:#ff9500;">📏 ' + (currentLang==='es'?'Distancia':'Distance') + '</h4>'
+        + '<h4 style="font-size:0.75em;color:#ff9500;">' + (currentLang==='es'?'Distancia':'Distance') + '</h4>'
         + '<div class="astro-value" style="color:#ff9500;">' + earthSunDist.toFixed(3) + ' M km</div>'
         + '<div class="astro-label">' + distLabel + '</div>'
         + '<div style="font-size:0.78em;color:#ffe066;margin-top:4px;">' + (currentLang==='es'?'Luz a la Tierra':'Light to Earth') + ': ' + lightTimeStr + '</div>'
@@ -14056,7 +14056,7 @@ function renderSolarInfoPanel() {
         + '</div>'
         // Box 2: Declinación Solar
         + '<div class="astro-card" style="margin-bottom:0;border-color:rgba(255,149,0,0.25);border-top-color:rgba(255,149,0,0.5);">'
-        + '<h4 style="font-size:0.75em;color:#ff9500;">📐 ' + (currentLang==='es'?'Declinación':'Declination') + '</h4>'
+        + '<h4 style="font-size:0.75em;color:#ff9500;">' + (currentLang==='es'?'Declinación':'Declination') + '</h4>'
         + '<div class="astro-value" style="color:' + decColor + ';">' + (sunDecl>=0?'+':'') + sunDecl.toFixed(2) + '°</div>'
         + '<div class="astro-label">Subsolar: ' + sunDecl.toFixed(1) + '° ' + (sunDecl>=0?'N':'S') + '</div>'
         + '<div class="astro-label" style="margin-top:4px;">' + Math.abs(sunDecl-uLat).toFixed(1) + '° ' + (currentLang==='es'?'de tu cenit':'from your zenith') + ' (' + Math.round(Math.abs(sunDecl-uLat)*111) + ' km)</div>'
@@ -14646,7 +14646,7 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
         return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;border-radius:8px;border:1px solid rgba(74,158,255,0.2);">'
         + '<defs>'
         + '<radialGradient id="bgG" cx="50%" cy="40%" r="70%"><stop offset="0%" stop-color="#091a3a"/><stop offset="100%" stop-color="#030810"/></radialGradient>'
-        + '<radialGradient id="mg4" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#c9a840" stop-opacity="0.65"/><stop offset="100%" stop-color="#c9a840" stop-opacity="0"/></radialGradient>'
+        + '<radialGradient id="mg4" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.5"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></radialGradient>'
         + '<filter id="gf4"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
         + '<radialGradient id="sg4" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff9500" stop-opacity="0.7"/><stop offset="100%" stop-color="#ff9500" stop-opacity="0"/></radialGradient>'
         + '</defs>'
@@ -14675,9 +14675,9 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
         + '<text x="'+(ux+10).toFixed(0)+'" y="'+(uy+4).toFixed(0)+'" fill="#4ecdc4" font-size="10" font-family="monospace" font-weight="bold">'+cityLabel+'</text>'
         // Moon
         + '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="26" fill="url(#mg4)"/>'
-        + '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="9" fill="#c9a840" filter="url(#gf4)" opacity="0.95"/>'
+        + '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="9" fill="#e0e0e0" filter="url(#gf4)" opacity="0.95"/>'
         + '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="4" fill="white"/>'
-        + '<text x="'+(px+12).toFixed(0)+'" y="'+(py-10).toFixed(0)+'" fill="#e8c84a" font-size="10" font-family="monospace" font-weight="bold">☽ '+lat.toFixed(1)+'°'+(lat>=0?'N':'S')+' '+Math.abs(lonDeg).toFixed(1)+'°'+(lonDeg>=0?'E':'W')+'</text>'
+        + '<text x="'+(px+12).toFixed(0)+'" y="'+(py-10).toFixed(0)+'" fill="#d0d8e8" font-size="10" font-family="monospace" font-weight="bold">☽ '+lat.toFixed(1)+'°'+(lat>=0?'N':'S')+' '+Math.abs(lonDeg).toFixed(1)+'°'+(lonDeg>=0?'E':'W')+'</text>'
         + '</svg>';
 }
 
@@ -14855,8 +14855,8 @@ function renderSublunaryGlobe(lat, lon) {
     if (pc.visible) {
         // Glow
         const mg = ctx.createRadialGradient(pc.x, pc.y, 0, pc.x, pc.y, 20);
-        mg.addColorStop(0, 'rgba(201,168,64,0.6)');
-        mg.addColorStop(1, 'rgba(201,168,64,0)');
+        mg.addColorStop(0, 'rgba(220,220,220,0.5)');
+        mg.addColorStop(1, 'rgba(220,220,220,0)');
         ctx.beginPath();
         ctx.arc(pc.x, pc.y, 20, 0, Math.PI*2);
         ctx.fillStyle = mg;
@@ -14864,7 +14864,7 @@ function renderSublunaryGlobe(lat, lon) {
         // Point
         ctx.beginPath();
         ctx.arc(pc.x, pc.y, 5, 0, Math.PI*2);
-        ctx.fillStyle = '#c9a840';
+        ctx.fillStyle = '#e0e0e0';
         ctx.fill();
         ctx.beginPath();
         ctx.arc(pc.x, pc.y, 2.5, 0, Math.PI*2);
@@ -15458,7 +15458,7 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
 
             <!-- Mareas fuerza -->
             <div class="astro-card" style="margin-bottom:0;">
-                <h4 style="font-size:0.75em;">🌊 ${currentLang==='es'?'Mareas':'Tides'}</h4>
+                <h4 style="font-size:0.75em;">${currentLang==='es'?'Mareas':'Tides'}</h4>
                 <div class="astro-value" style="color:#4FC3F7">${astro.tidePct}%</div>
                 <div class="astro-label">${astro.tideLabel}</div>
                 <div class="astro-bar-bg">
@@ -15468,7 +15468,7 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
 
             <!-- Curva de Marea (clickable) -->
             <div class="astro-card" style="margin-bottom:0;cursor:pointer;" onclick="openTideCycleModal()">
-                <h4 style="font-size:0.75em;">🌊 ${currentLang==='es'?'Curva de Marea':'Tide Curve'} <span style="font-size:0.7em;color:rgba(255,255,255,0.3);">▸</span></h4>
+                <h4 style="font-size:0.75em;">${currentLang==='es'?'Curva de Marea':'Tide Curve'} <span style="font-size:0.7em;color:rgba(255,255,255,0.3);">▸</span></h4>
                 <div class="tide-curve-container" style="overflow:hidden;width:100%;">${renderTideSVG(tideCurve, 400, 60)}</div>
                 <div id="tideExtremesDisplay" style="font-size:0.72em;color:rgba(255,255,255,0.5);margin-top:5px;">${extremesHTML || 'Calculando...'}</div>
                 <div id="tideApiStatus" style="font-size:0.58em;color:rgba(78,205,196,0.45);margin-top:2px;">⟳ actualizando con datos reales...</div>
@@ -15479,7 +15479,7 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
 
             <!-- Distancia -->
             <div class="astro-card" style="margin-bottom:0;">
-                <h4 style="font-size:0.75em;">📏 ${currentLang==='es'?'Distancia':'Distance'}</h4>
+                <h4 style="font-size:0.75em;">${currentLang==='es'?'Distancia':'Distance'}</h4>
                 <div class="astro-value" style="color:${distColor}">${astro.distance.toLocaleString()} km</div>
                 <div class="astro-label">${distLabel}</div>
                 <div style="font-size:0.78em;color:#7ec8ff;margin-top:4px;">${t('lightToEarth')}: ${(astro.distance / 299792.458).toFixed(2)}s</div>
@@ -15493,7 +15493,7 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
 
             <!-- Declinación -->
             <div class="astro-card" style="margin-bottom:0;">
-                <h4 style="font-size:0.75em;">📐 ${currentLang==='es'?'Declinación':'Declination'}</h4>
+                <h4 style="font-size:0.75em;">${currentLang==='es'?'Declinación':'Declination'}</h4>
                 <div class="astro-value" style="color:${decColor}">${astro.decStr}</div>
                 <div class="astro-label">Sublunar: ${astro.sublunarLat}° ${astro.sublunarDir}</div>
                 <div class="astro-label" style="margin-top:4px;">${astro.distFromUser}° de tu cenit (${Math.round(parseFloat(astro.distFromUser)*111)} km)</div>
@@ -18077,7 +18077,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v271';
+const APP_VERSION = 'v272';
 var _pendingSW = null;
 
 function showUpdateBanner() {
