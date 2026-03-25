@@ -10361,7 +10361,7 @@ function updateCurrentDayInfoForMode(mode) {
                 const sd = sg.start; const ed = sg.end;
                 const sm = currentLang==='es' ? ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'] : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                 const signDays = Math.ceil((ed - sd) / 86400000) + 1;
-                hoyBottomHTML = '<div style="margin-top:auto;width:100%;"><div style="font-size:0.85em;color:'+sg.color+';font-weight:800;">'+sg.symbol+' '+sg.name+'</div><div style="font-size:0.55em;color:'+sg.color+';opacity:0.7;">'+sd.getDate()+' '+sm[sd.getMonth()]+' - '+ed.getDate()+' '+sm[ed.getMonth()]+' · '+signDays+(currentLang==='es'?' días':' days')+'</div><div style="font-size:1.1em;color:'+getMonthColor(today.getMonth())+';font-weight:800;margin-top:3px;">'+( currentLang==='es' ? today.getDate()+' '+t('monthsLong')[today.getMonth()] : t('monthsLong')[today.getMonth()]+' '+today.getDate() )+'</div></div>';
+                hoyBottomHTML = '<div style="font-size:0.85em;color:'+sg.color+';font-weight:800;margin-top:4px;">'+sg.symbol+' '+sg.name+'</div><div style="font-size:0.55em;color:'+sg.color+';opacity:0.7;">'+sd.getDate()+' '+sm[sd.getMonth()]+' - '+ed.getDate()+' '+sm[ed.getMonth()]+' · '+signDays+(currentLang==='es'?' días':' days')+'</div>';
             }
         }
 
@@ -10394,8 +10394,11 @@ function updateCurrentDayInfoForMode(mode) {
                     <div style="font-size: 0.55em; color: #ffffff; opacity: 0.85;">${lunarCycleLine}</div>
                     <div style="margin-top:auto;font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; letter-spacing: 0.5px;">${currentLang === 'es' ? today.getDate() + ' ' + t('monthsLong')[today.getMonth()] : t('monthsLong')[today.getMonth()] + ' ' + today.getDate()}</div>
                     ` : `
-                    <div style="font-size: 0.47em; opacity: 0.60; color: #8899cc;">${displayInfo}</div>
-                    ${hoyBottomHTML}
+                    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+                        <div style="font-size: 0.47em; opacity: 0.60; color: #8899cc;">${displayInfo}</div>
+                        ${hoyBottomHTML}
+                    </div>
+                    <div style="margin-top:auto;font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; letter-spacing: 0.5px;">${currentLang === 'es' ? today.getDate() + ' ' + t('monthsLong')[today.getMonth()] : t('monthsLong')[today.getMonth()] + ' ' + today.getDate()}</div>
                     `}
                 </div>
                 <!-- Info según modo -->
@@ -14122,12 +14125,12 @@ function renderSolarInfoPanel() {
             nightSVG += drawTermLine(morningPts);
             return nightSVG;
         })()
-        // User location only (no sun marker, no trajectory)
-        // User location
-        + '<circle cx="'+ux.toFixed(1)+'" cy="'+uy.toFixed(1)+'" r="7" fill="none" stroke="#4ecdc4" stroke-width="2" filter="url(#gf5)"/>'
-        + '<circle cx="'+ux.toFixed(1)+'" cy="'+uy.toFixed(1)+'" r="3.5" fill="#4ecdc4"/>'
-        + '<circle cx="'+ux.toFixed(1)+'" cy="'+uy.toFixed(1)+'" r="1.5" fill="white"/>'
-        + '<text x="'+(ux+10).toFixed(0)+'" y="'+(uy+4).toFixed(0)+'" fill="#4ecdc4" font-size="10" font-family="monospace" font-weight="bold">'+cityLabel+'</text>'
+        // User location - red pin marker
+        + '<g transform="translate('+ux.toFixed(1)+','+(uy-12).toFixed(1)+')">'
+        + '<path d="M0,0 C-4,-8 -7,-12 -7,-16 C-7,-20 -4,-24 0,-24 C4,-24 7,-20 7,-16 C7,-12 4,-8 0,0z" fill="#e53935" stroke="#b71c1c" stroke-width="0.8" filter="url(#gf5)"/>'
+        + '<circle cx="0" cy="-16" r="3" fill="white" opacity="0.9"/>'
+        + '</g>'
+        + '<text x="'+(ux+10).toFixed(0)+'" y="'+(uy+4).toFixed(0)+'" fill="#e53935" font-size="10" font-family="monospace" font-weight="bold">'+cityLabel+'</text>'
         + '</svg>';
 
     // Distance bar percentage (147.1 = perihelion, 152.1 = aphelion)
@@ -18628,7 +18631,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v303';
+const APP_VERSION = 'v304';
 var _pendingSW = null;
 
 function showUpdateBanner() {
