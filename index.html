@@ -1070,7 +1070,7 @@
     <div id="tideCycleModal" class="modal" onclick="if(event.target===this)closeTideCycleModal()">
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header">
-                <h2 id="tideCycleTitle">🌊 Ciclo de Mareas</h2>
+                <h2 id="tideCycleTitle">Ciclo de Mareas</h2>
                 <span class="close" onclick="closeTideCycleModal()">&times;</span>
             </div>
             <div id="tideCycleBody" style="padding: 15px;">
@@ -2103,72 +2103,67 @@ function openTideCycleModal() {
     var phaseData = getPhaseData(today);
     var phaseName = phaseData.phaseName;
 
-    titleEl.textContent = '🌊 ' + (L ? 'Ciclo Lunar de Mareas' : 'Lunar Tide Cycle');
+    titleEl.textContent = L ? 'Ciclo Lunar de Mareas' : 'Lunar Tide Cycle';
 
-    // Generate 7-day tide forecast
-    var forecastHTML = '';
-    for (var d = 0; d < 7; d++) {
+    // Current info header (no cycle type labels, no icons)
+    var html = '';
+    html += '<div style="background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.2);border-radius:10px;padding:12px;margin-bottom:15px;">';
+    html += '<div style="display:flex;gap:15px;flex-wrap:wrap;font-size:0.82em;">';
+    html += '<span style="color:#c9a840;">' + (L ? 'Fase' : 'Phase') + ': ' + phaseName + '</span>';
+    html += '<span style="color:#7ec8ff;">' + (L ? 'Distancia' : 'Distance') + ': ' + astro.distance.toLocaleString() + ' km</span>';
+    html += '<span style="color:#4FC3F7;">' + (L ? 'Fuerza' : 'Strength') + ': ' + astro.tidePct + '%</span>';
+    html += '</div></div>';
+
+    // Forecast title with location on the right
+    var locationName = ASTRO_USER_NAME ? ASTRO_USER_NAME.split(',')[0] : '';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+    html += '<h3 style="color:#c9a840;font-size:0.95em;margin:0;font-family:Cinzel,serif;">' + (L ? 'Pronóstico Ciclo Lunar' : 'Lunar Cycle Forecast') + '</h3>';
+    if (locationName) {
+        html += '<span style="font-size:0.75em;color:rgba(255,255,255,0.4);">' + locationName + '</span>';
+    }
+    html += '</div>';
+
+    // Generate full lunar cycle forecast (~29 days)
+    // Detect phase transition days to mark them
+    var prevWeekIndex = -1;
+    var phaseLabels = L ? {0:'Luna Nueva', 1:'Cuarto Creciente', 2:'Luna Llena', 3:'Cuarto Menguante'} : {0:'New Moon', 1:'First Quarter', 2:'Full Moon', 3:'Last Quarter'};
+    var phaseColors = {0:'#a0a0a0', 1:'#c9a840', 2:'#fffbe6', 3:'#7ec8ff'};
+
+    for (var d = 0; d < 30; d++) {
         var fDate = new Date(today);
         fDate.setDate(fDate.getDate() + d);
         var fCurve = getTideCurveForLocation(fDate, ASTRO_USER_LAT, ASTRO_USER_LON);
         var fExtremes = getTideExtremes(fCurve);
         var fAstro = getAstroData(fDate);
-        var fPhase = calculateLunarPhase(fDate);
-        var dayLabel = d === 0 ? (L ? 'HOY' : 'TODAY') : fDate.toLocaleDateString(L ? 'es' : 'en', {weekday:'short', day:'numeric'});
+        var fPhaseData = getPhaseData(fDate);
+        var dayLabel = d === 0 ? (L ? 'HOY' : 'TODAY') : fDate.toLocaleDateString(L ? 'es' : 'en', {weekday:'short', day:'numeric', month:'short'});
         var strengthColor = fAstro.tidePct > 70 ? '#FF6B6B' : fAstro.tidePct > 45 ? '#f0e68c' : '#4FC3F7';
 
-        forecastHTML += '<div style="background:rgba(0,0,0,0.25);border-radius:8px;padding:10px;margin-bottom:8px;border-left:3px solid ' + strengthColor + ';">';
-        forecastHTML += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
-        forecastHTML += '<span style="font-weight:bold;color:' + (d===0?'#c9a840':'rgba(255,255,255,0.85)') + ';font-size:0.95em;">' + dayLabel + '</span>';
-        forecastHTML += '<span style="color:' + strengthColor + ';font-weight:bold;font-size:0.85em;">' + fAstro.tidePct + '% — ' + fAstro.tideLabel + '</span>';
-        forecastHTML += '</div>';
-        forecastHTML += '<div style="overflow:hidden;width:100%;margin-bottom:4px;">' + renderTideSVG(fCurve, 500, 50) + '</div>';
-        forecastHTML += '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.78em;">';
+        // Check if phase changed — insert phase marker
+        if (prevWeekIndex !== -1 && fPhaseData.weekIndex !== prevWeekIndex) {
+            var pColor = phaseColors[fPhaseData.weekIndex] || '#c9a840';
+            html += '<div style="text-align:center;padding:6px 0;margin:4px 0;">';
+            html += '<span style="display:inline-block;background:rgba(201,168,64,0.12);border:1px solid ' + pColor + ';border-radius:12px;padding:3px 14px;font-size:0.78em;color:' + pColor + ';font-weight:bold;">';
+            html += phaseLabels[fPhaseData.weekIndex];
+            html += '</span></div>';
+        }
+        prevWeekIndex = fPhaseData.weekIndex;
+
+        html += '<div style="background:rgba(0,0,0,0.25);border-radius:8px;padding:10px;margin-bottom:6px;border-left:3px solid ' + strengthColor + ';">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+        html += '<span style="font-weight:bold;color:' + (d===0?'#c9a840':'rgba(255,255,255,0.85)') + ';font-size:0.9em;">' + dayLabel + '</span>';
+        html += '<span style="color:' + strengthColor + ';font-weight:bold;font-size:0.8em;">' + fAstro.tidePct + '% — ' + fAstro.tideLabel + '</span>';
+        html += '</div>';
+        html += '<div style="overflow:hidden;width:100%;margin-bottom:4px;">' + renderTideSVG(fCurve, 500, 50) + '</div>';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75em;">';
         fExtremes.forEach(function(e) {
             var icon = e.type === 'alta' ? '▲' : '▼';
             var col = e.type === 'alta' ? '#4FC3F7' : '#01579B';
-            forecastHTML += '<span style="color:' + col + ';">' + icon + ' ' + (e.hour < 10 ? '0' : '') + e.hour + ':00 (' + e.level.toFixed(1) + 'm)</span>';
+            html += '<span style="color:' + col + ';">' + icon + ' ' + (e.hour < 10 ? '0' : '') + e.hour + ':00 (' + e.level.toFixed(1) + 'm)</span>';
         });
-        forecastHTML += '</div>';
-        forecastHTML += '</div>';
+        html += '</div>';
+        html += '</div>';
     }
-
-    // Current cycle info
-    var cycleType = astro.tidePct > 70 ? (L ? 'Mareas Vivas (Spring Tides)' : 'Spring Tides') :
-                    astro.tidePct > 45 ? (L ? 'Mareas Moderadas' : 'Moderate Tides') :
-                    (L ? 'Mareas Muertas (Neap Tides)' : 'Neap Tides');
-    var cycleDesc = astro.tidePct > 70 ?
-        (L ? 'Luna nueva o llena — Sol y Luna alinean fuerzas gravitacionales, produciendo las mareas más altas y bajas del ciclo.' :
-             'New or full Moon — Sun and Moon align gravitational forces, producing the highest and lowest tides of the cycle.') :
-        astro.tidePct > 45 ?
-        (L ? 'Transición entre mareas vivas y muertas. Amplitudes moderadas.' :
-             'Transition between spring and neap tides. Moderate amplitudes.') :
-        (L ? 'Cuarto creciente o menguante — Sol y Luna forman ángulo de 90°, sus fuerzas se contrarrestan parcialmente, produciendo mareas de menor amplitud.' :
-             'First or third quarter — Sun and Moon at 90° angle, their forces partially cancel, producing smaller tidal ranges.');
-
-    var html = '';
-    // Header with current info
-    html += '<div style="background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.2);border-radius:10px;padding:12px;margin-bottom:15px;">';
-    html += '<div style="font-size:1.1em;font-weight:bold;color:#4FC3F7;margin-bottom:6px;">' + cycleType + '</div>';
-    html += '<div style="font-size:0.88em;color:rgba(255,255,255,0.75);line-height:1.5;margin-bottom:8px;">' + cycleDesc + '</div>';
-    html += '<div style="display:flex;gap:15px;flex-wrap:wrap;font-size:0.82em;">';
-    html += '<span style="color:#c9a840;">🌙 ' + (L ? 'Fase' : 'Phase') + ': ' + phaseName + '</span>';
-    html += '<span style="color:#7ec8ff;">📏 ' + (L ? 'Distancia' : 'Distance') + ': ' + astro.distance.toLocaleString() + ' km</span>';
-    html += '<span style="color:#4FC3F7;">💪 ' + (L ? 'Fuerza' : 'Strength') + ': ' + astro.tidePct + '%</span>';
-    html += '</div></div>';
-
-    // Harmonic components explanation
-    html += '<div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:10px;margin-bottom:15px;font-size:0.8em;color:rgba(255,255,255,0.55);line-height:1.5;">';
-    html += '<strong style="color:rgba(255,255,255,0.7);">' + (L ? 'Componentes Armónicas' : 'Harmonic Components') + ':</strong> ';
-    html += 'M2 (' + (L ? 'principal lunar' : 'principal lunar') + ') · S2 (' + (L ? 'principal solar' : 'principal solar') + ') · K1 (' + (L ? 'diurna luni-solar' : 'luni-solar diurnal') + ') · O1 (' + (L ? 'diurna lunar' : 'lunar diurnal') + ') · N2 (' + (L ? 'elíptica lunar' : 'lunar elliptic') + ')';
-    html += '</div>';
-
-    // 7-day forecast
-    html += '<h3 style="color:#c9a840;font-size:0.95em;margin-bottom:10px;font-family:Cinzel,serif;">📅 ' + (L ? 'Pronóstico 7 Días' : '7-Day Forecast') + '</h3>';
-    html += forecastHTML;
-
-    // Location
-    html += '<div style="text-align:center;font-size:0.72em;color:rgba(255,255,255,0.3);margin-top:10px;">📍 ' + ASTRO_USER_NAME.split(',')[0] + '</div>';
 
     bodyEl.innerHTML = html;
     modal.classList.add('show');
@@ -18077,7 +18072,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v274';
+const APP_VERSION = 'v275';
 var _pendingSW = null;
 
 function showUpdateBanner() {
