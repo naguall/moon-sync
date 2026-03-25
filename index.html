@@ -2099,13 +2099,37 @@ function openTideCycleModal() {
     var titleEl = document.getElementById('tideCycleTitle');
     var bodyEl = document.getElementById('tideCycleBody');
     var today = new Date();
+    today.setHours(0,0,0,0);
     var astro = getAstroData(today);
     var phaseData = getPhaseData(today);
     var phaseName = phaseData.phaseName;
 
     titleEl.textContent = L ? 'Ciclo Lunar de Mareas' : 'Lunar Tide Cycle';
 
-    // Current info header (no cycle type labels, no icons)
+    // Find the most recent New Moon (weekIndex 0) scanning backwards
+    var startDate = new Date(today);
+    var prevPD = getPhaseData(startDate);
+    // Go back until we find when it entered weekIndex 0, then find the first day of that phase
+    for (var b = 1; b <= 30; b++) {
+        var bDate = new Date(today);
+        bDate.setDate(bDate.getDate() - b);
+        var bPD = getPhaseData(bDate);
+        if (bPD.weekIndex !== 0) {
+            // Previous day was NOT new moon, so startDate = today - (b-1)
+            startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - (b - 1));
+            break;
+        }
+        if (b === 30) {
+            startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - 29);
+        }
+    }
+
+    // Calculate how many days from startDate to today (for scroll target)
+    var todayOffset = Math.round((today - startDate) / 86400000);
+
+    // Current info header
     var html = '';
     html += '<div style="background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.2);border-radius:10px;padding:12px;margin-bottom:15px;">';
     html += '<div style="display:flex;gap:15px;flex-wrap:wrap;font-size:0.82em;">';
@@ -2123,50 +2147,70 @@ function openTideCycleModal() {
     }
     html += '</div>';
 
-    // Generate full lunar cycle forecast (~29 days)
-    // Detect phase transition days to mark them
+    // Generate full lunar cycle from New Moon (~30 days)
     var prevWeekIndex = -1;
     var phaseLabels = L ? {0:'Luna Nueva', 1:'Cuarto Creciente', 2:'Luna Llena', 3:'Cuarto Menguante'} : {0:'New Moon', 1:'First Quarter', 2:'Full Moon', 3:'Last Quarter'};
     var phaseColors = {0:'#a0a0a0', 1:'#c9a840', 2:'#fffbe6', 3:'#7ec8ff'};
+    // Moon phase SVG icons by weekIndex (elongation degrees)
+    var phaseElongations = {0: 0, 1: 90, 2: 180, 3: 270};
 
     for (var d = 0; d < 30; d++) {
-        var fDate = new Date(today);
+        var fDate = new Date(startDate);
         fDate.setDate(fDate.getDate() + d);
-        var fCurve = getTideCurveForLocation(fDate, ASTRO_USER_LAT, ASTRO_USER_LON);
-        var fExtremes = getTideExtremes(fCurve);
+        var fExtremes = getTideExtremes(getTideCurveForLocation(fDate, ASTRO_USER_LAT, ASTRO_USER_LON));
         var fAstro = getAstroData(fDate);
         var fPhaseData = getPhaseData(fDate);
-        var dayLabel = d === 0 ? (L ? 'HOY' : 'TODAY') : fDate.toLocaleDateString(L ? 'es' : 'en', {weekday:'short', day:'numeric', month:'short'});
+        var fElongation = calculateLunarPhase(fDate);
+        var isToday = (d === todayOffset);
+        var dayLabel = isToday ? (L ? 'HOY' : 'TODAY') : fDate.toLocaleDateString(L ? 'es' : 'en', {weekday:'short', day:'numeric', month:'short'});
         var strengthColor = fAstro.tidePct > 70 ? '#FF6B6B' : fAstro.tidePct > 45 ? '#f0e68c' : '#4FC3F7';
 
-        // Check if phase changed — insert phase marker
+        // Insert phase marker when phase changes
         if (prevWeekIndex !== -1 && fPhaseData.weekIndex !== prevWeekIndex) {
             var pColor = phaseColors[fPhaseData.weekIndex] || '#c9a840';
+            var pSvg = getMoonSVG(phaseElongations[fPhaseData.weekIndex], 18);
             html += '<div style="text-align:center;padding:6px 0;margin:4px 0;">';
-            html += '<span style="display:inline-block;background:rgba(201,168,64,0.12);border:1px solid ' + pColor + ';border-radius:12px;padding:3px 14px;font-size:0.78em;color:' + pColor + ';font-weight:bold;">';
-            html += phaseLabels[fPhaseData.weekIndex];
+            html += '<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,64,0.12);border:1px solid ' + pColor + ';border-radius:12px;padding:3px 14px;font-size:0.78em;color:' + pColor + ';font-weight:bold;">';
+            html += pSvg + ' ' + phaseLabels[fPhaseData.weekIndex];
             html += '</span></div>';
         }
         prevWeekIndex = fPhaseData.weekIndex;
 
-        html += '<div style="background:rgba(0,0,0,0.25);border-radius:8px;padding:10px;margin-bottom:6px;border-left:3px solid ' + strengthColor + ';">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
-        html += '<span style="font-weight:bold;color:' + (d===0?'#c9a840':'rgba(255,255,255,0.85)') + ';font-size:0.9em;">' + dayLabel + '</span>';
-        html += '<span style="color:' + strengthColor + ';font-weight:bold;font-size:0.8em;">' + fAstro.tidePct + '% — ' + fAstro.tideLabel + '</span>';
+        // Day row — with moon SVG icon, no tide curve graphic
+        var todayBorder = isToday ? 'border:1px solid #c9a840;' : '';
+        var todayId = isToday ? ' id="tideCycleToday"' : '';
+        html += '<div' + todayId + ' style="background:rgba(0,0,0,0.25);border-radius:8px;padding:8px 10px;margin-bottom:4px;border-left:3px solid ' + strengthColor + ';' + todayBorder + '">';
+
+        // Top row: moon icon + day label | strength %
+        var moonSvg = getMoonSVG(fElongation, 16);
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
+        html += '<span style="display:inline-flex;align-items:center;gap:6px;font-weight:bold;color:' + (isToday?'#c9a840':'rgba(255,255,255,0.85)') + ';font-size:0.88em;">' + moonSvg + ' ' + dayLabel + '</span>';
+        html += '<span style="color:' + strengthColor + ';font-weight:bold;font-size:0.78em;">' + fAstro.tidePct + '%</span>';
         html += '</div>';
-        html += '<div style="overflow:hidden;width:100%;margin-bottom:4px;">' + renderTideSVG(fCurve, 500, 50) + '</div>';
-        html += '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.75em;">';
+
+        // Tide extremes with distance
+        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;font-size:0.75em;">';
         fExtremes.forEach(function(e) {
             var icon = e.type === 'alta' ? '▲' : '▼';
             var col = e.type === 'alta' ? '#4FC3F7' : '#01579B';
             html += '<span style="color:' + col + ';">' + icon + ' ' + (e.hour < 10 ? '0' : '') + e.hour + ':00 (' + e.level.toFixed(1) + 'm)</span>';
         });
+        html += '<span style="color:rgba(255,255,255,0.35);margin-left:auto;font-size:0.92em;">' + fAstro.distance.toLocaleString() + ' km</span>';
         html += '</div>';
+
         html += '</div>';
     }
 
     bodyEl.innerHTML = html;
     modal.classList.add('show');
+
+    // Scroll to today's row
+    setTimeout(function() {
+        var todayEl = document.getElementById('tideCycleToday');
+        if (todayEl) {
+            todayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 100);
 }
 
 function closeTideCycleModal() {
@@ -18072,7 +18116,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v275';
+const APP_VERSION = 'v276';
 var _pendingSW = null;
 
 function showUpdateBanner() {
