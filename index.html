@@ -15495,9 +15495,6 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
                 <div class="tide-curve-container" style="overflow:hidden;width:100%;">${renderTideSVG(tideCurve, 400, 60)}</div>
                 <div id="tideExtremesDisplay" style="font-size:0.72em;color:rgba(255,255,255,0.5);margin-top:5px;">${extremesHTML || 'Calculando...'}</div>
                 <div id="tideApiStatus" style="font-size:0.58em;color:rgba(78,205,196,0.45);margin-top:2px;">⟳ actualizando con datos reales...</div>
-                <div style="display:flex;justify-content:space-between;font-size:0.60em;color:rgba(255,255,255,0.22);margin-top:3px;">
-                    <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span>
-                </div>
             </div>
 
             <!-- Distancia -->
@@ -18105,7 +18102,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v281';
+const APP_VERSION = 'v282';
 var _pendingSW = null;
 
 function showUpdateBanner() {
