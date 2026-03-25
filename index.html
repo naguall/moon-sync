@@ -10926,7 +10926,8 @@ function calculateNatalAspects(planets, houses) {
         { name: 'Cuadratura', nameEn: 'Square', symbol: '□', angle: 90, orb: 7, color: '#f1c40f' },
         { name: 'Trígono', nameEn: 'Trine', symbol: '△', angle: 120, orb: 8, color: '#2ecc71' },
         { name: 'Oposición', nameEn: 'Opposition', symbol: '☍', angle: 180, orb: 8, color: '#c0392b' },
-        { name: 'Quincuncio', nameEn: 'Quincunx', symbol: '⚻', angle: 150, orb: 3, color: '#9b59b6' }
+        { name: 'Quincuncio', nameEn: 'Quincunx', symbol: '⚻', angle: 150, orb: 3, color: '#9b59b6' },
+        { name: 'Semi-sextil', nameEn: 'Semi-sextile', symbol: '⚺', angle: 30, orb: 2, color: '#1abc9c' }
     ];
     const planetKeys = Object.keys(planets);
     const aspects = [];
@@ -11691,7 +11692,7 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
         const p = entry[0], data = entry[1];
         const house = natalChart.houses ? getHouseForLongitude(data.longitude, natalChart.houses.cusps) : '-';
         planetsTableRows += '<tr onclick="showNatalDetail(\'planet\', \'' + p + '\')" style="cursor:pointer;transition:all 0.2s;" onmouseover="this.style.backgroundColor=\'rgba(201,168,64,0.15)\';" onmouseout="this.style.backgroundColor=\'\';">' +
-            '<td style="white-space:nowrap;">' + (planetNms[p]||p) + '</td>' +
+            '<td style="white-space:nowrap;"><span style="font-size:1.1em;margin-right:4px;">' + ({'sun':'☉','moon':'☽','mercury':'☿','venus':'♀','mars':'♂','jupiter':'♃','saturn':'♄','uranus':'♅','neptune':'♆','pluto':'♇','chiron':'⚷','northnode':'☊','lilith':'⚸'}[p]||'') + '</span>' + (planetNms[p]||p) + '</td>' +
             '<td>' + data.sign + '</td>' +
             '<td>' + data.degree + '°' + (data.minute < 10 ? '0' : '') + data.minute + "'" + '</td>' +
             '<td style="text-align:center;">' + house + '</td>' +
@@ -11729,10 +11730,10 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
             var sign1 = getSignForKey(a.planet1);
             var sign2 = getSignForKey(a.planet2);
             aspectsTableRows += '<tr onclick="showNatalDetail(\'aspect\', ' + idx + ')" style="cursor:pointer;transition:all 0.2s;" onmouseover="this.style.backgroundColor=\'rgba(201,168,64,0.15)\';" onmouseout="this.style.backgroundColor=\'\';">' +
-                '<td style="white-space:nowrap;">' + (planetNms[a.planet1]||a.planet1) + '</td>' +
+                '<td style="white-space:nowrap;"><span style="font-size:1.1em;margin-right:3px;">' + ({'sun':'☉','moon':'☽','mercury':'☿','venus':'♀','mars':'♂','jupiter':'♃','saturn':'♄','uranus':'♅','neptune':'♆','pluto':'♇','chiron':'⚷','northnode':'☊','lilith':'⚸'}[a.planet1]||'') + '</span>' + (planetNms[a.planet1]||a.planet1) + '</td>' +
                 '<td style="white-space:nowrap;font-size:0.8em;color:rgba(255,255,255,0.5);">' + sign1 + '</td>' +
-                '<td style="text-align:center;color:' + a.aspect.color + ';font-weight:600;">' + a.aspect.name + '</td>' +
-                '<td style="white-space:nowrap;">' + (planetNms[a.planet2]||a.planet2) + '</td>' +
+                '<td style="text-align:center;color:' + a.aspect.color + ';font-weight:600;"><span style="font-size:1.2em;margin-right:4px;">' + a.aspect.symbol + '</span>' + a.aspect.name + '</td>' +
+                '<td style="white-space:nowrap;"><span style="font-size:1.1em;margin-right:3px;">' + ({'sun':'☉','moon':'☽','mercury':'☿','venus':'♀','mars':'♂','jupiter':'♃','saturn':'♄','uranus':'♅','neptune':'♆','pluto':'♇','chiron':'⚷','northnode':'☊','lilith':'⚸'}[a.planet2]||'') + '</span>' + (planetNms[a.planet2]||a.planet2) + '</td>' +
                 '<td style="white-space:nowrap;font-size:0.8em;color:rgba(255,255,255,0.5);">' + sign2 + '</td>' +
                 '<td style="text-align:center;">' + a.orbFormatted + '</td>' +
                 '</tr>';
@@ -18836,7 +18837,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v332';
+const APP_VERSION = 'v333';
 var _pendingSW = null;
 
 function showUpdateBanner() {
