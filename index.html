@@ -8968,9 +8968,9 @@ function switchToLunarMode() {
     // Update title
     document.getElementById('calendarTitle').innerHTML = t('lunarCalendar');
     
-    // RESTORE LUNAR NAVIGATION
+    // RESTORE LUNAR NAVIGATION (hidden - cycle dates now in HOY box)
     const nav = document.querySelector('.navigation');
-    nav.style.display = '';
+    nav.style.display = 'none';
     nav.innerHTML = `
         <div class="cycle-info">
             <div class="cycle-number" id="cycleNumber">${t('lunarCycle')}</div>
@@ -10343,8 +10343,8 @@ function updateCurrentDayInfoForMode(mode) {
 
         currentDayInfoDiv.style.display = 'block';
 
-        // Calculate lunar cycle dates for HOY box bottom
-        let cycleDatesHTML = '';
+        // Calculate cycle/sign info for HOY box bottom
+        let hoyBottomHTML = '';
         if (mode === 'lunar') {
             try {
                 const nmCycle = findNearestNewMoon(today);
@@ -10352,8 +10352,15 @@ function updateCurrentDayInfoForMode(mode) {
                 const cEnd = wksCycle[wksCycle.length - 1].endDate;
                 const cTotal = wksCycle.reduce((s, w) => s + w.days.length, 0);
                 const cStart = wksCycle[0].startDate;
-                cycleDatesHTML = '<div style="margin-top:auto;padding-top:5px;border-top:1px solid rgba(126,200,255,0.2);width:100%;"><div style="font-size:0.55em;color:#7ec8ff;opacity:0.8;">' + formatDate(cStart) + ' - ' + formatDate(cEnd) + ' · ' + cTotal + (currentLang==='es'?' días':' days') + '</div></div>';
+                displayInfo = '<span style="font-size:1.2em;font-weight:700;color:#7ec8ff;">' + formatDate(cStart) + ' - ' + formatDate(cEnd) + '</span><br><span style="font-size:1.1em;color:#7ec8ff;opacity:0.7;">' + cTotal + (currentLang==='es'?' días':' days') + '</span>';
             } catch(e) {}
+        } else if (mode === 'solar') {
+            const sg = getSignForDate(today);
+            if (sg) {
+                const sd = sg.start; const ed = sg.end;
+                const sm = currentLang==='es' ? ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'] : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                hoyBottomHTML = '<div style="margin-top:auto;padding-top:5px;border-top:1px solid '+sg.color+'30;width:100%;"><div style="font-size:0.85em;color:'+sg.color+';font-weight:800;">'+sg.symbol+' '+sg.name+'</div><div style="font-size:0.55em;color:'+sg.color+';opacity:0.7;">'+sd.getDate()+' '+sm[sd.getMonth()]+' - '+ed.getDate()+' '+sm[ed.getMonth()]+'</div></div>';
+            }
         }
 
         currentDayInfoDiv.innerHTML = `
@@ -10383,7 +10390,7 @@ function updateCurrentDayInfoForMode(mode) {
                     ${mode === 'lunar' ? `<div style="font-size: 0.75em; margin: 2px 0; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.5px;">${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} ${currentLang === 'es' ? 'Día' : 'Day'} ${displayDay}</div>` : ''}
                     <div style="font-size: 0.47em; opacity: 0.60; color: #8899cc;">${displayInfo}</div>
                     <div style="font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px;">${currentLang === 'es' ? today.getDate() + ' ' + t('monthsLong')[today.getMonth()] : t('monthsLong')[today.getMonth()] + ' ' + today.getDate()}</div>
-                    ${cycleDatesHTML}
+                    ${hoyBottomHTML}
                 </div>
                 <!-- Info según modo -->
                 <div style="background: ${bannerAspBg2}; padding: 6px 7px; border-radius: 8px; border: 1px solid ${bannerAspColor2}44; border-top: 2px solid ${bannerAspColor2}88; min-width: 0; overflow: hidden;">
@@ -13902,13 +13909,13 @@ function renderSolarCalendar() {
     // Update title
     document.getElementById('calendarTitle').innerHTML = currentLang === 'es' ? 'Solar' : 'Solar';
 
-    // Update navigation
+    // Update navigation (hidden - sign info now in HOY box)
     const nav = document.querySelector('.navigation');
-    nav.style.display = '';
+    nav.style.display = 'none';
     nav.innerHTML = `
         <div class="cycle-info">
-            <div class="cycle-number" style="color: ${sign.color}; font-size: 1.5em;">${ts(sign.name)}</div>
-            <div class="cycle-dates">${formatDate(sign.start)} - ${formatDate(sign.end)}</div>
+            <div class="cycle-number" style="color: ${sign.color}; font-size: 1.5em;" id="cycleNumber">${ts(sign.name)}</div>
+            <div class="cycle-dates" id="cycleDates">${formatDate(sign.start)} - ${formatDate(sign.end)}</div>
         </div>
     `;
 
@@ -15780,7 +15787,7 @@ function renderCalendar() {
             displayTitle = currentLang === 'es' ? 'Aspectos de Hoy' : 'Today\'s Aspects';
             displayEmoji = emoji;
             displayDay = currentDayInCycle.lunarDay;
-            displayInfo = moonSign;
+            displayInfo = formatDate(weeks[0].startDate) + ' - ' + formatDate(cycleEnd) + ' · ' + cycleTotalDays + (currentLang==='es'?' días':' days');
         } else if (calendarMode === 'solar') {
             // Modo Solar: mostrar signo solar
             const sunLongitude = getPlanetPosition('sun', today);
@@ -15911,7 +15918,6 @@ function renderCalendar() {
                     <div style="font-size: 0.75em; margin: 2px 0; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.5px;">${calendarMode === 'lunar' ? `${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} ${currentLang === 'es' ? 'Día' : 'Day'} ${weekDayNumber}` : ''}</div>
                     <div style="font-size: 0.47em; opacity: 0.60; color: #8899cc;">${displayInfo}</div>
                     <div style="font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px;">${currentLang === 'es' ? today.getDate() + ' ' + t('monthsLong')[today.getMonth()] : t('monthsLong')[today.getMonth()] + ' ' + today.getDate()}</div>
-                    <div style="margin-top:auto;padding-top:5px;border-top:1px solid rgba(126,200,255,0.2);width:100%;"><div style="font-size:0.55em;color:#7ec8ff;opacity:0.8;">${formatDate(weeks[0].startDate)} - ${formatDate(cycleEnd)} · ${cycleTotalDays} ${currentLang==='es'?'días':'days'}</div></div>
                 </div>
 
                 <!-- Luna/Sol/Info Hoy -->
@@ -18616,7 +18622,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v301';
+const APP_VERSION = 'v302';
 var _pendingSW = null;
 
 function showUpdateBanner() {
