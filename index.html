@@ -15885,7 +15885,7 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
             <div class="astro-card btn-shine btn-shine-teal" style="margin-bottom:0;cursor:pointer;grid-column:span 2;transition:transform 0.2s,box-shadow 0.3s;" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 16px rgba(78,205,196,0.15)'" onmouseleave="this.style.transform='';this.style.boxShadow=''" onclick="openTideCycleModal()">
                 <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
                     <h4 style="font-size:0.75em;margin:0;">${currentLang==='es'?'Curva de Marea':'Tide Curve'}</h4>
-                    <span style="font-size:0.6em;color:rgba(78,205,196,0.5);font-weight:600;">${currentLang==='es'?'Ver ciclo ▸':'View cycle ▸'}</span>
+                    <span style="font-size:0.6em;color:rgba(255,255,255,0.7);font-weight:600;">${currentLang==='es'?'Ver ciclo ▸':'View cycle ▸'}</span>
                 </div>
                 <div class="tide-curve-container" style="overflow:hidden;width:100%;">${renderTideSVG(tideCurve, 400, 60)}</div>
                 <div id="tideExtremesDisplay" style="font-size:0.72em;color:rgba(255,255,255,0.5);margin-top:5px;">${extremesHTML || 'Calculando...'}</div>
@@ -18851,7 +18851,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v316';
+const APP_VERSION = 'v317';
 var _pendingSW = null;
 
 function showUpdateBanner() {
