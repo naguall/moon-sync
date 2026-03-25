@@ -4767,18 +4767,18 @@ function formatShortDate(date) {
 // Alternating month colors for gregorian dates in calendars
 function getMonthColor(monthIndex) {
     const colors = [
-        '#7ec8ff', // Ene - azul claro
-        '#c9a840', // Feb - dorado
-        '#7ec8ff', // Mar - azul claro
-        '#e8c84a', // Abr - amarillo
-        '#7ec8ff', // May - azul claro
-        '#c9a840', // Jun - dorado
-        '#7ec8ff', // Jul - azul claro
-        '#e8c84a', // Ago - amarillo
-        '#7ec8ff', // Sep - azul claro
-        '#c9a840', // Oct - dorado
-        '#7ec8ff', // Nov - azul claro
-        '#e8c84a'  // Dic - amarillo
+        '#7ec8ff', // Ene - azul cielo
+        '#e8c84a', // Feb - amarillo dorado
+        '#80cbc4', // Mar - turquesa
+        '#f0a0c0', // Abr - rosa claro
+        '#a8b8ff', // May - lavanda
+        '#f5c76b', // Jun - ámbar
+        '#7ecba0', // Jul - verde menta
+        '#d4a5f5', // Ago - lila
+        '#7ec8ff', // Sep - azul cielo
+        '#e8c84a', // Oct - amarillo dorado
+        '#80cbc4', // Nov - turquesa
+        '#f0a0c0'  // Dic - rosa claro
     ];
     return colors[monthIndex % 12];
 }
@@ -10126,7 +10126,7 @@ function updateCurrentDayInfoForMode(mode) {
                     <div style="margin: 3px 0; display:flex; justify-content:center; font-size: 2em;">${displayEmoji}</div>
                     ${mode === 'lunar' ? `<div style="font-size: 0.75em; margin: 2px 0; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.5px;">${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} ${currentLang === 'es' ? 'Día' : 'Day'} ${displayDay}</div>` : ''}
                     <div style="font-size: 0.47em; opacity: 0.60; color: #8899cc;">${displayInfo}</div>
-                    <div style="font-size: 1.1em; color: #e8c84a; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px;">${today.getDate()} ${t('months')[today.getMonth()].substring(0,3)}</div>
+                    <div style="font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px;">${today.getDate()} ${t('months')[today.getMonth()].substring(0,3)}</div>
                 </div>
                 <!-- Info según modo -->
                 <div style="background: rgba(20,10,40,0.85); padding: 6px 7px; border-radius: 8px; border: 1px solid rgba(201,168,64,0.28); border-top: 2px solid rgba(201,168,64,0.55); min-width: 0; overflow: hidden;">
@@ -15481,7 +15481,7 @@ function renderCalendar() {
                     <div style="margin: 3px 0; display:flex; justify-content:center; font-size: 2em;">${displayEmoji || (calendarMode === 'lunar' ? getMoonSVG(calculateLunarPhase(today), 30) : '☉')}</div>
                     <div style="font-size: 0.75em; margin: 2px 0; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.5px;">${calendarMode === 'lunar' ? `${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} ${currentLang === 'es' ? 'Día' : 'Day'} ${weekDayNumber}` : ''}</div>
                     <div style="font-size: 0.47em; opacity: 0.60; color: #8899cc;">${displayInfo}</div>
-                    <div style="font-size: 1.1em; color: #e8c84a; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px;">${today.getDate()} ${t('months')[today.getMonth()].substring(0,3)}</div>
+                    <div style="font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px;">${today.getDate()} ${t('months')[today.getMonth()].substring(0,3)}</div>
                 </div>
                 
                 <!-- Luna/Sol/Info Hoy -->
@@ -17580,7 +17580,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v226';
+const APP_VERSION = 'v227';
 var _pendingSW = null;
 
 function showUpdateBanner() {
