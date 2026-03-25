@@ -10143,12 +10143,22 @@ function updateCurrentDayInfoForMode(mode) {
         ];
 
         // Regenerate the HTML
+        // Banner box colors based on calendar mode
+        const bannerEvtColor2 = calendarMode === 'lunar' ? '#7ec8ff' : '#e8c84a';
+        const bannerEvtBg2 = calendarMode === 'lunar' ? 'rgba(10,30,50,0.85)' : 'rgba(40,32,5,0.85)';
+        const bannerHoyBorder2 = calendarMode === 'lunar' ? '#7ec8ff' : '#c9a840';
+        const bannerHoyBg2 = calendarMode === 'lunar' ? 'linear-gradient(160deg,rgba(8,22,42,0.95) 0%,rgba(5,15,30,0.95) 100%)' : 'linear-gradient(160deg,rgba(40,28,5,0.95) 0%,rgba(25,18,3,0.95) 100%)';
+        const bannerHoyText2 = calendarMode === 'lunar' ? '#7ec8ff' : '#c9a840';
+        const bannerHoyDay2 = calendarMode === 'lunar' ? '#a8d8ff' : '#e8c84a';
+        const bannerAspColor2 = calendarMode === 'lunar' ? '#7ec8ff' : '#c9a840';
+        const bannerAspBg2 = calendarMode === 'lunar' ? 'rgba(10,20,45,0.85)' : 'rgba(20,10,40,0.85)';
+
         currentDayInfoDiv.style.display = 'block';
         currentDayInfoDiv.innerHTML = `
             <div style="display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 5px; align-items: stretch; font-size: 0.7em; padding: 2px;">
                 <!-- Eventos -->
-                <div style="background: rgba(6,40,38,0.85); padding: 6px 7px; border-radius: 8px; border: 1px solid rgba(78,205,196,0.30); border-top: 2px solid #4ecdc4; min-width: 0; overflow: hidden;">
-                    <div style="display:flex; align-items:center; justify-content:center; gap:4px; font-size: 0.62em; color: #4ecdc4; font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.5px;">
+                <div style="background: ${bannerEvtBg2}; padding: 6px 7px; border-radius: 8px; border: 1px solid ${bannerEvtColor2}44; border-top: 2px solid ${bannerEvtColor2}; min-width: 0; overflow: hidden;">
+                    <div style="display:flex; align-items:center; justify-content:center; gap:4px; font-size: 0.62em; color: ${bannerEvtColor2}; font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.5px;">
                         📅 ${currentLang === 'es' ? 'Eventos' : 'Events'}${todayEvents.length > 0 ? ` (${todayEvents.length})` : ''}
                     </div>
                     ${todayEvents.length > 0 ? `
@@ -10156,16 +10166,16 @@ function updateCurrentDayInfoForMode(mode) {
                         ${todayEvents.slice(0, 5).map((evt, idx) => {
                             const eventKey = getDateKey(today);
                             const isCompleted = evt.completed || false;
-                            return `<div style="font-size: 0.65em; padding: 2px 3px; background: rgba(78,205,196,0.12); border-radius: 3px; display: flex; align-items: center; gap: 4px; border-left: 2px solid ${evt.type === 'reminder' ? '#f5576c' : evt.type === 'appointment' ? '#c9a840' : '#4ecdc4'};"><input type="checkbox" ${isCompleted ? 'checked' : ''} onclick="toggleEventComplete('${eventKey}', ${idx}); event.stopPropagation();" style="cursor: pointer; width: 12px; height: 12px; flex-shrink: 0;"><span style="cursor: pointer; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${isCompleted ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${evt.title}${evt.time ? ` <span style="font-weight: bold; color: #c9a840; float:right;">${evt.time}</span>` : ''}</span></div>`;
+                            return `<div style="font-size: 0.65em; padding: 2px 3px; background: ${bannerEvtColor2}1a; border-radius: 3px; display: flex; align-items: center; gap: 4px; border-left: 2px solid ${evt.type === 'reminder' ? '#f5576c' : evt.type === 'appointment' ? '#c9a840' : bannerEvtColor2};"><input type="checkbox" ${isCompleted ? 'checked' : ''} onclick="toggleEventComplete('${eventKey}', ${idx}); event.stopPropagation();" style="cursor: pointer; width: 12px; height: 12px; flex-shrink: 0;"><span style="cursor: pointer; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${isCompleted ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${evt.title}${evt.time ? ` <span style="font-weight: bold; color: #c9a840; float:right;">${evt.time}</span>` : ''}</span></div>`;
                         }).join('')}
                     </div>
-                    ` : `<div style="font-size: 0.6em; color: rgba(78,205,196,0.45); font-style: italic; padding: 4px 0;">${currentLang==='es'?'Sin eventos':'No events'}</div>`}
+                    ` : `<div style="font-size: 0.6em; color: ${bannerEvtColor2}77; font-style: italic; padding: 4px 0;">${currentLang==='es'?'Sin eventos':'No events'}</div>`}
                 </div>
                 <!-- HOY Centro -->
-                <div onclick="goToToday()" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;cursor:pointer;transition:all 0.2s;padding:6px 4px;border-radius:10px;border:1px solid rgba(201,168,64,0.32);background:linear-gradient(160deg,rgba(40,28,5,0.95) 0%,rgba(25,18,3,0.95) 100%);box-shadow:0 0 20px rgba(201,168,64,0.15);">
-                    <div style="font-size: 0.50em; font-weight: 800; letter-spacing: 3px; color: #c9a840; text-transform: uppercase; margin-bottom: 1px;">— HOY —</div>
+                <div onclick="goToToday()" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;cursor:pointer;transition:all 0.2s;padding:6px 4px;border-radius:10px;border:1px solid ${bannerHoyBorder2}50;background:${bannerHoyBg2};box-shadow:0 0 20px ${bannerHoyBorder2}25;">
+                    <div style="font-size: 0.50em; font-weight: 800; letter-spacing: 3px; color: ${bannerHoyText2}; text-transform: uppercase; margin-bottom: 1px;">— HOY —</div>
                     <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;">
-                        <span style="font-size:${String(displayDay).length > 4 ? '1.2em' : '1.8em'};font-weight:800;color:#e8c84a;text-shadow:0 0 18px rgba(201,168,64,0.65);">${displayDay}</span>
+                        <span style="font-size:${String(displayDay).length > 4 ? '1.2em' : '1.8em'};font-weight:800;color:${bannerHoyDay2};text-shadow:0 0 18px ${bannerHoyBorder2}aa;">${displayDay}</span>
                     </div>
                     <div style="margin: 3px 0; display:flex; justify-content:center; font-size: 2em;">${displayEmoji}</div>
                     ${mode === 'lunar' ? `<div style="font-size: 0.75em; margin: 2px 0; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.5px;">${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} ${currentLang === 'es' ? 'Día' : 'Day'} ${displayDay}</div>` : ''}
@@ -10173,8 +10183,8 @@ function updateCurrentDayInfoForMode(mode) {
                     <div style="font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px;">${today.getDate()} ${t('months')[today.getMonth()]}</div>
                 </div>
                 <!-- Info según modo -->
-                <div style="background: rgba(20,10,40,0.85); padding: 6px 7px; border-radius: 8px; border: 1px solid rgba(201,168,64,0.28); border-top: 2px solid rgba(201,168,64,0.55); min-width: 0; overflow: hidden;">
-                    <div style="display:flex; align-items:center; justify-content:center; gap:4px; font-size: 0.62em; color: #c9a840; font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.5px;">
+                <div style="background: ${bannerAspBg2}; padding: 6px 7px; border-radius: 8px; border: 1px solid ${bannerAspColor2}44; border-top: 2px solid ${bannerAspColor2}88; min-width: 0; overflow: hidden;">
+                    <div style="display:flex; align-items:center; justify-content:center; gap:4px; font-size: 0.62em; color: ${bannerAspColor2}; font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.5px;">
                         <span style="font-size: 1em;">${displayEmoji}</span>
                         ${displayTitle}${allPlanetaryEvents.length > 0 ? ` (${allPlanetaryEvents.length})` : ''}
                     </div>
@@ -10218,10 +10228,10 @@ function updateCurrentDayInfoForMode(mode) {
                             return '';
                         }).join('')}
                     </div>
-                    <div style="margin-top:4px;border-top:1px solid rgba(201,168,64,0.15);padding-top:4px;">
-                        <div onclick="showAllAspectsInterpretation()" style="font-size:0.6em;text-align:center;color:#c9a840;cursor:pointer;padding:3px;background:rgba(201,168,64,0.08);border-radius:4px;border:1px solid rgba(201,168,64,0.2);">✦ ${currentLang==='es'?'Interpretar todo':'Interpret all'}</div>
+                    <div style="margin-top:4px;border-top:1px solid ${bannerAspColor2}22;padding-top:4px;">
+                        <div onclick="showAllAspectsInterpretation()" style="font-size:0.6em;text-align:center;color:${bannerAspColor2};cursor:pointer;padding:3px;background:${bannerAspColor2}14;border-radius:4px;border:1px solid ${bannerAspColor2}33;">✦ ${currentLang==='es'?'Interpretar todo':'Interpret all'}</div>
                     </div>
-                    ` : `<div style="font-size:0.6em;color:rgba(201,168,64,0.4);font-style:italic;padding:4px 0;">${currentLang==='es'?'Sin aspectos':'No aspects'}</div>`}
+                    ` : `<div style="font-size:0.6em;color:${bannerAspColor2}66;font-style:italic;padding:4px 0;">${currentLang==='es'?'Sin aspectos':'No aspects'}</div>`}
                 </div>
             </div>
         `;
@@ -15507,13 +15517,23 @@ function renderCalendar() {
         const tideColor = todayAstro.tideStrength > 0.75 ? '#4FC3F7' : todayAstro.tideStrength > 0.5 ? '#0288D1' : todayAstro.tideStrength > 0.3 ? '#01579B' : '#546E7A';
         const distColor = todayAstro.isPerigee ? '#FF6B6B' : todayAstro.isApogee ? '#7E57C2' : '#fff';
         
+        // Banner box colors based on calendar mode
+        const bannerEvtColor = calendarMode === 'lunar' ? '#7ec8ff' : '#e8c84a';
+        const bannerEvtBg = calendarMode === 'lunar' ? 'rgba(10,30,50,0.85)' : 'rgba(40,32,5,0.85)';
+        const bannerHoyBorder = calendarMode === 'lunar' ? '#7ec8ff' : '#c9a840';
+        const bannerHoyBg = calendarMode === 'lunar' ? 'linear-gradient(160deg,rgba(8,22,42,0.95) 0%,rgba(5,15,30,0.95) 100%)' : 'linear-gradient(160deg,rgba(40,28,5,0.95) 0%,rgba(25,18,3,0.95) 100%)';
+        const bannerHoyText = calendarMode === 'lunar' ? '#7ec8ff' : '#c9a840';
+        const bannerHoyDay = calendarMode === 'lunar' ? '#a8d8ff' : '#e8c84a';
+        const bannerAspColor = calendarMode === 'lunar' ? '#7ec8ff' : '#c9a840';
+        const bannerAspBg = calendarMode === 'lunar' ? 'rgba(10,20,45,0.85)' : 'rgba(20,10,40,0.85)';
+
         document.getElementById('currentDayInfo').innerHTML = `
             <div style="display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 5px; align-items: stretch; font-size: 0.7em; padding: 2px;">
-                
+
                 <!-- Eventos -->
-                <div style="background: rgba(6,40,38,0.85); padding: 6px 7px; border-radius: 8px; border: 1px solid rgba(78,205,196,0.30); border-top: 2px solid #4ecdc4; min-width: 0; overflow: hidden;">
-                    <div style="display:flex; align-items:center; justify-content:center; gap:4px; font-size: 0.62em; color: #4ecdc4; font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.5px;">
-                        <svg width="10" height="10" viewBox="0 0 10 10"><rect x="1" y="1" width="8" height="8" rx="1.5" fill="none" stroke="#4ecdc4" stroke-width="1"/><line x1="3" y1="0" x2="3" y2="3" stroke="#4ecdc4" stroke-width="1"/><line x1="7" y1="0" x2="7" y2="3" stroke="#4ecdc4" stroke-width="1"/><line x1="2" y1="5" x2="8" y2="5" stroke="#4ecdc4" stroke-width="0.8" opacity="0.6"/><line x1="2" y1="7" x2="6" y2="7" stroke="#4ecdc4" stroke-width="0.8" opacity="0.6"/></svg>
+                <div style="background: ${bannerEvtBg}; padding: 6px 7px; border-radius: 8px; border: 1px solid ${bannerEvtColor}44; border-top: 2px solid ${bannerEvtColor}; min-width: 0; overflow: hidden;">
+                    <div style="display:flex; align-items:center; justify-content:center; gap:4px; font-size: 0.62em; color: ${bannerEvtColor}; font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.5px;">
+                        <svg width="10" height="10" viewBox="0 0 10 10"><rect x="1" y="1" width="8" height="8" rx="1.5" fill="none" stroke="${bannerEvtColor}" stroke-width="1"/><line x1="3" y1="0" x2="3" y2="3" stroke="${bannerEvtColor}" stroke-width="1"/><line x1="7" y1="0" x2="7" y2="3" stroke="${bannerEvtColor}" stroke-width="1"/><line x1="2" y1="5" x2="8" y2="5" stroke="${bannerEvtColor}" stroke-width="0.8" opacity="0.6"/><line x1="2" y1="7" x2="6" y2="7" stroke="${bannerEvtColor}" stroke-width="0.8" opacity="0.6"/></svg>
                         ${currentLang === 'es' ? 'Eventos' : 'Events'}${todayEvents.length > 0 ? ` (${todayEvents.length})` : ''}
                     </div>
                     ${todayEvents.length > 0 ? `
@@ -15521,19 +15541,19 @@ function renderCalendar() {
                         ${todayEvents.slice(0, 5).map((evt, idx) => {
                             const eventKey = getDateKey(today);
                             const isCompleted = evt.completed || false;
-                            return `<div style="font-size: 0.65em; padding: 2px 3px; background: rgba(78,205,196,0.12); border-radius: 3px; display: flex; align-items: center; gap: 4px; border-left: 2px solid ${evt.type === 'reminder' ? '#f5576c' : evt.type === 'appointment' ? '#c9a840' : '#4ecdc4'};"><input type="checkbox" ${isCompleted ? 'checked' : ''} onclick="toggleEventComplete('${eventKey}', ${idx}); event.stopPropagation();" style="cursor: pointer; width: 12px; height: 12px; flex-shrink: 0;"><span style="cursor: pointer; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${isCompleted ? 'text-decoration: line-through; opacity: 0.6;' : ''}" onclick="openEventsModal(new Date(${today.getTime()}), ${currentDayInCycle.lunarDay})">${evt.title}${evt.time ? ` <span style="font-weight:bold;color:#c9a840;float:right;">${evt.time}</span>` : ''}</span></div>`;
+                            return `<div style="font-size: 0.65em; padding: 2px 3px; background: ${bannerEvtColor}1a; border-radius: 3px; display: flex; align-items: center; gap: 4px; border-left: 2px solid ${evt.type === 'reminder' ? '#f5576c' : evt.type === 'appointment' ? '#c9a840' : bannerEvtColor};"><input type="checkbox" ${isCompleted ? 'checked' : ''} onclick="toggleEventComplete('${eventKey}', ${idx}); event.stopPropagation();" style="cursor: pointer; width: 12px; height: 12px; flex-shrink: 0;"><span style="cursor: pointer; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${isCompleted ? 'text-decoration: line-through; opacity: 0.6;' : ''}" onclick="openEventsModal(new Date(${today.getTime()}), ${currentDayInCycle.lunarDay})">${evt.title}${evt.time ? ` <span style="font-weight:bold;color:#c9a840;float:right;">${evt.time}</span>` : ''}</span></div>`;
                         }).join('')}
-                        ${todayEvents.length > 5 ? `<div style="font-size: 0.6em; text-align: center; color: #4ecdc4;">+${todayEvents.length - 5}</div>` : ''}
+                        ${todayEvents.length > 5 ? `<div style="font-size: 0.6em; text-align: center; color: ${bannerEvtColor};">+${todayEvents.length - 5}</div>` : ''}
                     </div>
-                    ` : `<div style="font-size: 0.6em; color: rgba(78,205,196,0.45); font-style: italic; padding: 4px 0;">${currentLang==='es'?'Sin eventos':'No events'}</div>`}
+                    ` : `<div style="font-size: 0.6em; color: ${bannerEvtColor}77; font-style: italic; padding: 4px 0;">${currentLang==='es'?'Sin eventos':'No events'}</div>`}
                 </div>
                 <!-- HOY Centro -->
-                <div onclick="goToCurrentCycle()" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;cursor:pointer;transition:all 0.2s;padding:6px 4px;border-radius:10px;border:1px solid rgba(201,168,64,0.32);background:linear-gradient(160deg,rgba(40,28,5,0.95) 0%,rgba(25,18,3,0.95) 100%);box-shadow:0 0 20px rgba(201,168,64,0.15);"
-                     onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 28px rgba(201,168,64,0.25)';"
-                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px rgba(201,168,64,0.15)';">
-                    <div style="font-size: 0.50em; font-weight: 800; letter-spacing: 3px; color: #c9a840; text-transform: uppercase; margin-bottom: 1px;">— HOY —</div>
+                <div onclick="goToCurrentCycle()" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;cursor:pointer;transition:all 0.2s;padding:6px 4px;border-radius:10px;border:1px solid ${bannerHoyBorder}50;background:${bannerHoyBg};box-shadow:0 0 20px ${bannerHoyBorder}25;"
+                     onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 28px ${bannerHoyBorder}40';"
+                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px ${bannerHoyBorder}25';">
+                    <div style="font-size: 0.50em; font-weight: 800; letter-spacing: 3px; color: ${bannerHoyText}; text-transform: uppercase; margin-bottom: 1px;">— HOY —</div>
                     <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;">
-                        <span style="font-size:${String(displayDay).length > 4 ? '1.2em' : '1.8em'};font-weight:800;color:#e8c84a;text-shadow:0 0 18px rgba(201,168,64,0.65);">${displayDay}</span>
+                        <span style="font-size:${String(displayDay).length > 4 ? '1.2em' : '1.8em'};font-weight:800;color:${bannerHoyDay};text-shadow:0 0 18px ${bannerHoyBorder}aa;">${displayDay}</span>
                     </div>
                     <div style="margin: 3px 0; display:flex; justify-content:center; font-size: 2em;">${displayEmoji || (calendarMode === 'lunar' ? getMoonSVG(calculateLunarPhase(today), 30) : '☉')}</div>
                     <div style="font-size: 0.75em; margin: 2px 0; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.5px;">${calendarMode === 'lunar' ? `${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} ${currentLang === 'es' ? 'Día' : 'Day'} ${weekDayNumber}` : ''}</div>
@@ -15542,8 +15562,8 @@ function renderCalendar() {
                 </div>
                 
                 <!-- Luna/Sol/Info Hoy -->
-                <div style="background: rgba(20,10,40,0.85); padding: 6px 7px; border-radius: 8px; border: 1px solid rgba(201,168,64,0.28); border-top: 2px solid rgba(201,168,64,0.55); min-width: 0; overflow: hidden;">
-                    <div style="display:flex; align-items:center; justify-content:center; gap:4px; font-size: 0.62em; color: #c9a840; font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.5px;">
+                <div style="background: ${bannerAspBg}; padding: 6px 7px; border-radius: 8px; border: 1px solid ${bannerAspColor}44; border-top: 2px solid ${bannerAspColor}88; min-width: 0; overflow: hidden;">
+                    <div style="display:flex; align-items:center; justify-content:center; gap:4px; font-size: 0.62em; color: ${bannerAspColor}; font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing:0.5px;">
                         <span style="font-size: 1em;">${calendarMode === 'lunar' ? '☽' : calendarMode === 'solar' ? '☉' : '📅'}</span>
                         ${displayTitle}${allPlanetaryEvents.length > 0 ? ` (${allPlanetaryEvents.length})` : ''}
                     </div>
@@ -15587,10 +15607,10 @@ function renderCalendar() {
                         }).join('')}
                         ${allPlanetaryEvents.length > 6 ? `<div style="font-size:0.6em;text-align:center;color:#8899cc;">+${allPlanetaryEvents.length - 6}</div>` : ''}
                     </div>
-                    <div style="margin-top:4px;border-top:1px solid rgba(201,168,64,0.15);padding-top:4px;">
-                        <div onclick="showAllAspectsInterpretation()" style="font-size:0.6em;text-align:center;color:#c9a840;cursor:pointer;padding:3px;background:rgba(201,168,64,0.08);border-radius:4px;border:1px solid rgba(201,168,64,0.2);">✦ ${currentLang==='es'?'Interpretar todo':'Interpret all'}</div>
+                    <div style="margin-top:4px;border-top:1px solid ${bannerAspColor}22;padding-top:4px;">
+                        <div onclick="showAllAspectsInterpretation()" style="font-size:0.6em;text-align:center;color:${bannerAspColor};cursor:pointer;padding:3px;background:${bannerAspColor}14;border-radius:4px;border:1px solid ${bannerAspColor}33;">✦ ${currentLang==='es'?'Interpretar todo':'Interpret all'}</div>
                     </div>
-                    ` : `<div style="font-size:0.6em;color:rgba(201,168,64,0.4);font-style:italic;padding:4px 0;">${currentLang==='es'?'Sin aspectos':'No aspects'}</div>`}
+                    ` : `<div style="font-size:0.6em;color:${bannerAspColor}66;font-style:italic;padding:4px 0;">${currentLang==='es'?'Sin aspectos':'No aspects'}</div>`}
                 </div>
             </div>
         `;
@@ -17638,7 +17658,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v249';
+const APP_VERSION = 'v250';
 var _pendingSW = null;
 
 function showUpdateBanner() {
