@@ -837,6 +837,9 @@
             <button onclick="selectDayOption('diario')" style="width: 100%; padding: 15px; margin-bottom: 10px; background: #9b59b6; border: none; border-radius: 8px; color: white; font-size: 1em; cursor: pointer; transition: all 0.2s;">
                 📝 Diario Personal y Reflexiones
             </button>
+            <button id="interpretDayBtn" onclick="selectDayOption('interpretacion')" style="width: 100%; padding: 15px; margin-bottom: 10px; background: linear-gradient(135deg,#667eea,#764ba2); border: none; border-radius: 8px; color: white; font-size: 1em; cursor: pointer; transition: all 0.2s; font-weight: bold;">
+                ✨ Interpretación de este día
+            </button>
             <button onclick="closeDayOptionsModal()" style="width: 100%; padding: 15px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; font-size: 1em; cursor: pointer; transition: all 0.2s;">
                 ❌ Cancelar
             </button>
@@ -5258,6 +5261,12 @@ function handleDayClick(element) {
             astroBtn.innerHTML = currentLang === 'es' ? '🌊🌙 Info Lunar' : '🌊🌙 Lunar Info';
         }
 
+        // Update interpretation button
+        const interpretBtn = document.getElementById('interpretDayBtn');
+        if (interpretBtn) {
+            interpretBtn.innerHTML = currentLang === 'es' ? '✨ Interpretación de este día' : '✨ Interpretation of this day';
+        }
+
         // IMPORTANTE: Mostrar botón de aspectos SIEMPRE (incluso si es 0)
         aspectsBtn.style.display = 'block';
         aspectsBtn.style.visibility = 'visible';
@@ -5371,12 +5380,94 @@ function selectDayOption(option) {
         openDiarioModal(window.selectedDayDate, window.selectedDayLunarDay);
     } else if (option === 'astronomia') {
         openAstroModal(window.selectedDayDate, window.selectedDayLunarDay);
+    } else if (option === 'interpretacion') {
+        openDayInterpretationModal(window.selectedDayDate, window.selectedDayLunarDay, window.selectedDayData);
     }
 }
 
 function closeDayOptionsModal() {
     const m = document.getElementById('dayOptionsModal');
     if (m) m.classList.remove('show');
+}
+
+// ── Day Interpretation Modal ──
+function openDayInterpretationModal(date, lunarDay, dayData) {
+    var L = currentLang === 'es';
+    var dateStr = formatLongDate(date);
+    var astro = getAstroData(date);
+    var elong = calculateLunarPhase(date);
+    var signChanges = getSignChanges(date);
+    var retrogrades = getRetrogrades(date);
+    var interAspects = getInterPlanetaryAspects(date);
+    var eclipse = getEclipseInfo(date);
+    var moonEvent = getMoonEventForDate(date);
+
+    // Build summary of the day's astro data
+    var phaseName = '';
+    if (elong < 45) phaseName = L ? 'Luna Nueva' : 'New Moon';
+    else if (elong < 135) phaseName = L ? 'Cuarto Creciente' : 'First Quarter';
+    else if (elong < 225) phaseName = L ? 'Luna Llena' : 'Full Moon';
+    else if (elong < 315) phaseName = L ? 'Cuarto Menguante' : 'Last Quarter';
+    else phaseName = L ? 'Luna Nueva' : 'New Moon';
+
+    var lines = [];
+    lines.push((L ? 'Fecha: ' : 'Date: ') + dateStr);
+    if (lunarDay) lines.push((L ? 'Día lunar: ' : 'Lunar day: ') + lunarDay);
+    lines.push((L ? 'Fase: ' : 'Phase: ') + phaseName + ' (' + elong.toFixed(1) + '°)');
+    lines.push((L ? 'Distancia: ' : 'Distance: ') + astro.distance.toLocaleString() + ' km');
+    lines.push((L ? 'Declinación: ' : 'Declination: ') + astro.declination.toFixed(2) + '°');
+
+    if (signChanges.length > 0) {
+        lines.push('');
+        lines.push(L ? '— Cambios de signo —' : '— Sign changes —');
+        signChanges.forEach(function(sc) { lines.push(sc.planet + ': ' + sc.sign); });
+    }
+    if (retrogrades.length > 0) {
+        lines.push('');
+        lines.push(L ? '— Retrógrados —' : '— Retrogrades —');
+        retrogrades.forEach(function(r) { lines.push(r.planet + ': ' + r.type); });
+    }
+    if (interAspects.length > 0) {
+        lines.push('');
+        lines.push(L ? '— Aspectos interplanetarios —' : '— Interplanetary aspects —');
+        interAspects.forEach(function(a) { lines.push(a.planet1 + ' ' + a.aspect + ' ' + a.planet2); });
+    }
+    if (eclipse) {
+        lines.push('');
+        lines.push((L ? 'Eclipse: ' : 'Eclipse: ') + (eclipse.type || eclipse.name || ''));
+    }
+    if (moonEvent) {
+        lines.push((L ? 'Evento lunar: ' : 'Moon event: ') + (moonEvent.name || moonEvent.type || ''));
+    }
+
+    var summaryText = lines.join('\n');
+
+    // Build modal HTML
+    var html = '<div class="modal show" id="dayInterpretModal" onclick="if(event.target===this){this.remove()}" '
+        + 'style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;">'
+        + '<div style="background:#0d1117;border:1px solid rgba(102,126,234,0.3);border-radius:16px;max-width:440px;width:100%;max-height:85vh;overflow-y:auto;padding:20px;">'
+        + '<h3 style="text-align:center;color:#a78bfa;font-family:Cinzel,serif;margin-bottom:4px;">✨ ' + (L ? 'Interpretación' : 'Interpretation') + '</h3>'
+        + '<p style="text-align:center;color:rgba(255,255,255,0.5);font-size:0.8em;margin-bottom:16px;">' + dateStr + '</p>'
+        + '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px;margin-bottom:16px;font-size:0.78em;color:rgba(255,255,255,0.6);white-space:pre-line;line-height:1.5;max-height:200px;overflow-y:auto;">'
+        + summaryText.replace(/</g,'&lt;')
+        + '</div>'
+        + '<p style="text-align:center;color:rgba(255,255,255,0.4);font-size:0.72em;margin-bottom:12px;">'
+        + (L ? 'Copia el resumen y pégalo en tu asistente de IA favorito para obtener una interpretación personalizada.' : 'Copy the summary and paste it into your favorite AI assistant for a personalized interpretation.')
+        + '</p>'
+        + '<div style="display:flex;gap:8px;">'
+        + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'dayInterpSummary\').textContent).then(function(){var b=event.target;b.textContent=\'' + (L ? '✓ Copiado' : '✓ Copied') + '\';setTimeout(function(){b.textContent=\'' + (L ? '📋 Copiar resumen' : '📋 Copy summary') + '\'},1500)})" style="flex:1;padding:12px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:8px;color:white;font-size:0.9em;cursor:pointer;font-weight:600;">'
+        + (L ? '📋 Copiar resumen' : '📋 Copy summary')
+        + '</button>'
+        + '<button onclick="this.closest(\'.modal\').remove()" style="padding:12px 18px;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;font-size:0.9em;cursor:pointer;">'
+        + (L ? 'Cerrar' : 'Close')
+        + '</button>'
+        + '</div>'
+        + '<div id="dayInterpSummary" style="display:none;">' + summaryText.replace(/</g,'&lt;') + '</div>'
+        + '</div></div>';
+
+    var existing = document.getElementById('dayInterpretModal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', html);
 }
 
 // Close any visible modal when Android back button is pressed
@@ -11434,9 +11525,9 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
                 <canvas id="natalWheelCanvas" width="600" height="600" style="max-width:100%;margin:0 auto;display:block;"></canvas>
             </div>
         </div>
-        <div style="display:flex;justify-content:center;padding:4px;">
-                <button onclick="copyNatalChartForAI()" style="background:none;border:1px solid rgba(78,205,196,0.2);border-radius:6px;padding:4px 10px;color:rgba(78,205,196,0.4);font-size:0.68em;cursor:pointer;">
-                    📋 ${L ? 'Copiar para AI' : 'Copy for AI'}
+        <div style="display:flex;justify-content:center;padding:8px 4px;">
+                <button class="btn-shine" onclick="openNatalInterpretationModal()" style="padding:10px 24px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:10px;color:white;font-size:0.88em;cursor:pointer;font-weight:600;letter-spacing:0.5px;">
+                    ✨ ${L ? 'Interpretación Carta Natal' : 'Natal Chart Interpretation'}
                 </button>
         </div>
         <div class="personal-natal-card" style="margin-top:8px;">
@@ -13023,6 +13114,79 @@ function copyNatalChartForAI() {
         // Fallback: show in a modal
         alert(text);
     });
+}
+
+function openNatalInterpretationModal() {
+    var L = currentLang === 'es';
+    var natal = getNatalData();
+    if (!natal) return;
+
+    var natalChart;
+    try {
+        var profileChart = localStorage.getItem('natalChart_' + natal.id);
+        natalChart = profileChart ? JSON.parse(profileChart) : JSON.parse(localStorage.getItem('natalChart'));
+    } catch(e) { return; }
+    if (!natalChart) return;
+
+    var today = new Date();
+    var todayTransits = calculateTransitsToNatal(today, natalChart);
+
+    var text = (L ? 'CARTA NATAL' : 'NATAL CHART') + ' — ' + (natal.name || natal.cityName) + '\n';
+    text += (L ? 'Nacimiento: ' : 'Birth: ') + natal.date + ', ' + natal.time + ' — ' + natal.cityName + '\n';
+    text += 'Lat: ' + natal.lat + ', Lon: ' + natal.lon + '\n';
+    text += '\n--- ' + (L ? 'PLANETAS NATALES' : 'NATAL PLANETS') + ' ---\n';
+
+    Object.entries(natalChart.planets).forEach(function(entry) {
+        var p = entry[0], data = entry[1];
+        var house = natalChart.houses ? getHouseForLongitude(data.longitude, natalChart.houses.cusps) : '?';
+        text += (planetNames[p] || p) + ': ' + data.formatted + ' (' + data.longitude.toFixed(2) + '°) — ' + (L ? 'Casa ' : 'House ') + house + '\n';
+    });
+
+    if (natalChart.houses) {
+        text += '\nASC: ' + natalChart.houses.ascFormatted + ' (' + natalChart.houses.ascendant.toFixed(2) + '°)\n';
+        text += 'MC: ' + natalChart.houses.mcFormatted + ' (' + natalChart.houses.mc.toFixed(2) + '°)\n';
+        text += '\n--- ' + (L ? 'CÚSPIDES DE CASAS' : 'HOUSE CUSPS') + ' (Equal) ---\n';
+        natalChart.houses.cusps.forEach(function(c, i) {
+            text += (L ? 'Casa ' : 'House ') + (i + 1) + ': ' + c.toFixed(2) + '°\n';
+        });
+    }
+
+    text += '\n--- ' + (L ? 'TRÁNSITOS HOY' : 'TRANSITS TODAY') + ' (' + today.toISOString().split('T')[0] + ') ---\n';
+    if (todayTransits.length > 0) {
+        todayTransits.forEach(function(tr) {
+            text += (planetNames[tr.transitPlanet] || tr.transitPlanet) + ' ' + tr.symbol + ' natal ' + (planetNames[tr.natalPlanet] || tr.natalPlanet) + ' (' + (L ? 'orbe' : 'orb') + ': ' + tr.orb + '°)\n';
+        });
+    } else {
+        text += L ? 'Sin aspectos exactos hoy.\n' : 'No exact aspects today.\n';
+    }
+
+    var safeText = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    var html = '<div class="modal show" id="natalInterpretModal" onclick="if(event.target===this){this.remove()}" '
+        + 'style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;">'
+        + '<div style="background:#0d1117;border:1px solid rgba(102,126,234,0.3);border-radius:16px;max-width:440px;width:100%;max-height:85vh;overflow-y:auto;padding:20px;">'
+        + '<h3 style="text-align:center;color:#a78bfa;font-family:Cinzel,serif;margin-bottom:4px;">' + (L ? '✨ Interpretación Carta Natal' : '✨ Natal Chart Interpretation') + '</h3>'
+        + '<p style="text-align:center;color:rgba(255,255,255,0.5);font-size:0.8em;margin-bottom:16px;">' + (natal.name || natal.cityName) + '</p>'
+        + '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px;margin-bottom:16px;font-size:0.78em;color:rgba(255,255,255,0.6);white-space:pre-line;line-height:1.5;max-height:280px;overflow-y:auto;">'
+        + safeText
+        + '</div>'
+        + '<p style="text-align:center;color:rgba(255,255,255,0.4);font-size:0.72em;margin-bottom:12px;">'
+        + (L ? 'Copia el resumen y pégalo en tu asistente de IA favorito para una interpretación personalizada.' : 'Copy the summary and paste it into your favorite AI assistant for a personalized interpretation.')
+        + '</p>'
+        + '<div style="display:flex;gap:8px;">'
+        + '<button onclick="var el=document.getElementById(\'natalInterpHidden\');navigator.clipboard.writeText(el.textContent).then(function(){var b=event.target;b.textContent=\'' + (L ? '✓ Copiado' : '✓ Copied') + '\';setTimeout(function(){b.textContent=\'' + (L ? '📋 Copiar' : '📋 Copy') + '\'},1500)})" style="flex:1;padding:12px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:8px;color:white;font-size:0.9em;cursor:pointer;font-weight:600;">'
+        + (L ? '📋 Copiar' : '📋 Copy')
+        + '</button>'
+        + '<button onclick="this.closest(\'.modal\').remove()" style="padding:12px 18px;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;font-size:0.9em;cursor:pointer;">'
+        + (L ? 'Cerrar' : 'Close')
+        + '</button>'
+        + '</div>'
+        + '<div id="natalInterpHidden" style="display:none;">' + safeText + '</div>'
+        + '</div></div>';
+
+    var existing = document.getElementById('natalInterpretModal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', html);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -18654,7 +18818,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v310';
+const APP_VERSION = 'v311';
 var _pendingSW = null;
 
 function showUpdateBanner() {
