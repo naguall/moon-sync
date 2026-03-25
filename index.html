@@ -2117,7 +2117,7 @@ function get186CycleData() {
 }
 
 // ========== TIDE CYCLE MODAL ==========
-function openTideCycleModal() {
+async function openTideCycleModal() {
     var L = currentLang === 'es';
     var modal = document.getElementById('tideCycleModal');
     var titleEl = document.getElementById('tideCycleTitle');
@@ -2135,6 +2135,38 @@ function openTideCycleModal() {
     if (locHeader) {
         var locName = ASTRO_USER_NAME ? ASTRO_USER_NAME.split(',')[0] : '';
         locHeader.innerHTML = locName ? '<span style="color:#e53935;">📍</span> ' + locName + ' <span style="color:rgba(255,255,255,0.3);">▾</span>' : '';
+    }
+
+    // Fetch 15 days of real tide data if not already cached
+    var rollingStart = new Date(today);
+    rollingStart.setDate(rollingStart.getDate() - 3);
+    var needFetch = false;
+    for (var chk = 0; chk < 15; chk++) {
+        var chkDate = new Date(rollingStart);
+        chkDate.setDate(chkDate.getDate() + chk);
+        if (!_tideCache['ext_' + getDateStr(chkDate)]) { needFetch = true; break; }
+    }
+    if (needFetch) {
+        // Show loading state
+        bodyEl.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.5);"><div style="font-size:1.5em;margin-bottom:10px;">🌊</div>' + (L ? 'Cargando datos de mareas...' : 'Loading tide data...') + '</div>';
+        modal.classList.add('show');
+        var rollingDateStr = getDateStr(rollingStart);
+        var wtData = await fetchWorldTides(ASTRO_USER_LAT, ASTRO_USER_LON, rollingDateStr, 15);
+        if (wtData) {
+            for (var fd = 0; fd < 15; fd++) {
+                var cacheDate = new Date(rollingStart);
+                cacheDate.setDate(cacheDate.getDate() + fd);
+                var cDateStr = getDateStr(cacheDate);
+                if (wtData.heights) {
+                    var dayCurve = wtHeightsToCurve(wtData, cDateStr);
+                    if (dayCurve) _tideCache[cDateStr] = dayCurve;
+                }
+                if (wtData.extremes) {
+                    var dayExts = wtExtremesForDate(wtData, cDateStr);
+                    if (dayExts) _tideCache['ext_' + cDateStr] = dayExts;
+                }
+            }
+        }
     }
 
     // Find first new moon of 2026 and first new moon of 2027 from newMoonsLocal
@@ -15663,8 +15695,10 @@ function setWTCache(lat, lon, dateStr, data) {
     } catch(e) {}
 }
 
-// Fetch 7 days of heights + extremes from WorldTides
-async function fetchWorldTides(lat, lon, dateStr) {
+// Fetch tide data from WorldTides API
+// days parameter controls how many days to fetch (default 7)
+async function fetchWorldTides(lat, lon, dateStr, days) {
+    days = days || 7;
     // Check localStorage cache first
     var cached = getWTCache(lat, lon, dateStr);
     if (cached) {
@@ -15675,7 +15709,7 @@ async function fetchWorldTides(lat, lon, dateStr) {
 
     var url = 'https://www.worldtides.info/api/v3?heights&extremes&localtime'
         + '&date=' + dateStr
-        + '&days=7'
+        + '&days=' + days
         + '&lat=' + lat
         + '&lon=' + lon
         + '&key=' + WORLDTIDES_KEY;
@@ -15750,10 +15784,15 @@ function wtExtremesForDate(wtData, dateStr) {
     return exts.length > 0 ? exts : null;
 }
 
-// Main refresh function — replaces Open-Meteo
+// Main refresh function — fetches 15 days of tide data (3 past + today + 11 future)
 async function refreshTidesFromAPI(today, currentDayInCycle, todayWeeks, currentWeekIndex) {
     var dateStr = getDateStr(today);
-    var wtData = await fetchWorldTides(ASTRO_USER_LAT, ASTRO_USER_LON, dateStr);
+
+    // Fetch 15 days starting from 3 days ago to cover the full rolling window
+    var rollingStart = new Date(today);
+    rollingStart.setDate(rollingStart.getDate() - 3);
+    var rollingDateStr = getDateStr(rollingStart);
+    var wtData = await fetchWorldTides(ASTRO_USER_LAT, ASTRO_USER_LON, rollingDateStr, 15);
 
     if (!wtData) {
         var statusEl = document.getElementById('tideApiStatus');
@@ -15785,23 +15824,18 @@ async function refreshTidesFromAPI(today, currentDayInCycle, todayWeeks, current
         }
     }
 
-    // Cache all 7 days of data in memory for the tide modal
-    if (wtData.heights) {
-        for (var d = 0; d < 7; d++) {
-            var futureDate = new Date(today);
-            futureDate.setDate(futureDate.getDate() + d);
-            var fDateStr = getDateStr(futureDate);
-            var dayCurve = wtHeightsToCurve(wtData, fDateStr);
-            if (dayCurve) _tideCache[fDateStr] = dayCurve;
+    // Cache all 15 days of data in memory for the tide modal
+    for (var d = 0; d < 15; d++) {
+        var cacheDate = new Date(rollingStart);
+        cacheDate.setDate(cacheDate.getDate() + d);
+        var cDateStr = getDateStr(cacheDate);
+        if (wtData.heights) {
+            var dayCurve = wtHeightsToCurve(wtData, cDateStr);
+            if (dayCurve) _tideCache[cDateStr] = dayCurve;
         }
-    }
-    if (wtData.extremes) {
-        for (var d = 0; d < 7; d++) {
-            var futureDate = new Date(today);
-            futureDate.setDate(futureDate.getDate() + d);
-            var fDateStr = getDateStr(futureDate);
-            var dayExts = wtExtremesForDate(wtData, fDateStr);
-            if (dayExts) _tideCache['ext_' + fDateStr] = dayExts;
+        if (wtData.extremes) {
+            var dayExts = wtExtremesForDate(wtData, cDateStr);
+            if (dayExts) _tideCache['ext_' + cDateStr] = dayExts;
         }
     }
 
@@ -18863,7 +18897,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v319';
+const APP_VERSION = 'v320';
 var _pendingSW = null;
 
 function showUpdateBanner() {
