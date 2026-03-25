@@ -10068,7 +10068,7 @@ function updateCurrentDayInfoForMode(mode) {
                     <div style="margin: 3px 0; display:flex; justify-content:center; font-size: 2em;">${displayEmoji}</div>
                     ${mode === 'lunar' ? `<div style="font-size: 0.75em; margin: 2px 0; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.5px;">${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} ${currentLang === 'es' ? 'Día' : 'Day'} ${displayDay}</div>` : ''}
                     <div style="font-size: 0.47em; opacity: 0.60; color: #8899cc;">${displayInfo}</div>
-                    <div style="font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px;">${today.getDate()} ${t('months')[today.getMonth()].substring(0,3)}</div>
+                    <div style="font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px;">${today.getDate()} ${t('months')[today.getMonth()]}</div>
                 </div>
                 <!-- Info según modo -->
                 <div style="background: rgba(20,10,40,0.85); padding: 6px 7px; border-radius: 8px; border: 1px solid rgba(201,168,64,0.28); border-top: 2px solid rgba(201,168,64,0.55); min-width: 0; overflow: hidden;">
@@ -13728,60 +13728,68 @@ function renderSolarInfoPanel() {
             const DR = Math.PI/180;
             const bandDeg = 2;
             let nightSVG = '';
-            // Evening terminator points for the terminator line
             const eveningPts = [];
             const morningPts = [];
+            // Normalize longitude to [-180, 180]
+            function normLon(lo) { lo = lo % 360; if (lo > 180) lo -= 360; if (lo < -180) lo += 360; return lo; }
 
             for (let lat = -90; lat <= 90; lat += bandDeg) {
                 const lat2 = Math.min(lat + bandDeg, 90);
                 const midLat = (lat + lat2) / 2;
-                const y1 = my(lat2); // top of band (higher lat = lower y)
-                const y2 = my(lat);  // bottom of band
+                const y1 = my(lat2);
+                const y2 = my(lat);
                 const bh = y2 - y1;
                 if (bh <= 0) continue;
 
                 const tanProd = Math.tan(midLat*DR) * Math.tan(sunDecl*DR);
 
                 if (tanProd >= 1) {
-                    // 24h night at this latitude
                     nightSVG += '<rect x="0" y="'+y1.toFixed(1)+'" width="'+W+'" height="'+bh.toFixed(1)+'" fill="rgba(0,0,15,0.45)"/>';
                     continue;
                 }
                 if (tanProd <= -1) {
-                    // 24h daylight — warm glow
                     nightSVG += '<rect x="0" y="'+y1.toFixed(1)+'" width="'+W+'" height="'+bh.toFixed(1)+'" fill="rgba(255,180,50,0.10)"/>';
                     continue;
                 }
 
-                // Half-day angle in degrees
                 const halfDay = Math.acos(-tanProd) / DR;
-                // Day extends from subsolarLon - halfDay to subsolarLon + halfDay
-                const dayStartLon = subsolarLon - halfDay;
-                const dayEndLon = subsolarLon + halfDay;
-                const dsx = mx(dayStartLon);
-                const dex = mx(dayEndLon);
+                // Normalize terminators to [-180, 180] for correct pixel mapping
+                const mLon = normLon(subsolarLon - halfDay); // morning terminator
+                const eLon = normLon(subsolarLon + halfDay); // evening terminator
+                const msx = mx(mLon);
+                const esx = mx(eLon);
+                const yMid = (y1+y2)/2;
 
-                // Store terminator points for the line
-                eveningPts.push({ x: dex, y: (y1+y2)/2 });
-                morningPts.push({ x: dsx, y: (y1+y2)/2 });
+                eveningPts.push({ x: esx, y: yMid });
+                morningPts.push({ x: msx, y: yMid });
 
-                if (dsx < dex) {
-                    // Day doesn't wrap — day is in middle, night on sides
-                    nightSVG += '<rect x="'+dsx.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(dex-dsx).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(255,180,50,0.10)"/>';
-                    if (dsx > 0) nightSVG += '<rect x="0" y="'+y1.toFixed(1)+'" width="'+dsx.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(0,0,15,0.45)"/>';
-                    if (dex < W) nightSVG += '<rect x="'+dex.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(W-dex).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(0,0,15,0.45)"/>';
+                if (msx < esx) {
+                    // Day in middle, night on both sides
+                    nightSVG += '<rect x="'+msx.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(esx-msx).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(255,180,50,0.10)"/>';
+                    if (msx > 0) nightSVG += '<rect x="0" y="'+y1.toFixed(1)+'" width="'+msx.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(0,0,15,0.45)"/>';
+                    if (esx < W) nightSVG += '<rect x="'+esx.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(W-esx).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(0,0,15,0.45)"/>';
                 } else {
-                    // Day wraps around ±180° — day on edges, night in middle
-                    nightSVG += '<rect x="0" y="'+y1.toFixed(1)+'" width="'+dex.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(255,180,50,0.10)"/>';
-                    nightSVG += '<rect x="'+dsx.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(W-dsx).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(255,180,50,0.10)"/>';
-                    nightSVG += '<rect x="'+dex.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(dsx-dex).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(0,0,15,0.45)"/>';
+                    // Day wraps around edges, night in middle
+                    nightSVG += '<rect x="0" y="'+y1.toFixed(1)+'" width="'+esx.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(255,180,50,0.10)"/>';
+                    nightSVG += '<rect x="'+msx.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(W-msx).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(255,180,50,0.10)"/>';
+                    nightSVG += '<rect x="'+esx.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+(msx-esx).toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="rgba(0,0,15,0.45)"/>';
                 }
             }
-            // Terminator lines (evening + morning)
-            if (eveningPts.length > 2) {
-                nightSVG += '<polyline points="'+eveningPts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ')+'" fill="none" stroke="rgba(255,200,80,0.7)" stroke-width="1.5"/>';
-                nightSVG += '<polyline points="'+morningPts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ')+'" fill="none" stroke="rgba(255,200,80,0.7)" stroke-width="1.5"/>';
+            // Terminator lines — split polylines at wrap-around jumps
+            function drawTermLine(pts) {
+                if (pts.length < 2) return '';
+                var segs = [], cur = [pts[0]];
+                for (var i = 1; i < pts.length; i++) {
+                    if (Math.abs(pts[i].x - pts[i-1].x) > W * 0.4) {
+                        if (cur.length > 1) segs.push(cur);
+                        cur = [pts[i]];
+                    } else { cur.push(pts[i]); }
+                }
+                if (cur.length > 1) segs.push(cur);
+                return segs.map(function(s) { return '<polyline points="'+s.map(function(p){return p.x.toFixed(1)+','+p.y.toFixed(1)}).join(' ')+'" fill="none" stroke="rgba(255,200,80,0.7)" stroke-width="1.5"/>'; }).join('');
             }
+            nightSVG += drawTermLine(eveningPts);
+            nightSVG += drawTermLine(morningPts);
             return nightSVG;
         })()
         // User location only (no sun marker, no trajectory)
@@ -15423,7 +15431,7 @@ function renderCalendar() {
                     <div style="margin: 3px 0; display:flex; justify-content:center; font-size: 2em;">${displayEmoji || (calendarMode === 'lunar' ? getMoonSVG(calculateLunarPhase(today), 30) : '☉')}</div>
                     <div style="font-size: 0.75em; margin: 2px 0; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.5px;">${calendarMode === 'lunar' ? `${currentLang === 'es' ? 'Sem' : 'Wk'} ${currentWeekIndex + 1} ${currentLang === 'es' ? 'Día' : 'Day'} ${weekDayNumber}` : ''}</div>
                     <div style="font-size: 0.47em; opacity: 0.60; color: #8899cc;">${displayInfo}</div>
-                    <div style="font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px;">${today.getDate()} ${t('months')[today.getMonth()].substring(0,3)}</div>
+                    <div style="font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px;">${today.getDate()} ${t('months')[today.getMonth()]}</div>
                 </div>
                 
                 <!-- Luna/Sol/Info Hoy -->
@@ -17522,7 +17530,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v233';
+const APP_VERSION = 'v234';
 var _pendingSW = null;
 
 function showUpdateBanner() {
