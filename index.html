@@ -12160,7 +12160,7 @@ function drawNatalWheel(canvasId) {
             // Glyph
             var midA = L2A(i*30+15);
             var gr = (R_signOuter+R_signInner)/2;
-            svg += '<text x="'+px(gr,midA)+'" y="'+py(gr,midA)+'" fill="'+signColors[i]+'" font-size="18" font-weight="bold" font-family="serif" text-anchor="middle" dominant-baseline="central">'+signGlyphs[i]+'</text>';
+            svg += '<text x="'+px(gr,midA)+'" y="'+py(gr,midA)+'" fill="'+signColors[i]+'" font-size="24" font-weight="bold" font-family="serif" text-anchor="middle" dominant-baseline="central">'+signGlyphs[i]+'</text>';
         }
 
         // ===== DEGREE TICK RING =====
@@ -12219,21 +12219,6 @@ function drawNatalWheel(canvasId) {
                 var midLon = cusp + span/2;
                 var hA = L2A(midLon);
                 svg += '<text x="'+px(R_hMid,hA)+'" y="'+py(R_hMid,hA)+'" fill="#888" font-size="11" font-family="system-ui,sans-serif" text-anchor="middle" dominant-baseline="central">'+(idx+1)+'</text>';
-            });
-
-            // Cusp degree labels (between tick ring and planet ring, near the cusp line)
-            nc.houses.cusps.forEach(function(cusp, idx) {
-                var cA = L2A(cusp);
-                var signIdx = Math.floor(cusp/30)%12;
-                var deg = Math.floor(cusp%30);
-                var min = Math.floor(((cusp%30)-deg)*60);
-                var label = deg+'°'+signGlyphs[signIdx]+(min<10?'0':'')+min+"'";
-                // Position just inside the tick ring
-                var dlr = R_tickInner - 8;
-                var rotDeg = (cA*180/Math.PI)+90;
-                var check = rotDeg%360; if(check<0)check+=360;
-                if(check>90&&check<270) rotDeg+=180;
-                svg += '<text x="'+px(dlr,cA)+'" y="'+py(dlr,cA)+'" fill="#555" font-size="6" font-family="system-ui,sans-serif" text-anchor="middle" dominant-baseline="central" transform="rotate('+rotDeg.toFixed(1)+','+px(dlr,cA)+','+py(dlr,cA)+')">'+label+'</text>';
             });
 
             // AC / MC / DC / IC labels outside chart
@@ -18774,7 +18759,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v329';
+const APP_VERSION = 'v330';
 var _pendingSW = null;
 
 function showUpdateBanner() {
