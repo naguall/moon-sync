@@ -5238,7 +5238,7 @@ function openAstroModal(date, lunarDay) {
     
     let html = `
         <p style="text-align:center;color:rgba(255,255,255,0.6);margin-bottom:16px;">
-            🌙 ${formatLongDate(date)} · Latitud ${ASTRO_USER_LAT}°N
+            🌙 ${formatLongDate(date)} · 📍 ${ASTRO_USER_NAME.split(',')[0]}
         </p>
         
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
@@ -8266,7 +8266,7 @@ function renderEarthInfoPanel() {
             <span style="font-family:'Cinzel',serif;color:#4ecdc4;font-weight:600;letter-spacing:1px;font-size:0.85em;">
                 ${currentLang==='es' ? 'Información Terrestre' : 'Earth Information'}
             </span>
-            <span style="color:#6aaa9e;font-size:0.68em;margin-left:4px;">${formatLongDate(now)} · ${uLat.toFixed(2)}°${uLat>=0?'N':'S'} · 📍 ${ASTRO_USER_NAME.split(',')[0]}</span>
+            <span style="color:#6aaa9e;font-size:0.68em;margin-left:auto;">📍 ${ASTRO_USER_NAME.split(',')[0]}</span>
         </div>
 
         <!-- 1. Resonancia Schumann -->
@@ -15295,8 +15295,6 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
     const headerLocale = currentLang==='es'?'es':'en';
     const headerRise = headerMrs.rise ? headerMrs.rise.toLocaleTimeString(headerLocale, headerTimeFmt) : '--:--';
     const headerSet = headerMrs.set ? headerMrs.set.toLocaleTimeString(headerLocale, headerTimeFmt) : '--:--';
-    const tideStationName = findNearestTideStation(ASTRO_USER_LAT,ASTRO_USER_LON)?.n||'';
-
     banner.style.display = 'block';
     banner.innerHTML = `
     <div style="background:linear-gradient(160deg,rgba(5,10,40,0.98) 0%,rgba(4,7,28,0.98) 100%); border-radius:12px; border:1px solid rgba(74,158,255,0.28); border-top:2px solid rgba(74,158,255,0.55); box-shadow:0 0 22px rgba(74,158,255,0.09); padding:8px 10px; font-size:0.78em;">
@@ -17703,7 +17701,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v260';
+const APP_VERSION = 'v261';
 var _pendingSW = null;
 
 function showUpdateBanner() {
