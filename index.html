@@ -544,23 +544,19 @@
             header > div.mode-btns { flex-direction: row !important; }
             #notificationBtn, #langES, #langEN { font-size: 1em !important; padding: 4px 8px !important; }
             
-            /* ── Modals: full width, start from top ── */
-            .modal { align-items: flex-start !important; overflow: hidden !important; }
+            /* ── Modals: full width, scrollable from top ── */
+            .modal { justify-content: flex-start !important; align-items: center !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; padding: 4px 0 !important; }
             .modal-content {
                 width: 96% !important;
                 max-width: 96vw !important;
-                margin: 6px auto !important;
-                padding: 0 !important;
-                max-height: calc(100dvh - 12px) !important;
+                margin: 0 auto !important;
+                padding: 12px !important;
+                max-height: none !important;
                 box-sizing: border-box !important;
-                overflow-x: hidden !important;
-                overflow-y: auto !important;
-                display: flex !important;
-                flex-direction: column !important;
+                overflow: visible !important;
             }
-            .modal-header { margin: 0 !important; padding: 10px 14px 8px !important; position: sticky; top: 0; background: linear-gradient(170deg, rgba(7,9,42,0.99) 0%, rgba(4,5,25,0.99) 100%); z-index: 2; flex-shrink: 0; border-bottom: 1px solid rgba(201,168,64,0.2) !important; }
+            .modal-header { margin-bottom: 10px !important; padding-bottom: 8px !important; }
             .modal-header h2 { font-size: 0.9em !important; line-height: 1.2; }
-            #aspectsModalBody, .modal-content > div:not(.modal-header) { padding: 0 14px 14px !important; }
             
             /* ── Planet buttons: 2 per row ── */
             #planetAspectsSection > div[style*="grid"] {
@@ -17531,7 +17527,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v238';
+const APP_VERSION = 'v239';
 var _pendingSW = null;
 
 function showUpdateBanner() {
