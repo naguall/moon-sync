@@ -671,6 +671,7 @@
     </style>
     <!-- Google Identity Services for Calendar sync -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -1195,8 +1196,8 @@ function getJulianDay(date) {
            Math.floor(y / 400) - 32045;
 }
 
-// Calcular posición de la Luna
-function getMoonPosition(date) {
+// Calcular posición de la Luna (legacy — fallback if astronomy-engine not loaded)
+function getMoonPositionLegacy(date) {
     const jd = getJulianDay(date);
     const T = (jd - 2451545.0) / 36525;
     
@@ -1246,9 +1247,20 @@ function getMoonPosition(date) {
     return moonLongitude;
 }
 
-// Calcular posición planetaria (simplificado)
-function getPlanetPosition(planet, date) {
-    if (planet === 'moon') return getMoonPosition(date);
+// Moon position — uses astronomy-engine (professional accuracy) with legacy fallback
+function getMoonPosition(date) {
+    if (typeof Astronomy !== 'undefined') {
+        try {
+            var t = Astronomy.MakeTime(date);
+            return Astronomy.EclipticGeoMoon(t).lon;
+        } catch(e) { /* fallback */ }
+    }
+    return getMoonPositionLegacy(date);
+}
+
+// Calcular posición planetaria (legacy — fallback if astronomy-engine not loaded)
+function getPlanetPositionLegacy(planet, date) {
+    if (planet === 'moon') return getMoonPositionLegacy(date);
 
     const jd = getJulianDay(date);
     // d = days since 2000 Jan 0.0 UT (Schlyter epoch = JD 2451543.5)
@@ -1545,6 +1557,25 @@ function getPlanetPosition(planet, date) {
 // Helper: Moon mean anomaly for Sun perturbation
 function getMoonMeanAnomaly(d) {
     return (115.3654 + 13.0649929509 * d) % 360;
+}
+
+// Planet position — uses astronomy-engine (professional accuracy) with legacy fallback
+function getPlanetPosition(planet, date) {
+    if (typeof Astronomy !== 'undefined') {
+        try {
+            var t = Astronomy.MakeTime(date);
+            var name = planet.toLowerCase();
+            if (name === 'moon') return Astronomy.EclipticGeoMoon(t).lon;
+            if (name === 'sun') return Astronomy.SunPosition(t).elon;
+            var bodyMap = {'mercury':'Mercury','venus':'Venus','mars':'Mars','jupiter':'Jupiter','saturn':'Saturn','uranus':'Uranus','neptune':'Neptune','pluto':'Pluto'};
+            if (bodyMap[name]) {
+                var vec = Astronomy.GeoVector(bodyMap[name], t, true);
+                var ecl = Astronomy.Ecliptic(vec);
+                return ecl.elon;
+            }
+        } catch(e) { console.warn('AE error:', planet, e); }
+    }
+    return getPlanetPositionLegacy(planet, date);
 }
 
 // Obtener signo zodiacal desde longitud
@@ -11050,51 +11081,97 @@ function calculateElementsQualities(planets, houses) {
 }
 
 function calculateHouses(date, latitude) {
-    // Simplified Placidus house calculation
-    // Local Sidereal Time (LST)
-    const jd = getJulianDay(date);
-    const T = (jd - 2451545.0) / 36525;
-    const lon = parseFloat(localStorage.getItem('natalLon') || '0');
+    // ═══════════════════════════════════════════════════
+    // PLACIDUS house system — professional-grade
+    // Uses iterative method to trisect diurnal/nocturnal semi-arcs
+    // ═══════════════════════════════════════════════════
+    var jd = getJulianDay(date);
+    var T = (jd - 2451545.0) / 36525;
+    var lon = parseFloat(localStorage.getItem('natalLon') || '0');
+    var dr = Math.PI / 180;
 
-    // Greenwich Mean Sidereal Time (GMST) in degrees
-    let GMST = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T;
-    GMST = GMST % 360;
-    if (GMST < 0) GMST += 360;
+    // GMST in degrees
+    var GMST = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T;
+    GMST = ((GMST % 360) + 360) % 360;
 
-    // Local Sidereal Time
-    let LST = GMST + lon;
-    LST = LST % 360;
-    if (LST < 0) LST += 360;
+    // RAMC (Right Ascension of MC) = Local Sidereal Time in degrees
+    var RAMC = ((GMST + lon) % 360 + 360) % 360;
 
     // Obliquity of ecliptic
-    const obliquity = 23.4393 - 0.0130 * T;
-    const oblRad = obliquity * Math.PI / 180;
-    const latRad = latitude * Math.PI / 180;
-    const lstRad = LST * Math.PI / 180;
+    var eps = (23.4393 - 0.0130 * T) * dr;
+    var phi = latitude * dr;
 
-    // Ascendant
-    let ascendant = Math.atan2(
-        Math.cos(lstRad),
-        -(Math.sin(oblRad) * Math.tan(latRad) + Math.cos(oblRad) * Math.sin(lstRad))
-    ) * 180 / Math.PI;
-    if (ascendant < 0) ascendant += 360;
-
-    // MC (Midheaven)
-    let mc = Math.atan2(Math.sin(lstRad), Math.cos(lstRad) * Math.cos(oblRad)) * 180 / Math.PI;
+    // MC (Medium Coeli) — ecliptic longitude from RAMC
+    var mc = Math.atan(Math.tan(RAMC * dr) / Math.cos(eps)) / dr;
+    if (RAMC >= 90 && RAMC < 270) mc += 180;
     if (mc < 0) mc += 360;
+    mc = mc % 360;
 
-    // Simplified equal house system (30° per house from ASC)
-    const houseCusps = [];
-    for (let i = 0; i < 12; i++) {
-        let cusp = (ascendant + i * 30) % 360;
-        houseCusps.push(cusp);
+    // ASC (Ascendant)
+    var asc = Math.atan2(
+        Math.cos(RAMC * dr),
+        -(Math.sin(eps) * Math.tan(phi) + Math.cos(eps) * Math.sin(RAMC * dr))
+    ) / dr;
+    if (asc < 0) asc += 360;
+
+    // Helper: convert Right Ascension to ecliptic longitude
+    function ra2lon(ra_deg) {
+        var raMod = ((ra_deg % 360) + 360) % 360;
+        var lam = Math.atan(Math.tan(raMod * dr) / Math.cos(eps)) / dr;
+        // Quadrant correction: lambda must be in same quadrant as RA
+        if (raMod >= 90 && raMod < 270) lam += 180;
+        if (lam < 0) lam += 360;
+        return lam % 360;
     }
 
+    // Placidus cusp iteration
+    // H11: RA(λ) = RAMC + 30 + AD(λ)/3
+    // H12: RA(λ) = RAMC + 60 + 2·AD(λ)/3
+    // H2:  RA(λ) = RAMC + 210 - AD(λ)/3   (below horizon)
+    // H3:  RA(λ) = RAMC + 240 - 2·AD(λ)/3 (below horizon)
+    function placidusCusp(baseOffset, adFrac) {
+        var AD = 0;
+        var lambda;
+        for (var i = 0; i < 50; i++) {
+            var targetRA = RAMC + baseOffset + adFrac * AD;
+            lambda = ra2lon(targetRA);
+            var lamR = lambda * dr;
+            var dec = Math.asin(Math.sin(eps) * Math.sin(lamR));
+            var tanProd = Math.tan(dec) * Math.tan(phi);
+            if (tanProd > 1) tanProd = 0.9999;
+            if (tanProd < -1) tanProd = -0.9999;
+            var newAD = Math.asin(tanProd) / dr;
+            if (Math.abs(newAD - AD) < 0.0001) break;
+            AD = newAD;
+        }
+        return ((lambda % 360) + 360) % 360;
+    }
+
+    var cusps = new Array(12);
+    cusps[0] = asc;                              // House 1 = ASC
+    cusps[9] = mc;                               // House 10 = MC
+
+    // Above horizon cusps
+    cusps[10] = placidusCusp(30, 1/3);           // House 11
+    cusps[11] = placidusCusp(60, 2/3);           // House 12
+
+    // Below horizon cusps
+    cusps[1] = placidusCusp(210, -1/3);          // House 2
+    cusps[2] = placidusCusp(240, -2/3);          // House 3
+
+    // Opposite cusps (180° from their counterparts)
+    cusps[3] = (mc + 180) % 360;                 // House 4 = IC
+    cusps[4] = (cusps[10] + 180) % 360;          // House 5
+    cusps[5] = (cusps[11] + 180) % 360;          // House 6
+    cusps[6] = (asc + 180) % 360;                // House 7 = DSC
+    cusps[7] = (cusps[1] + 180) % 360;           // House 8
+    cusps[8] = (cusps[2] + 180) % 360;           // House 9
+
     return {
-        ascendant: ascendant,
+        ascendant: asc,
         mc: mc,
-        cusps: houseCusps,
-        ascFormatted: getZodiacSignWithDegree(ascendant).formatted,
+        cusps: cusps,
+        ascFormatted: getZodiacSignWithDegree(asc).formatted,
         mcFormatted: getZodiacSignWithDegree(mc).formatted
     };
 }
@@ -18759,7 +18836,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v331';
+const APP_VERSION = 'v332';
 var _pendingSW = null;
 
 function showUpdateBanner() {

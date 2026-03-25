@@ -1,9 +1,10 @@
-const CACHE_NAME = 'moon-sync-v331';
+const CACHE_NAME = 'moon-sync-v332';
 const ASSETS = [
   '/moon-sync/',
   '/moon-sync/index.html',
   '/moon-sync/lunar-data.js',
-  '/moon-sync/manifest.json'
+  '/moon-sync/manifest.json',
+  'https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js'
 ];
 
 // Helper: close ALL notifications and clear badge
