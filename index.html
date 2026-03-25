@@ -298,7 +298,7 @@
         /* AI Chat */
         #aiChatFab { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); border: 2px solid rgba(255,255,255,0.2); color: white; font-size: 1.5em; cursor: pointer; z-index: 999; box-shadow: 0 4px 20px rgba(102,126,234,0.4); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
         #aiChatFab:active { transform: scale(0.92); }
-        #aiChatModal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background: rgba(2,2,15,0.95); flex-direction: column; }
+        #aiChatModal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; height: 100dvh; background: rgba(2,2,15,0.95); flex-direction: column; }
         #aiChatModal.show { display: flex; }
         #hoyInterpModal { display: none; position: fixed; z-index: 1002; left: 0; top: 0; width: 100%; height: 100%; background: rgba(2,2,15,0.97); flex-direction: column; }
         #hoyInterpModal.show { display: flex; }
@@ -18863,7 +18863,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v318';
+const APP_VERSION = 'v319';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -19300,28 +19300,29 @@ function openAIChat() {
     // Don't auto-focus to prevent keyboard from pushing buttons off screen
 }
 
-// Keep AI chat quick action buttons visible when mobile keyboard opens
+// Fix AI chat modal height when mobile keyboard opens
 (function() {
-    function scrollAIChatToBottom() {
-        var msgs = document.getElementById('aiChatMessages');
-        if (msgs && document.getElementById('aiChatModal').classList.contains('show')) {
-            setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 150);
-        }
-    }
     if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', scrollAIChatToBottom);
-    }
-    // Also scroll on input focus
-    var chatInput = document.getElementById('aiChatInput');
-    if (chatInput) {
-        chatInput.addEventListener('focus', function() {
-            setTimeout(scrollAIChatToBottom, 300);
+        window.visualViewport.addEventListener('resize', function() {
+            var modal = document.getElementById('aiChatModal');
+            if (modal && modal.classList.contains('show')) {
+                modal.style.height = window.visualViewport.height + 'px';
+                modal.style.top = window.visualViewport.offsetTop + 'px';
+            }
+            var hoyModal = document.getElementById('hoyInterpModal');
+            if (hoyModal && hoyModal.classList.contains('show')) {
+                hoyModal.style.height = window.visualViewport.height + 'px';
+                hoyModal.style.top = window.visualViewport.offsetTop + 'px';
+            }
         });
     }
 })();
 
 function closeAIChat() {
-    document.getElementById('aiChatModal').classList.remove('show');
+    var modal = document.getElementById('aiChatModal');
+    modal.classList.remove('show');
+    modal.style.height = '';
+    modal.style.top = '';
     document.getElementById('aiChatFab').style.display = 'flex';
 }
 
@@ -19645,14 +19646,19 @@ function showAIWelcome() {
     } else {
         container.innerHTML = `
             <div class="ai-msg assistant" style="margin-top:0;">
-                <div style="display:flex;flex-direction:column;gap:8px;margin:8px 0;">
-                    <button onclick="aiQuickAction(1)" style="padding:10px 14px;background:linear-gradient(135deg,rgba(102,126,234,0.25),rgba(118,75,162,0.25));border:1px solid rgba(102,126,234,0.4);border-radius:10px;color:#c4b5fd;font-size:0.85em;font-weight:600;cursor:pointer;text-align:left;">${isEs ? 'Lectura completa de carta astral' : 'Full natal chart reading'}</button>
-                    <button onclick="aiQuickAction(3)" style="padding:10px 14px;background:linear-gradient(135deg,rgba(255,224,102,0.15),rgba(255,149,0,0.15));border:1px solid rgba(255,224,102,0.3);border-radius:10px;color:#ffd54f;font-size:0.85em;font-weight:600;cursor:pointer;text-align:left;">${isEs ? 'Tránsitos de hoy' : 'Today transits'}</button>
-                </div>
+                <p><strong>${isEs ? '¡Hola! Soy tu asistente de ciclos cósmicos.' : 'Hi! I\'m your cosmic cycles assistant.'}</strong></p>
+                <p style="color:rgba(255,255,255,0.5);font-size:0.85em;">${isEs ? 'Pregúntame sobre tu carta natal, tránsitos, fases lunares o cualquier tema astrológico.' : 'Ask me about your natal chart, transits, lunar phases or any astrological topic.'}</p>
             </div>`;
-        // Hide the sticky quick actions area (not needed)
+        // Show quick action buttons in the sticky area (won't be pushed by keyboard)
         var qa = document.getElementById('aiQuickActions');
-        if (qa) qa.style.display = 'none';
+        if (qa) {
+            qa.style.display = 'flex';
+            qa.style.flexDirection = 'column';
+            qa.style.gap = '8px';
+            qa.innerHTML = `
+                <button onclick="aiQuickAction(1)" style="padding:10px 14px;background:linear-gradient(135deg,rgba(102,126,234,0.25),rgba(118,75,162,0.25));border:1px solid rgba(102,126,234,0.4);border-radius:10px;color:#c4b5fd;font-size:0.85em;font-weight:600;cursor:pointer;text-align:left;">${isEs ? 'Lectura completa de carta astral' : 'Full natal chart reading'}</button>
+                <button onclick="aiQuickAction(3)" style="padding:10px 14px;background:linear-gradient(135deg,rgba(255,224,102,0.15),rgba(255,149,0,0.15));border:1px solid rgba(255,224,102,0.3);border-radius:10px;color:#ffd54f;font-size:0.85em;font-weight:600;cursor:pointer;text-align:left;">${isEs ? 'Tránsitos de hoy' : 'Today transits'}</button>`;
+        }
     }
 }
 
