@@ -5825,11 +5825,11 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
             return;
         }
 
-        var astroCtx = gatherAstroContext();
+        var astroCtx = gatherFullAppContext();
         // Summary prompt — ~6-8 bullets, user can ask for details via chat
         var systemPrompt = L
-            ? 'Eres un astrólogo transpersonal evolutivo. Interpretas la carta natal como mapa del viaje del alma. REGLAS ESTRICTAS:\n- Formato DIRECTO: usa bullets cortos (•) con los puntos clave. Cada bullet 1-2 frases máximo.\n- Agrupa por temas: Esencia, Desafíos, Potencial, Consejo práctico.\n- Ve AL GRANO. NUNCA empieces con introducciones como "Aquí tienes..." o "Te presento..." o "Veamos..." — empieza DIRECTAMENTE con el primer bullet.\n- Aproximadamente 5-8 bullets en total. Sé BREVE. El usuario podrá preguntar más detalles en el chat.\n- NUNCA uses el nombre del usuario. Usa "tú", "tu carta", "tu alma".\n- SIEMPRE termina cada frase completa.\n- Usa datos reales de la carta. No repitas datos ya en pantalla.\n- Responde en español.\n\nDATOS:\n' + astroCtx
-            : 'You are a transpersonal evolutionary astrologer. You interpret the natal chart as a map of the soul\'s journey. STRICT RULES:\n- DIRECT format: use short bullets (•) with key points. Each bullet 1-2 sentences max.\n- Group by themes: Essence, Challenges, Potential, Practical advice.\n- Get TO THE POINT. NEVER start with introductions like "Here is..." or "Let me present..." — start DIRECTLY with the first bullet.\n- Approximately 5-8 bullets total. Be BRIEF. The user can ask for more details in the chat.\n- NEVER use the user\'s name. Use "you", "your chart", "your soul".\n- ALWAYS finish every sentence completely.\n- Use real chart data. Don\'t repeat data already on screen.\n- Respond in English.\n\nDATA:\n' + astroCtx;
+            ? 'Eres un asistente integral de conocimiento cósmico y terrestre. Interpretas astrología, mareas, sismos, datos de la Tierra, sistema solar, mitología y filosofía. REGLAS ESTRICTAS:\n- Formato DIRECTO: usa bullets cortos (•) con los puntos clave. Cada bullet 1-2 frases máximo.\n- Agrupa por temas relevantes al contenido.\n- Ve AL GRANO. NUNCA empieces con introducciones como "Aquí tienes..." o "Te presento..." o "Veamos..." — empieza DIRECTAMENTE con el primer bullet.\n- Aproximadamente 5-8 bullets en total. Sé BREVE. El usuario podrá preguntar más detalles en el chat.\n- NUNCA uses el nombre del usuario. Usa "tú".\n- SIEMPRE termina cada frase completa.\n- Usa datos reales. No repitas datos ya en pantalla.\n- Responde en español.\n\nDATOS:\n' + astroCtx
+            : 'You are a comprehensive cosmic and terrestrial knowledge assistant. You interpret astrology, tides, earthquakes, Earth data, solar system, mythology and philosophy. STRICT RULES:\n- DIRECT format: use short bullets (•) with key points. Each bullet 1-2 sentences max.\n- Group by relevant themes.\n- Get TO THE POINT. NEVER start with introductions like "Here is..." or "Let me present..." — start DIRECTLY with the first bullet.\n- Approximately 5-8 bullets total. Be BRIEF. The user can ask for more details in the chat.\n- NEVER use the user\'s name. Use "you".\n- ALWAYS finish every sentence completely.\n- Use real data. Don\'t repeat data already on screen.\n- Respond in English.\n\nDATA:\n' + astroCtx;
 
         var requestBody = {
             system_instruction: { parts: [{ text: systemPrompt }] },
@@ -5917,10 +5917,10 @@ async function expandAIReading(readingKey, btn) {
     btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(102,126,234,0.3);border-top-color:#667eea;border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:4px;"></span>' + (L ? 'Expandiendo...' : 'Expanding...');
 
     try {
-        var astroCtx = gatherAstroContext();
+        var astroCtx = gatherFullAppContext();
         var systemPrompt = L
-            ? 'Eres un astrólogo transpersonal evolutivo con maestría profunda (astrología evolutiva, transpersonal, arquetipal, psicología profunda). REGLAS ESTRICTAS:\n- Formato DIRECTO con bullets (•). Cada bullet 1-3 frases máximo.\n- NUNCA uses el nombre del usuario. Usa "tú", "tu carta", "tu alma".\n- SIEMPRE termina cada frase completa.\n- Estructura por secciones con encabezados en MAYÚSCULA:\n  • PROPÓSITO EVOLUTIVO (3-4 bullets)\n  • PATRÓN KÁRMICO (3-4 bullets)\n  • DINÁMICA PSICOLÓGICA (3-4 bullets)\n  • POTENCIAL DE TRANSFORMACIÓN (3-4 bullets)\n  • CONEXIONES EN LA CARTA (3-4 bullets)\n  • PRAXIS CONCRETA (3-4 bullets: rituales, meditaciones, prácticas)\n- Ve AL GRANO. NUNCA empieces con introducciones como "Aquí tienes..." o "Te presento..." — empieza DIRECTAMENTE con la primera sección.\n- Cada bullet debe aportar información concreta.\n- Usa datos REALES de la carta. Responde en español.\n\nDATOS:\n' + astroCtx
-            : 'You are a transpersonal evolutionary astrologer with deep mastery (evolutionary, transpersonal, archetypal astrology, depth psychology). STRICT RULES:\n- DIRECT format with bullets (•). Each bullet 1-3 sentences max.\n- NEVER use the user\'s name. Use "you", "your chart", "your soul".\n- ALWAYS finish every sentence completely.\n- Structure by sections with UPPERCASE headers:\n  • EVOLUTIONARY PURPOSE (3-4 bullets)\n  • KARMIC PATTERN (3-4 bullets)\n  • PSYCHOLOGICAL DYNAMICS (3-4 bullets)\n  • TRANSFORMATION POTENTIAL (3-4 bullets)\n  • CHART CONNECTIONS (3-4 bullets)\n  • CONCRETE PRAXIS (3-4 bullets: rituals, meditations, practices)\n- Get TO THE POINT. NEVER start with introductions like "Here is..." — start DIRECTLY with the first section.\n- Each bullet must provide concrete information.\n- Use REAL chart data. Respond in English.\n\nDATA:\n' + astroCtx;
+            ? 'Eres un asistente integral de conocimiento cósmico y terrestre con maestría profunda. REGLAS ESTRICTAS:\n- Formato DIRECTO con bullets (•). Cada bullet 1-3 frases máximo.\n- NUNCA uses el nombre del usuario. Usa "tú".\n- SIEMPRE termina cada frase completa.\n- Estructura por secciones con encabezados en MAYÚSCULA según el tema.\n- Ve AL GRANO. NUNCA empieces con introducciones — empieza DIRECTAMENTE con la primera sección.\n- Cada bullet debe aportar información concreta.\n- Usa datos REALES. Responde en español.\n\nDATOS:\n' + astroCtx
+            : 'You are a comprehensive cosmic and terrestrial knowledge assistant with deep mastery. STRICT RULES:\n- DIRECT format with bullets (•). Each bullet 1-3 sentences max.\n- NEVER use the user\'s name. Use "you".\n- ALWAYS finish every sentence completely.\n- Structure by sections with UPPERCASE headers relevant to the topic.\n- Get TO THE POINT. NEVER start with introductions — start DIRECTLY with the first section.\n- Each bullet must provide concrete information.\n- Use REAL data. Respond in English.\n\nDATA:\n' + astroCtx;
 
         var requestBody = {
             system_instruction: { parts: [{ text: systemPrompt }] },
@@ -6082,11 +6082,11 @@ async function sendInterpChatMessage(chatId, readingKey) {
     saveInterpChat(chatId, chat);
 
     try {
-        var astroCtx = gatherAstroContext();
+        var astroCtx = gatherFullAppContext();
         // Build conversation context with original interpretation
         var systemPrompt = L
-            ? 'Eres un astrólogo transpersonal evolutivo. El usuario te hizo una consulta y le diste esta interpretación inicial:\n\n"' + (data ? data.text : chat.initialResponse) + '"\n\nAhora el usuario quiere profundizar con preguntas de seguimiento. REGLAS:\n- Responde de forma CONCISA y DIRECTA.\n- Usa bullets cortos (•) cuando sea útil.\n- Mantén el contexto de la interpretación original.\n- NUNCA uses el nombre del usuario.\n- Responde en español.\n\nDATOS ASTROLÓGICOS:\n' + astroCtx
-            : 'You are a transpersonal evolutionary astrologer. The user asked a question and you gave this initial interpretation:\n\n"' + (data ? data.text : chat.initialResponse) + '"\n\nNow the user wants to go deeper with follow-up questions. RULES:\n- Respond CONCISELY and DIRECTLY.\n- Use short bullets (•) when useful.\n- Keep context of original interpretation.\n- NEVER use user\'s name.\n- Respond in English.\n\nASTROLOGICAL DATA:\n' + astroCtx;
+            ? 'Eres un asistente integral de conocimiento cósmico y terrestre. El usuario te hizo una consulta y le diste esta interpretación inicial:\n\n"' + (data ? data.text : chat.initialResponse) + '"\n\nAhora el usuario quiere profundizar con preguntas de seguimiento. Puedes responder sobre cualquier tema: astrología, mareas, sismos, tierra, sistema solar, mitología, filosofía. REGLAS:\n- Responde de forma CONCISA y DIRECTA.\n- Usa bullets cortos (•) cuando sea útil.\n- Mantén el contexto de la interpretación original.\n- NUNCA uses el nombre del usuario.\n- Responde en español.\n\nDATOS COMPLETOS:\n' + astroCtx
+            : 'You are a comprehensive cosmic and terrestrial knowledge assistant. The user asked a question and you gave this initial interpretation:\n\n"' + (data ? data.text : chat.initialResponse) + '"\n\nNow the user wants to go deeper with follow-up questions. You can answer about any topic: astrology, tides, earthquakes, earth, solar system, mythology, philosophy. RULES:\n- Respond CONCISELY and DIRECTLY.\n- Use short bullets (•) when useful.\n- Keep context of original interpretation.\n- NEVER use user\'s name.\n- Respond in English.\n\nFULL DATA:\n' + astroCtx;
 
         // Build contents with previous chat messages
         var contents = [];
@@ -8695,6 +8695,7 @@ function fetchEarthWeather(lat, lon, containerId) {
 }
 
 // ── USGS Earthquake API ──
+var _lastEarthquakeData = []; // Store last fetched earthquake data for AI context
 function fetchEarthquakes(lat, lon, containerId) {
     const now = new Date();
     const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -8737,6 +8738,7 @@ function fetchEarthquakes(lat, lon, containerId) {
 
         // Sort: most recent first
         quakes.sort((a, b) => b.time - a.time);
+        _lastEarthquakeData = quakes; // Store for AI context
         const nearest = quakes;
 
         // Summary stats
@@ -18540,7 +18542,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v290';
+const APP_VERSION = 'v291';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -18945,7 +18947,7 @@ function openAIChat() {
     modal.classList.add('show');
     document.getElementById('aiChatFab').style.display = 'none';
     document.getElementById('aiChatTitle').textContent = currentLang === 'es' ? 'Asistente AI' : 'AI Assistant';
-    document.getElementById('aiChatSubtitle').textContent = currentLang === 'es' ? 'Ciclos cósmicos & astrología' : 'Cosmic cycles & astrology';
+    document.getElementById('aiChatSubtitle').textContent = currentLang === 'es' ? 'Cosmos, Tierra, mareas, sismos & astrología' : 'Cosmos, Earth, tides, quakes & astrology';
 
     if (aiChatHistory.length === 0) {
         showAIWelcome();
@@ -18971,7 +18973,12 @@ function aiQuickAction(id) {
         2: isEs ? 'Que eventos astronomicos hay en este ciclo lunar?' : 'What astronomical events are in this lunar cycle?',
         3: isEs ? 'Como me afectan los transitos planetarios de hoy?' : 'How do today\'s planetary transits affect me?',
         4: isEs ? 'Dime los eventos de mi calendario de este ciclo lunar y solar y cómo se relacionan con la astrología' : 'Tell me the calendar events of this lunar and solar cycle and how they relate to astrology',
-        5: isEs ? 'Cuáles son los eventos astrológicos más importantes de este ciclo lunar y solar? Eclipses, retrogradaciones, aspectos mayores, cambios de signo.' : 'What are the most important astrological events of this lunar and solar cycle? Eclipses, retrogrades, major aspects, sign changes.'
+        5: isEs ? 'Cuáles son los eventos astrológicos más importantes de este ciclo lunar y solar? Eclipses, retrogradaciones, aspectos mayores, cambios de signo.' : 'What are the most important astrological events of this lunar and solar cycle? Eclipses, retrogrades, major aspects, sign changes.',
+        6: isEs ? 'Analiza las mareas de hoy y los próximos días. ¿Cuál es la relación entre las mareas y la fase lunar actual? ¿Mejores momentos para actividades acuáticas?' : 'Analyze today\'s and upcoming tides. What is the relationship between tides and the current lunar phase? Best times for water activities?',
+        7: isEs ? 'Resumen de la actividad sísmica reciente. ¿Hay alguna relación entre los terremotos y las posiciones planetarias actuales? Contexto tectónico de mi ubicación.' : 'Summary of recent seismic activity. Is there any relationship between earthquakes and current planetary positions? Tectonic context of my location.',
+        8: isEs ? 'Háblame de la Tierra en este momento: velocidad de rotación, velocidad orbital, posición en la órbita, estación actual, resonancia Schumann y qué significa para nosotros.' : 'Tell me about Earth right now: rotation speed, orbital speed, position in orbit, current season, Schumann resonance and what it means for us.',
+        9: isEs ? 'Dame un recorrido por el Sistema Solar: datos actuales de cada planeta, distancias, y la mitología detrás de sus nombres.' : 'Give me a tour of the Solar System: current data for each planet, distances, and the mythology behind their names.',
+        10: isEs ? 'Explica los eventos extraordinarios del 2026 (Saturno-Neptuno, Urano-Plutón, etc.) desde la perspectiva mitológica y filosófica hermética. ¿Qué significan para la humanidad?' : 'Explain the extraordinary events of 2026 (Saturn-Neptune, Uranus-Pluto, etc.) from the mythological and Hermetic philosophical perspective. What do they mean for humanity?'
     };
     const input = document.getElementById('aiChatInput');
     if (input && prompts[id]) {
@@ -19219,22 +19226,196 @@ function gatherAstroContext() {
     return ctx;
 }
 
+// ══════════════════════════════════════════════════
+// GATHER FULL APP CONTEXT — All data for AI (tides, earthquakes, earth, solar system)
+// ══════════════════════════════════════════════════
+function gatherFullAppContext() {
+    var ctx = gatherAstroContext();
+    var now = new Date();
+    var dateStr = getDateStr(now);
+
+    // ========== TIDE DATA ==========
+    try {
+        var todayTideCurve = _tideCache[dateStr] || null;
+        var todayTideExtremes = _tideCache['ext_' + dateStr] || null;
+        if (todayTideExtremes || todayTideCurve) {
+            ctx += 'DATOS DE MAREAS (ubicación actual):\n';
+            if (_wtStation) ctx += 'Estación de mareas: ' + _wtStation + '\n';
+            if (todayTideExtremes && todayTideExtremes.length > 0) {
+                ctx += 'Extremos de marea hoy:\n';
+                todayTideExtremes.forEach(function(e) {
+                    var timeLabel = e.timeStr || ((e.hour < 10 ? '0' : '') + e.hour + ':00');
+                    var typeLabel = (e.type === 'alta' || e.type === 'High') ? 'Marea Alta' : 'Marea Baja';
+                    ctx += '  ' + typeLabel + ' a las ' + timeLabel + ' (' + e.level.toFixed(2) + 'm)\n';
+                });
+            }
+            if (todayTideCurve && todayTideCurve.length > 0) {
+                // Current tide level interpolation
+                var curH = now.getHours() + now.getMinutes() / 60;
+                var idx1 = Math.min(Math.floor(curH), todayTideCurve.length - 1);
+                var idx2 = Math.min(idx1 + 1, todayTideCurve.length - 1);
+                var frac = curH - Math.floor(curH);
+                var lA = (typeof todayTideCurve[idx1] === 'object') ? todayTideCurve[idx1].level : (todayTideCurve[idx1] || 0);
+                var lB = (typeof todayTideCurve[idx2] === 'object') ? todayTideCurve[idx2].level : (todayTideCurve[idx2] || 0);
+                ctx += 'Nivel de marea actual: ' + (lA + (lB - lA) * frac).toFixed(2) + 'm\n';
+            }
+            // Future days
+            for (var td = 1; td <= 3; td++) {
+                var fd = new Date(now); fd.setDate(fd.getDate() + td);
+                var fds = getDateStr(fd);
+                var fExts = _tideCache['ext_' + fds];
+                if (fExts && fExts.length > 0) {
+                    ctx += 'Mareas ' + fds + ': ';
+                    ctx += fExts.map(function(e) {
+                        var tl = e.timeStr || ((e.hour < 10 ? '0' : '') + e.hour + ':00');
+                        return ((e.type === 'alta' || e.type === 'High') ? 'Alta' : 'Baja') + ' ' + tl + ' (' + e.level.toFixed(1) + 'm)';
+                    }).join(', ') + '\n';
+                }
+            }
+            ctx += '\n';
+        }
+    } catch(e) {}
+
+    // ========== EARTHQUAKE / SEISMIC DATA ==========
+    try {
+        if (_lastEarthquakeData && _lastEarthquakeData.length > 0) {
+            ctx += 'ACTIVIDAD SÍSMICA (últimas 24h, M2.5+):\n';
+            ctx += 'Total de sismos registrados: ' + _lastEarthquakeData.length + '\n';
+            var maxMag = Math.max.apply(null, _lastEarthquakeData.map(function(q) { return q.mag; }));
+            ctx += 'Magnitud máxima: ' + maxMag.toFixed(1) + '\n';
+            // Top 10 most significant
+            var topQuakes = _lastEarthquakeData.slice(0, 10);
+            topQuakes.forEach(function(q) {
+                var ago = Math.round((now - q.time) / (60 * 1000));
+                var agoStr = ago < 60 ? ago + ' min' : Math.round(ago / 60) + 'h';
+                ctx += '  M' + q.mag.toFixed(1) + ' — ' + (q.place || 'Desconocido') + ' (prof: ' + q.depth.toFixed(0) + 'km, dist: ' + Math.round(q.dist) + 'km, hace ' + agoStr + ')\n';
+            });
+            ctx += '\n';
+        }
+    } catch(e) {}
+
+    // ========== EARTH INFORMATION ==========
+    try {
+        var uLat = ASTRO_USER_LAT || 0;
+        var uLon = ASTRO_USER_LON || 0;
+        var DR = Math.PI / 180;
+        var earthRadiusEq = 6378.137;
+        var circumAtLat = 2 * Math.PI * earthRadiusEq * Math.cos(uLat * DR);
+        var rotationSpeedKmH = circumAtLat / 23.9345;
+
+        // Orbital speed
+        var dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / 86400000) + 1;
+        var meanAnomaly = ((dayOfYear - 3) / 365.25) * 2 * Math.PI;
+        var ecc = 0.0167086;
+        var semiMajor = 1.000001018 * 149597870.7;
+        var E = meanAnomaly;
+        for (var i = 0; i < 10; i++) E = E - (E - ecc * Math.sin(E) - meanAnomaly) / (1 - ecc * Math.cos(E));
+        var currentRadius = semiMajor * (1 - ecc * Math.cos(E));
+        var orbitalSpeed = Math.sqrt(1.32712440018e11 * (2 / currentRadius - 1 / semiMajor));
+
+        // Sun declination & daylight
+        var sunDecl = typeof getSunDeclination === 'function' ? getSunDeclination(now) : 0;
+        var tanProd = Math.tan(uLat * DR) * Math.tan(sunDecl * DR);
+        var dayHours = 12;
+        if (tanProd < 1 && tanProd > -1) dayHours = (Math.acos(-tanProd) / Math.PI) * 24;
+
+        // Season
+        var isNorth = uLat >= 0;
+        var seasons = [
+            { start: new Date(2026, 2, 20), name: isNorth ? 'Primavera' : 'Otoño' },
+            { start: new Date(2026, 5, 21), name: isNorth ? 'Verano' : 'Invierno' },
+            { start: new Date(2026, 8, 22), name: isNorth ? 'Otoño' : 'Primavera' },
+            { start: new Date(2026, 11, 21), name: isNorth ? 'Invierno' : 'Verano' }
+        ];
+        var currentSeason = seasons[3].name;
+        for (var si = seasons.length - 1; si >= 0; si--) {
+            if (now >= seasons[si].start) { currentSeason = seasons[si].name; break; }
+        }
+
+        // Schumann resonance
+        var seed = now.getMinutes() * 60 + now.getSeconds();
+        var schumann1 = (7.83 + Math.sin(seed * 0.01) * 0.3).toFixed(2);
+
+        ctx += 'INFORMACIÓN DE LA TIERRA EN TIEMPO REAL:\n';
+        ctx += 'Velocidad de rotación en tu latitud: ' + rotationSpeedKmH.toFixed(0) + ' km/h\n';
+        ctx += 'Velocidad orbital: ' + (orbitalSpeed * 3600).toFixed(0) + ' km/h (' + orbitalSpeed.toFixed(1) + ' km/s)\n';
+        ctx += 'Velocidad galáctica: ~828,000 km/h (230 km/s)\n';
+        ctx += 'Distancia al Sol: ' + (currentRadius / 149597870.7).toFixed(4) + ' UA (' + (currentRadius / 1000000).toFixed(1) + ' M km)\n';
+        ctx += 'Estación actual: ' + currentSeason + ' (Hemisferio ' + (isNorth ? 'Norte' : 'Sur') + ')\n';
+        ctx += 'Horas de luz: ' + dayHours.toFixed(1) + 'h / Oscuridad: ' + (24 - dayHours).toFixed(1) + 'h\n';
+        ctx += 'Declinación solar: ' + sunDecl.toFixed(1) + '°\n';
+        ctx += 'Resonancia Schumann (1ª): ' + schumann1 + ' Hz\n';
+        ctx += '\n';
+    } catch(e) {}
+
+    // ========== SOLAR SYSTEM DATA ==========
+    try {
+        if (typeof getSolarSystemData === 'function') {
+            var planets = getSolarSystemData();
+            ctx += 'SISTEMA SOLAR — DATOS ACTUALES:\n';
+            planets.forEach(function(p) {
+                if (p.isStar) {
+                    ctx += p.name + ': Tipo ' + p.spectralType + ', Diámetro ' + p.diameter.toLocaleString() + ' km, Temp superficie ' + p.surfaceTemp + '\n';
+                } else if (p.isEarth) {
+                    ctx += p.name + ': Diámetro ' + p.diameter.toLocaleString() + ' km, ' + p.moons + ' luna, ' + p.tempAvg + '°C promedio\n';
+                } else {
+                    var dist = typeof calcDistanceFromEarth === 'function' ? calcDistanceFromEarth(p) : null;
+                    ctx += p.name + ': Diámetro ' + p.diameter.toLocaleString() + ' km, ' + p.moons + ' lunas, ' + p.tempAvg + '°C';
+                    if (dist) ctx += ', Dist. actual ' + dist.mkm.toFixed(1) + ' M km (' + dist.au.toFixed(2) + ' UA)';
+                    ctx += ', Órbita ' + p.orbitalPeriod + ' ' + p.orbitalPeriodUnit + ', Vel. ' + p.orbitalSpeed + ' km/s';
+                    if (p.rings) ctx += ' [Anillos]';
+                    ctx += '\n';
+                }
+            });
+            ctx += '\n';
+        }
+    } catch(e) {}
+
+    // ========== CELESTIAL EVENTS 2026 ==========
+    try {
+        if (typeof getHistoricEventsData === 'function') {
+            var events2026 = getHistoricEventsData();
+            if (events2026 && events2026.length > 0) {
+                ctx += 'EVENTOS EXTRAORDINARIOS 2026:\n';
+                events2026.forEach(function(ev) {
+                    ctx += ev.planet1 + ' ' + ev.symbol + ' ' + ev.planet2 + ' — ' + ev.date + ' — ' + ev.meaning + '\n';
+                });
+                ctx += '\n';
+            }
+        }
+    } catch(e) {}
+
+    return ctx;
+}
+
 function buildSystemPrompt() {
     const isEs = currentLang === 'es';
-    const astroCtx = gatherAstroContext();
+    const fullCtx = gatherFullAppContext();
 
     if (isEs) {
-        return `Eres un astrólogo transpersonal evolutivo integrado en "Moon Sync". Bases teóricas: astrología evolutiva (Jeff Green, Steven Forrest), transpersonal (Dane Rudhyar), arquetipal (Richard Tarnas), psicología profunda (Liz Greene), sabiduría perenne y hermetismo.
+        return `Eres un asistente integral de conocimiento cósmico y terrestre integrado en "Moon Sync". Combinas múltiples disciplinas:
+— Astrología evolutiva (Jeff Green, Steven Forrest), transpersonal (Dane Rudhyar), arquetipal (Richard Tarnas), psicología profunda (Liz Greene)
+— Oceanografía y mareas (ciclos lunares-solares, mareas vivas/muertas, corrientes)
+— Geología y sismología (tectónica de placas, actividad sísmica, vulcanismo)
+— Ciencias de la Tierra (rotación, órbita, estaciones, resonancia Schumann, campo magnético, ritmo circadiano)
+— Astronomía del Sistema Solar (planetas, distancias, órbitas, composición, exploración espacial)
+— Mitología planetaria y estelar (griega, romana, mesopotámica, egipcia, maya, nórdica)
+— Filosofía hermética y sabiduría perenne (como arriba es abajo, correspondencias, alquimia)
 
-DATOS DEL CIELO Y LA CARTA:
-${astroCtx}
+TODOS LOS DATOS DISPONIBLES DE LA APP:
+${fullCtx}
 
 CAPACIDADES:
 - Interpretar carta natal desde el paradigma evolutivo (Plutón, Nodos Lunares, eje kármico)
 - Analizar tránsitos como ventanas de transformación
-- Quirón como herida sagrada, Lilith como fuerza salvaje, Saturno como maestro
-- Ciclos lunares como ritmos de siembra, crecimiento, cosecha y liberación
-- LEER eventos de agenda y notas de diario del usuario (ya están en los datos)
+- Explicar datos de MAREAS: nivel actual, extremos, predicciones, relación con fases lunares, mejores momentos para surf/pesca/navegación
+- Analizar SISMOS: actividad reciente, magnitudes, distancias, contexto tectónico, relación con posiciones planetarias
+- Explicar datos de la TIERRA: velocidad de rotación/orbital/galáctica, estaciones, duración del día, resonancia Schumann, gravedad local
+- Describir el SISTEMA SOLAR: datos de cada planeta, distancias actuales, mitología asociada, simbolismo astrológico
+- Conectar MITOLOGÍA planetaria: historias de los dioses (Mercurio/Hermes, Venus/Afrodita, Marte/Ares, Júpiter/Zeus, Saturno/Cronos, etc.) con su significado astrológico
+- Explorar FILOSOFÍA hermética: principios de correspondencia, vibración, polaridad; alquimia interior; tradiciones de sabiduría
+- Relacionar EVENTOS EXTRAORDINARIOS 2026 (conjunciones, cambios de signo generacionales) con contexto histórico y mitológico
+- LEER eventos de agenda y notas de diario del usuario
 - CREAR eventos y notas cuando se pida
 
 ACCIONES — Para crear, incluye estas etiquetas EXACTAS al final:
@@ -19247,43 +19428,42 @@ REGLAS DE ESTILO (OBLIGATORIAS):
 - NO adornes las respuestas con cortesías innecesarias. Ve al grano.
 - NO uses frases como "qué hermosa pregunta", "me encanta que preguntes", "es maravilloso que..." — son vacías.
 - Habla como alguien que sabe, no como alguien que quiere agradar.
-- Usa datos reales de la carta — grados, casas, aspectos específicos. Sin generalidades.
-- Da interpretaciones concretas: evolutiva, psicológica, práctica. Sin relleno.
+- Usa datos reales de los sensores y la carta — números, grados, casas, tiempos específicos. Sin generalidades.
+- Da respuestas concretas con datos. Sin relleno.
 - Cuando la pregunta lo amerite, sé extenso (5-8 párrafos) pero siempre con sustancia.
-- Usa emojis astrológicos con moderación (🌙☀️♈♉♊♋♌♍♎♏♐♑♒♓)
+- Responde sobre CUALQUIER tema que contenga la app: mareas, terremotos, tierra, sistema solar, mitología, filosofía, astrología.
+- Si la pregunta es sobre un tema NO astrológico (mareas, sismos, tierra, planetas), responde con datos científicos y contexto relevante.
+- Si la pregunta mezcla ciencia y espiritualidad, integra ambas perspectivas con respeto.
+- Usa emojis con moderación según el tema (🌙☀️🌊🌋🌍🪐♈♉♊♋♌♍♎♏♐♑♒♓)
 - Responde SIEMPRE en español
 
 LECTURA COMPLETA — Cuando te pidan una lectura completa o análisis de carta astral, DEBES cubrir TODOS estos elementos SIN EXCEPCIÓN (mínimo 15 párrafos con sustancia):
-1. Sol: signo, casa, grado, aspectos principales
-2. Luna: signo, casa, grado, aspectos — vida emocional profunda
-3. Ascendente: signo, grado, regente y su posición
-4. Mercurio: signo, casa, aspectos — mente y comunicación
-5. Venus: signo, casa, aspectos — amor, valores, estética
-6. Marte: signo, casa, aspectos — acción, deseo, energía vital
-7. Júpiter: signo, casa, aspectos — expansión, sentido, abundancia
-8. Saturno: signo, casa, aspectos — estructura, maestro, karma
-9. Urano: signo, casa, aspectos — revolución, despertar
-10. Neptuno: signo, casa, aspectos — espiritualidad, ilusión, trascendencia
-11. Plutón: signo, casa, aspectos — transformación, poder, eje evolutivo
-12. Nodos Lunares: Nodo Norte y Sur, casas, significado kármico-evolutivo
-13. Quirón: signo, casa — herida sagrada y don sanador
-14. Lilith: signo, casa — fuerza salvaje, sombra femenina
-15. Medio Cielo (MC): signo, vocación, propósito público
-16. Aspectos mayores entre planetas (conjunciones, oposiciones, trígonos, cuadraturas, sextiles)
-17. Síntesis final: patrón evolutivo general, propósito del alma
-NO te detengas en Sol y Ascendente — la lectura completa debe cubrir TODOS los planetas y puntos listados arriba.`;
+1-17: Sol, Luna, Ascendente, Mercurio, Venus, Marte, Júpiter, Saturno, Urano, Neptuno, Plutón, Nodos Lunares, Quirón, Lilith, MC, Aspectos mayores, Síntesis.
+NO te detengas en Sol y Ascendente — la lectura completa debe cubrir TODOS los planetas y puntos.`;
     } else {
-        return `You are a transpersonal evolutionary astrologer integrated in "Moon Sync". Theoretical bases: evolutionary astrology (Jeff Green, Steven Forrest), transpersonal (Dane Rudhyar), archetypal (Richard Tarnas), depth psychology (Liz Greene), perennial wisdom and hermeticism.
+        return `You are a comprehensive cosmic and terrestrial knowledge assistant integrated in "Moon Sync". You combine multiple disciplines:
+— Evolutionary astrology (Jeff Green, Steven Forrest), transpersonal (Dane Rudhyar), archetypal (Richard Tarnas), depth psychology (Liz Greene)
+— Oceanography and tides (lunar-solar cycles, spring/neap tides, currents)
+— Geology and seismology (plate tectonics, seismic activity, volcanism)
+— Earth sciences (rotation, orbit, seasons, Schumann resonance, magnetic field, circadian rhythm)
+— Solar System astronomy (planets, distances, orbits, composition, space exploration)
+— Planetary and stellar mythology (Greek, Roman, Mesopotamian, Egyptian, Mayan, Norse)
+— Hermetic philosophy and perennial wisdom (as above so below, correspondences, alchemy)
 
-SKY AND CHART DATA:
-${astroCtx}
+ALL AVAILABLE APP DATA:
+${fullCtx}
 
 CAPABILITIES:
 - Interpret natal chart from the evolutionary paradigm (Pluto, Lunar Nodes, karmic axis)
 - Analyze transits as windows of transformation
-- Chiron as sacred wound, Lilith as wild force, Saturn as teacher
-- Lunar cycles as rhythms of planting, growth, harvest and release
-- READ the user's agenda events and diary notes (already in the data)
+- Explain TIDE data: current level, extremes, predictions, relation to lunar phases, best times for surfing/fishing/navigation
+- Analyze EARTHQUAKES: recent activity, magnitudes, distances, tectonic context, relation to planetary positions
+- Explain EARTH data: rotation/orbital/galactic speed, seasons, day length, Schumann resonance, local gravity
+- Describe the SOLAR SYSTEM: data for each planet, current distances, associated mythology, astrological symbolism
+- Connect planetary MYTHOLOGY: stories of the gods with their astrological meaning
+- Explore HERMETIC PHILOSOPHY: principles of correspondence, vibration, polarity; inner alchemy; wisdom traditions
+- Relate EXTRAORDINARY EVENTS 2026 to historical and mythological context
+- READ user's agenda events and diary notes
 - CREATE events and diary notes when asked
 
 ACTIONS — To create, include these EXACT tags at the end:
@@ -19294,33 +19474,16 @@ STYLE RULES (MANDATORY):
 - Be SOBER, WISE and DIRECT. No empty flattery or generic motivational phrases.
 - NEVER use the user's name. No "dear", "friend", or addressing by name.
 - DO NOT decorate responses with unnecessary pleasantries. Get to the point.
-- DO NOT use phrases like "what a beautiful question", "I love that you ask", "how wonderful that..." — they are hollow.
 - Speak like someone who knows, not someone trying to please.
-- Use real chart data — degrees, houses, specific aspects. No generalities.
-- Give concrete interpretations: evolutionary, psychological, practical. No filler.
+- Use real sensor and chart data — numbers, degrees, houses, specific times. No generalities.
+- Give concrete data-driven answers. No filler.
 - When warranted, be thorough (5-8 paragraphs) but always with substance.
-- Use astrological emojis sparingly (🌙☀️♈♉♊♋♌♍♎♏♐♑♒♓)
+- Answer about ANY topic the app contains: tides, earthquakes, earth, solar system, mythology, philosophy, astrology.
+- If the question is non-astrological (tides, earthquakes, earth, planets), respond with scientific data and relevant context.
+- If the question mixes science and spirituality, integrate both perspectives respectfully.
 - Always respond in English
 
-FULL READING — When asked for a complete or full reading of the natal chart, you MUST cover ALL these elements WITHOUT EXCEPTION (minimum 15 paragraphs with substance):
-1. Sun: sign, house, degree, main aspects
-2. Moon: sign, house, degree, aspects — deep emotional life
-3. Ascendant: sign, degree, ruler and its position
-4. Mercury: sign, house, aspects — mind and communication
-5. Venus: sign, house, aspects — love, values, aesthetics
-6. Mars: sign, house, aspects — action, desire, vital energy
-7. Jupiter: sign, house, aspects — expansion, meaning, abundance
-8. Saturn: sign, house, aspects — structure, teacher, karma
-9. Uranus: sign, house, aspects — revolution, awakening
-10. Neptune: sign, house, aspects — spirituality, illusion, transcendence
-11. Pluto: sign, house, aspects — transformation, power, evolutionary axis
-12. Lunar Nodes: North and South Node, houses, karmic-evolutionary meaning
-13. Chiron: sign, house — sacred wound and healing gift
-14. Lilith: sign, house — wild force, feminine shadow
-15. Midheaven (MC): sign, vocation, public purpose
-16. Major aspects between planets (conjunctions, oppositions, trines, squares, sextiles)
-17. Final synthesis: general evolutionary pattern, soul purpose
-DO NOT stop at Sun and Ascendant — a complete reading must cover ALL planets and points listed above.`;
+FULL READING — When asked for a complete natal chart reading, cover ALL elements (Sun through synthesis, 17 items minimum).`;
     }
 }
 
