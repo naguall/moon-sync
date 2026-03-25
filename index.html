@@ -2281,9 +2281,6 @@ async function openTideCycleModal() {
         } else {
             html += '<span style="font-weight:bold;color:' + (isToday?'#c9a840':'rgba(255,255,255,0.85)') + ';font-size:0.88em;">' + dayLabel + '</span>';
         }
-        if (fIsReal) {
-            html += '<span style="color:#4CAF50;font-size:1.05em;font-weight:bold;">✓</span>';
-        }
         html += '<span style="color:' + strengthColor + ';font-weight:bold;font-size:0.78em;">' + fAstro.tidePct + '%</span>';
         html += '</div>';
 
@@ -18897,7 +18894,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v322';
+const APP_VERSION = 'v323';
 var _pendingSW = null;
 
 function showUpdateBanner() {
