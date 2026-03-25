@@ -18620,7 +18620,7 @@ var _googleMapsLoaded = false;
 
 function loadGoogleMaps(cb) {
     if (_googleMapsLoaded) { cb(); return; }
-    var gKey = localStorage.getItem('googlePlacesKey') || 'AIzaSyAedPie2Vi9ZqiTOsZMZHyQPKI-nyUMoSE';
+    var gKey = localStorage.getItem('googlePlacesKey') || '';
     if (!gKey) return;
     if (window.google && window.google.maps) { _googleMapsLoaded = true; cb(); return; }
     var script = document.createElement('script');
@@ -18789,7 +18789,7 @@ openLocationSelector = function() {
     loadGoogleMaps(function() {
         setTimeout(initLocMap, 100);
     });
-    var gKey = localStorage.getItem('googlePlacesKey') || 'AIzaSyAedPie2Vi9ZqiTOsZMZHyQPKI-nyUMoSE';
+    var gKey = localStorage.getItem('googlePlacesKey') || '';
     if (gKey) {
         document.getElementById('googleApiKeyInput').value = gKey;
     }
@@ -18897,7 +18897,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v320';
+const APP_VERSION = 'v321';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -19047,18 +19047,10 @@ if ('serviceWorker' in navigator) {
                 <div style="margin-top:8px;padding:8px 10px;background:rgba(201,168,64,0.08);border:1px solid rgba(201,168,64,0.25);border-radius:6px;font-size:0.78em;color:#8899cc;">
                     <span id="currentLocDisplay"></span>
                 </div>
-                <!-- Google API Key toggle -->
-                <details style="margin-top:8px;">
-                    <summary style="font-size:0.72em;color:rgba(255,255,255,0.3);cursor:pointer;">Google Places API (opcional)</summary>
-                    <div style="margin-top:6px;display:flex;gap:6px;">
-                        <input id="googleApiKeyInput" type="text" placeholder="API Key de Google Places..."
-                            value="" style="flex:1;padding:6px 8px;background:rgba(5,8,40,0.9);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#e8eaf6;font-size:0.78em;box-sizing:border-box;"/>
-                        <button onclick="saveGoogleApiKey()" style="padding:6px 12px;background:rgba(78,205,196,0.2);border:1px solid rgba(78,205,196,0.4);border-radius:6px;color:#4ecdc4;font-size:0.78em;cursor:pointer;">OK</button>
-                    </div>
-                    <div style="font-size:0.65em;color:rgba(255,255,255,0.25);margin-top:4px;line-height:1.4;">
-                        Activa Google Places Autocomplete para buscar playas, lugares y puntos de interés con la base de datos de Google Maps. Gratis hasta ~70k búsquedas/mes.
-                    </div>
-                </details>
+                <!-- Google API Key (hidden, user sets via localStorage if needed) -->
+                <div id="googleApiKeySection" style="display:none;">
+                    <input id="googleApiKeyInput" type="text" value="" />
+                </div>
             </div>
         </div>
     </div>
