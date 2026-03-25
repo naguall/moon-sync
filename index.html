@@ -4855,24 +4855,28 @@ function openAspectsModal(date, lunarDay, dayData) {
     if (interAspects.length > 0) {
         htmlContent += `<div style="font-size:0.68em;color:#c9a840;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;padding-bottom:3px;border-bottom:1px solid rgba(201,168,64,0.15);">${currentLang==='es'?'Aspectos Interplanetarios':'Interplanetary Aspects'}</div>`;
         htmlContent += interAspects.map(asp => {
+            // Check if this aspect has rich historic data
+            if (asp.isImportant || asp.isMajor || asp.isGenerational) {
+                const historicEv = findHistoricEvent(asp.planet1, asp.symbol, asp.planet2);
+                if (historicEv) {
+                    const catType = asp.isGenerational ? 'generational' : asp.isMajor ? 'major' : 'notable';
+                    const cfg = { color: historicEv.badgeColor, bg: historicEv.badgeBg };
+                    return renderHistoricEventCard(historicEv, cfg);
+                }
+            }
+            // Normal rendering for regular aspects
             const degreeStr = asp.degrees ? `<span style="color: #a8b2d1; font-size: 0.85em;">(${asp.degrees})</span>` : '';
             const signsStr = asp.signs ? `<span style="color: rgba(255,255,255,0.4); font-size: 0.82em;"> — ${asp.signs}</span>` : '';
-            const badge = asp.isGenerational ? '<span onclick="event.stopPropagation();showCategoryPanel(\'generational\')" style="background:rgba(155,89,182,0.25);color:#d4a5f5;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(155,89,182,0.4);cursor:pointer;" title="Ver todos los eventos generacionales">GENERACIONAL</span>' :
-                         asp.isMajor ? '<span onclick="event.stopPropagation();showCategoryPanel(\'major\')" style="background:rgba(231,76,60,0.2);color:#ff8a80;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(231,76,60,0.35);cursor:pointer;" title="Ver todos los aspectos mayores">MAYOR</span>' :
-                         asp.isImportant ? '<span onclick="event.stopPropagation();showCategoryPanel(\'notable\')" style="background:rgba(78,205,196,0.2);color:#80cbc4;padding:2px 6px;border-radius:3px;font-size:0.7em;margin-left:5px;border:1px solid rgba(78,205,196,0.35);cursor:pointer;" title="Ver todos los aspectos notables">NOTABLE</span>' : '';
-
-            const badgeColor = asp.isGenerational ? '#d4a5f5' : asp.isMajor ? '#ff8a80' : asp.isImportant ? '#80cbc4' : '';
-            const badgeExplain = asp.badgeInfo ? `<div style="font-size:0.72em;color:${badgeColor};margin-bottom:4px;line-height:1.3;font-style:italic;">${asp.badgeInfo}</div>` : '';
 
             const aspWordLabel = asp.aspect ? `<span style="font-size:0.82em;color:rgba(255,255,255,0.55);">${asp.aspect}</span> ` : '';
             const ipaClickText = (tp(asp.planet1) + ' ' + asp.symbol + ' ' + (asp.aspect||'') + ' ' + tp(asp.planet2) + (asp.signs ? ' ' + asp.signs : '')).replace(/'/g, "\\'");
             return `
             <div class="aspect-detail" style="border-left-color: ${asp.color}; background: rgba(0,0,0,0.2); cursor:pointer;" onclick="showBannerAspectDetail('${ipaClickText}')">
                 <div class="aspect-planets">
-                    ${tp(asp.planet1)} ${asp.symbol} ${aspWordLabel}${tp(asp.planet2)} ${degreeStr}${signsStr}${badge}${asp.time ? `<span style="color: #f0e68c; font-weight: bold; float:right;">${asp.time}</span>` : ''}
+                    ${tp(asp.planet1)} ${asp.symbol} ${aspWordLabel}${tp(asp.planet2)} ${degreeStr}${signsStr}${asp.time ? `<span style="color: #f0e68c; font-weight: bold; float:right;">${asp.time}</span>` : ''}
                 </div>
                 <div class="aspect-description">
-                    ${badgeExplain}${translateMeaning(asp.meaning)}
+                    ${translateMeaning(asp.meaning)}
                 </div>
             </div>
         `}).join('');
@@ -4881,6 +4885,14 @@ function openAspectsModal(date, lunarDay, dayData) {
     // 2. Cambios de Signo (PLANETARIOS antes que lunares) — enriched with companions
     if (signChanges.length > 0) {
         htmlContent += signChanges.map(change => {
+            // Check if this sign change has rich historic data (generational/critical)
+            if (change.isGenerational || change.isCritical || change.isImportant) {
+                const historicEv = findHistoricEvent(change.planet, '→', change.toSign);
+                if (historicEv) {
+                    const cfg = { color: historicEv.badgeColor, bg: historicEv.badgeBg };
+                    return renderHistoricEventCard(historicEv, cfg);
+                }
+            }
             const timeStr = change.time ? `<span style="color: #f0e68c; font-weight: bold;">${change.time}</span> - ` : '';
             // Show companion planets in the same sign
             let companionHtml = '';
@@ -7581,6 +7593,17 @@ function getHistoricEventsData() {
         { type:'generational', badge:L?'GENERACIONAL':'GENERATIONAL', badgeColor:'#d4a5f5', badgeBg:'rgba(155,89,182,0.25)', planet1:'Neptuno', symbol:'→', planet2:L?'Aries':'Aries', date:'26 Ene 2026', time:'', degrees:'', signs:'', cycle:L?'Neptuno cambia de signo cada ~14 años':'Neptune changes signs every ~14 years', lastTime:L?'Última vez en Aries: 1861-1875':'Last time in Aries: 1861-1875', history:[{year:'1861-75',text:L?'Guerra Civil de EE.UU. Abolición de la esclavitud. Unificación de Italia y Alemania. Comuna de París.':'US Civil War. Abolition of slavery. Unification of Italy and Germany. Paris Commune.'}], meaning:L?'Neptuno entra en Aries por primera vez en 165 años. Nueva generación con ideales aplicados a la acción directa. Hasta 2039.':'Neptune enters Aries for first time in 165 years. New generation with ideals in direct action. Until 2039.' },
         { type:'generational', badge:L?'GENERACIONAL':'GENERATIONAL', badgeColor:'#d4a5f5', badgeBg:'rgba(155,89,182,0.25)', planet1:'Urano', symbol:'→', planet2:L?'Géminis':'Gemini', date:'7 Jul 2026', time:'', degrees:'', signs:'', cycle:L?'Urano cambia de signo cada ~7 años':'Uranus changes signs every ~7 years', lastTime:L?'Última vez en Géminis: 1941-1949':'Last time in Gemini: 1941-1949', history:[{year:'1941-49',text:L?'Revolución en comunicaciones de guerra (radar, Enigma). Invención del transistor. Plan Marshall. Naciones Unidas.':'Revolution in wartime communications (radar, Enigma). Transistor invention. Marshall Plan. United Nations.'}], meaning:L?'Urano entra en Géminis por primera vez en 77 años. Revolución en IA, comunicación y tecnología. Hasta 2033.':'Uranus enters Gemini for first time in 77 years. AI revolution, communication and tech. Until 2033.' }
     ];
+}
+
+function findHistoricEvent(planet1, symbol, planet2) {
+    var events = getHistoricEventsData();
+    for (var i = 0; i < events.length; i++) {
+        var ev = events[i];
+        if (ev.planet1 === planet1 && ev.symbol === symbol && ev.planet2 === planet2) return ev;
+        // Also check reversed order for aspects
+        if (ev.planet1 === planet2 && ev.symbol === symbol && ev.planet2 === planet1) return ev;
+    }
+    return null;
 }
 
 function renderHistoricEventCard(ev, cfg) {
@@ -17489,7 +17512,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v228';
+const APP_VERSION = 'v229';
 var _pendingSW = null;
 
 function showUpdateBanner() {
