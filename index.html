@@ -14641,8 +14641,8 @@ function renderPersonalCalendar() {
         eventsByMonth[mKey].push(ev);
     });
 
-    var yearEventsHTML = '<div class="personal-natal-card" style="margin-top:8px;"><h3 style="color:#c9a840;">📅 ' + (L ? 'Eventos del Año ' + year : year + ' Events') + '</h3>';
-    yearEventsHTML += '<div style="max-height:500px;overflow-y:auto;scrollbar-width:thin;">';
+    var yearEventsHTML = '<div class="personal-natal-card" style="margin-top:8px;"><h3 style="color:#c9a840;">' + (L ? 'Ciclos ' + year : 'Cycles ' + year) + '</h3>';
+    yearEventsHTML += '<div>';
     for (var mi = 0; mi < 12; mi++) {
         if (!eventsByMonth[mi] || eventsByMonth[mi].length === 0) continue;
         var isCurrentMonth = (mi === month);
@@ -20703,7 +20703,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v359';
+const APP_VERSION = 'v360';
 var _pendingSW = null;
 
 function showUpdateBanner() {
