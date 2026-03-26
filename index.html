@@ -12212,13 +12212,13 @@ function drawNatalWheel(canvasId) {
         }
 
         // ===== RADII (Astroly Master proportions) =====
-        var R_outer       = S/2 - 20;   // outermost edge
+        var R_outer       = S/2 - 10;   // outermost edge (wider)
         var R_signOuter   = R_outer;     // zodiac outer
-        var R_signInner   = R_outer - 36;// zodiac inner
+        var R_signInner   = R_outer - 52;// zodiac inner (wider ring for bigger glyphs)
         var R_tickOuter   = R_signInner; // degree ticks outer
-        var R_tickInner   = R_signInner - 18; // degree ticks inner
+        var R_tickInner   = R_signInner - 14; // degree ticks inner
         var R_planetOuter = R_tickInner; // planet ring outer boundary
-        var R_planetInner = R_planetOuter - 65; // planet ring inner boundary
+        var R_planetInner = R_planetOuter - 60; // planet ring inner boundary
         var R_houseOuter  = R_planetInner - 2;  // house number ring outer circle
         var R_houseInner  = R_houseOuter - 22;  // house number ring inner circle
         var R_aspectCircle= R_houseInner;       // aspect lines drawn inside this
@@ -12239,14 +12239,17 @@ function drawNatalWheel(canvasId) {
         svg += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R_signOuter+'" fill="#f5f2ec" stroke="#555" stroke-width="1.2"/>';
         svg += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R_signInner+'" fill="none" stroke="#555" stroke-width="1"/>';
 
+        var glyphR = 20; // radius of circular background behind each glyph
         for (var i = 0; i < 12; i++) {
             var a1 = L2A(i*30);
             // Sign divider
             svg += line(R_signOuter,a1,R_signInner,a1,'#777',0.8);
-            // Glyph
+            // Glyph with circular background
             var midA = L2A(i*30+15);
             var gr = (R_signOuter+R_signInner)/2;
-            svg += '<text x="'+px(gr,midA)+'" y="'+py(gr,midA)+'" fill="'+signColors[i]+'" font-size="24" font-weight="bold" font-family="serif" text-anchor="middle" dominant-baseline="central">'+signGlyphs[i]+'</text>';
+            var gx = px(gr,midA), gy = py(gr,midA);
+            svg += '<circle cx="'+gx+'" cy="'+gy+'" r="'+glyphR+'" fill="rgba(255,255,255,0.85)" stroke="'+signColors[i]+'" stroke-width="1.5"/>';
+            svg += '<text x="'+gx+'" y="'+gy+'" fill="'+signColors[i]+'" font-size="28" font-weight="bold" font-family="serif" text-anchor="middle" dominant-baseline="central">'+signGlyphs[i]+'</text>';
         }
 
         // ===== DEGREE TICK RING =====
@@ -19006,7 +19009,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v339';
+const APP_VERSION = 'v340';
 var _pendingSW = null;
 
 function showUpdateBanner() {
