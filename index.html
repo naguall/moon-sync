@@ -7229,17 +7229,16 @@ function _renderCompass() {
     var smoothBeta = _compassDeviceBetaSmooth;
     var phoneTilt = Math.max(-90, Math.min(90, smoothBeta)); // clamp to ±90°
 
-    // Moon: to point at moon, need tilt = 90 - moonAlt
-    // Moon at zenith (alt=90°) → tilt 0° (flat, center)
-    // Moon at horizon (alt=0°) → tilt 90° (vertical, far right)
-    // Moon below horizon (alt<0°) → tilt >90° (past vertical, clamped)
-    var moonTilt = Math.max(-90, Math.min(90, 90 - moonAlt));
+    // Moon altitude shown directly on bar (same -90..+90 scale)
+    var moonAltClamped = Math.max(-90, Math.min(90, moonAlt));
 
     // Bar: -90° (left) ← 0° CENTER (flat) → +90° (right)
     var altBarWidth = 260;
     var phonePct = Math.max(0, Math.min(100, (phoneTilt + 90) / 180 * 100));
-    var moonPct = Math.max(0, Math.min(100, (moonTilt + 90) / 180 * 100));
-    var altAligned = Math.abs(phoneTilt - moonTilt) < 5;
+    var moonPct = Math.max(0, Math.min(100, (moonAltClamped + 90) / 180 * 100));
+    // Aligned: phone elevation (90-beta) ≈ moonAlt
+    var phoneElevation = 90 - phoneTilt; // what altitude you're pointing at
+    var altAligned = Math.abs(phoneElevation - moonAlt) < 5;
 
     info += '<div style="margin-bottom:8px;">';
     info += '<div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:3px;letter-spacing:1px;">' + (L ? 'INCLINACIÓN (0° = plano al centro)' : 'TILT (0° = flat at center)') + '</div>';
@@ -7260,7 +7259,7 @@ function _renderCompass() {
     info += '<div style="display:flex;justify-content:space-between;width:' + altBarWidth + 'px;margin:3px auto 0;font-size:0.65em;color:rgba(255,255,255,0.25);">';
     info += '<span style="color:rgba(224,176,255,0.5);">📱 ' + phoneTilt.toFixed(0) + '°</span>';
     info += '<span style="color:rgba(255,255,255,0.3);">' + (L ? 'Plano' : 'Flat') + '</span>';
-    info += '<span style="color:rgba(255,213,79,0.5);">🌙 ' + moonTilt.toFixed(0) + '°</span>';
+    info += '<span style="color:rgba(255,213,79,0.5);">🌙 ' + moonAlt.toFixed(0) + '°</span>';
     info += '</div>';
     if (altAligned && !moonBelowHorizon) {
         info += '<div style="font-size:0.7em;color:#4ecdc4;text-align:center;margin-top:2px;">✓ ' + (L ? 'Apuntando a la Luna' : 'Pointing at the Moon') + '</div>';
@@ -20990,7 +20989,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v376';
+const APP_VERSION = 'v377';
 var _pendingSW = null;
 
 function showUpdateBanner() {

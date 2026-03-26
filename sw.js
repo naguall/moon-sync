@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moon-sync-v376';
+const CACHE_NAME = 'moon-sync-v377';
 const ASSETS = [
   '/moon-sync/',
   '/moon-sync/index.html',
