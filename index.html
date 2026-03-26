@@ -19056,6 +19056,10 @@ function openPreferencesModal() {
                     '</button>';
                 }).join('')}
             </div>
+            <button onclick="resetAllAIChats(); this.textContent=currentLang==='es'?'✓ Chats reiniciados':'✓ Chats reset'; this.style.color='#4ecdc4'; this.style.borderColor='rgba(78,205,196,0.4)'; setTimeout(()=>{this.textContent=currentLang==='es'?'🗑 Reiniciar todos los chats AI':'🗑 Reset all AI chats'; this.style.color='#ff6b6b'; this.style.borderColor='rgba(255,107,107,0.3)';},2000);"
+                style="width:100%;padding:10px;background:rgba(255,107,107,0.06);border:1px solid rgba(255,107,107,0.3);border-radius:8px;color:#ff6b6b;font-size:0.78em;font-weight:600;cursor:pointer;">
+                🗑 ${currentLang==='es'?'Reiniciar todos los chats AI':'Reset all AI chats'}
+            </button>
         </div>
 
         <!-- AI Assistant -->
@@ -20722,7 +20726,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v363';
+const APP_VERSION = 'v364';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -22313,6 +22317,26 @@ function setActivePersona(id) {
     // Clear chat history so new persona takes effect cleanly
     aiChatHistory = [];
     hoyInterpHistory = [];
+}
+
+function resetAllAIChats() {
+    // Clear in-memory histories
+    aiChatHistory = [];
+    hoyInterpHistory = [];
+    currentInterpCacheKey = null;
+    // Clear all interp caches from localStorage
+    var keysToRemove = [];
+    for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf('interp_') === 0) keysToRemove.push(k);
+    }
+    keysToRemove.forEach(function(k) { localStorage.removeItem(k); });
+    // Clear AI chat container
+    var aiContainer = document.getElementById('aiChatMessages');
+    if (aiContainer) aiContainer.innerHTML = '';
+    // Clear interp container
+    var interpContainer = document.getElementById('hoyInterpMessages');
+    if (interpContainer) interpContainer.innerHTML = '';
 }
 
 function buildSystemPrompt() {
