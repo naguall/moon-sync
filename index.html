@@ -6222,6 +6222,7 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
                 + '<button onclick="openInterpretationChat(\'' + readingKey + '\',\'' + chatId + '\',this)" style="flex:1;padding:6px 10px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.35);border-radius:6px;color:#667eea;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">💬 ' + (L ? 'Chat' : 'Chat') + '</button>'
                 + '<button onclick="var d=window[\'' + readingKey + '\'];if(d){saveReading(d.title,d.text,d.html);this.disabled=true;this.innerHTML=\'' + (L ? '✅ Guardada' : '✅ Saved') + '\';}" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.35);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">💾 ' + (L ? 'Guardar' : 'Save') + '</button>'
                 + '<button onclick="var d=window[\'' + readingKey + '\'];if(d)shareReading(d);" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.35);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">📤 ' + (L ? 'Compartir' : 'Share') + '</button>'
+                + '<button onclick="deleteInterpChat(\'' + chatId + '\');var m=document.getElementById(\'natalDetailModal\');if(m)m.classList.remove(\'show\');" style="flex:1;padding:6px 10px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.25);border-radius:6px;color:#ff6b6b;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">🗑️ ' + (L ? 'Borrar' : 'Delete') + '</button>'
                 + '</div>';
         } else {
             div.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.85em;">' + (L ? 'No se pudo generar interpretación.' : 'Could not generate interpretation.') + '</p>';
@@ -10834,6 +10835,7 @@ function showBannerAspectDetail(text) {
             + '<button onclick="openInterpretationChat(\'' + readingKey + '\',\'' + chatId + '\',this)" style="flex:1;padding:6px 10px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.35);border-radius:6px;color:#667eea;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">💬 ' + (L ? 'Chat' : 'Chat') + (existingChat.messages.length > 0 ? ' (' + existingChat.messages.length + ')' : '') + '</button>'
             + '<button onclick="var d=window[\'' + readingKey + '\'];if(d){saveReading(d.title,d.text,d.html||d.text);this.disabled=true;this.innerHTML=\'' + (L ? '✅ Guardada' : '✅ Saved') + '\';}" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.35);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">💾 ' + (L ? 'Guardar' : 'Save') + '</button>'
             + '<button onclick="var d=window[\'' + readingKey + '\'];if(d)shareReading(d);" style="flex:1;padding:6px 10px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.35);border-radius:6px;color:#c9a840;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">📤 ' + (L ? 'Compartir' : 'Share') + '</button>'
+            + '<button onclick="deleteInterpChat(\'' + chatId + '\');var m=document.getElementById(\'natalDetailModal\');if(m)m.classList.remove(\'show\');" style="flex:1;padding:6px 10px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.25);border-radius:6px;color:#ff6b6b;font-size:0.8em;cursor:pointer;white-space:nowrap;font-weight:600;">🗑️ ' + (L ? 'Borrar' : 'Delete') + '</button>'
             + '</div>';
         // Auto-open chat if it has messages
         if (existingChat.messages.length > 0) {
@@ -20885,7 +20887,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v371';
+const APP_VERSION = 'v372';
 var _pendingSW = null;
 
 function showUpdateBanner() {
