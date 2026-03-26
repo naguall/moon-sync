@@ -1,10 +1,11 @@
-const CACHE_NAME = 'moon-sync-v358';
+const CACHE_NAME = 'moon-sync-v359';
 const ASSETS = [
   '/moon-sync/',
   '/moon-sync/index.html',
   '/moon-sync/lunar-data.js',
   '/moon-sync/manifest.json',
-  'https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js'
+  'https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js',
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Blue_Marble_2002.png/1280px-Blue_Marble_2002.png'
 ];
 
 // Helper: close ALL notifications and clear badge
