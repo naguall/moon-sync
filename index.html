@@ -6948,7 +6948,10 @@ function closeDiarioModal() {
 var _compassInterval = null;
 var _compassOrientationHandler = null;
 var _compassHeading = 0; // device compass heading in degrees
+var _compassDeviceBeta = 0; // device tilt front-back (0=flat, 90=vertical)
+var _compassDeviceGamma = 0; // device tilt left-right
 var _compassPermissionGranted = false;
+var _compassMapMode = '2d'; // '2d' or '3d'
 
 function getMoonHorizonCoords(date, lat, lon) {
     // Use astronomy-engine to get Moon's azimuth & altitude from observer
@@ -7004,18 +7007,53 @@ function _startCompass() {
     // Listen for device orientation
     _compassOrientationHandler = function(e) {
         if (e.webkitCompassHeading !== undefined) {
-            // iOS: webkitCompassHeading is degrees from magnetic north (0=N, 90=E)
             _compassHeading = e.webkitCompassHeading;
         } else if (e.alpha !== null) {
-            // Android/others: alpha is degrees CCW from north when device is flat
             _compassHeading = (360 - e.alpha) % 360;
         }
+        // Capture tilt for altitude bar interaction
+        if (e.beta !== null) _compassDeviceBeta = e.beta;   // -180..180, 0=flat, 90=vertical
+        if (e.gamma !== null) _compassDeviceGamma = e.gamma; // -90..90
     };
     window.addEventListener('deviceorientation', _compassOrientationHandler, true);
 
     // Update compass display every 100ms
     _renderCompass();
     _compassInterval = setInterval(_renderCompass, 100);
+}
+
+function _getMoonRiseSet(date, lat, lon) {
+    // Calculate moonrise and moonset for the given date using astronomy-engine
+    if (typeof Astronomy === 'undefined') return { rise: null, set: null };
+    try {
+        var observer = new Astronomy.Observer(lat, lon, 0);
+        // Search from start of day
+        var dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+        var t0 = Astronomy.MakeTime(dayStart);
+        var rise = Astronomy.SearchRiseSet(Astronomy.Body.Moon, observer, +1, t0, 1);
+        var set = Astronomy.SearchRiseSet(Astronomy.Body.Moon, observer, -1, t0, 1);
+        return {
+            rise: rise ? rise.date : null,
+            set: set ? set.date : null
+        };
+    } catch(e) { return { rise: null, set: null }; }
+}
+
+function _getSubLunarPoint(date) {
+    // Get the geographic point on Earth directly under the Moon
+    if (typeof Astronomy === 'undefined') return null;
+    try {
+        var t = Astronomy.MakeTime(date);
+        // Get Moon's geocentric equatorial coordinates
+        var equ = Astronomy.Equator(Astronomy.Body.Moon, t, new Astronomy.Observer(0, 0, 0), true, true);
+        // Declination = sub-lunar latitude
+        var subLat = equ.dec;
+        // Right ascension to longitude: need Greenwich Sidereal Time
+        var gst = Astronomy.SiderealTime(t);
+        var subLon = ((equ.ra - gst) * 15 + 360) % 360;
+        if (subLon > 180) subLon -= 360;
+        return { lat: subLat, lon: subLon };
+    } catch(e) { return null; }
 }
 
 function _renderCompass() {
@@ -7037,11 +7075,9 @@ function _renderCompass() {
     var moonAz = moon.azimuth;
     var moonAlt = moon.altitude;
     var heading = _compassHeading;
-
-    // Relative angle: where Moon is relative to where phone points
     var relAngle = ((moonAz - heading) % 360 + 360) % 360;
-
     var moonBelowHorizon = moonAlt < 0;
+
     var moonPhaseIllum = '';
     try {
         var t = Astronomy.MakeTime(now);
@@ -7049,26 +7085,22 @@ function _renderCompass() {
         moonPhaseIllum = (illum.phase_fraction * 100).toFixed(1) + '%';
     } catch(e) {}
 
-    // Cardinal direction of the Moon
     var cardinals = L ? ['N','NE','E','SE','S','SO','O','NO'] : ['N','NE','E','SE','S','SW','W','NW'];
     var cardIdx = Math.round(moonAz / 45) % 8;
     var moonCardinal = cardinals[cardIdx];
 
-    // Compass SVG
-    var size = 300;
+    // ===== COMPASS SVG =====
+    var size = 280;
     var cx = size / 2, cy = size / 2;
-    var outerR = 130, innerR = 40;
+    var outerR = 120, innerR = 36;
 
     var svg = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;">';
-
-    // Background ring
     svg += '<defs>';
     svg += '<radialGradient id="compassBg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#1a1a3e"/><stop offset="100%" stop-color="#0a0a1e"/></radialGradient>';
     svg += '<filter id="compassGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
     svg += '</defs>';
     svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + outerR + '" fill="url(#compassBg)" stroke="rgba(155,89,182,0.3)" stroke-width="2"/>';
 
-    // Degree ticks
     for (var deg = 0; deg < 360; deg += 10) {
         var rad = (deg - 90) * Math.PI / 180;
         var isTick30 = deg % 30 === 0;
@@ -7077,7 +7109,6 @@ function _renderCompass() {
         svg += '<line x1="' + (cx + r1 * Math.cos(rad)) + '" y1="' + (cy + r1 * Math.sin(rad)) + '" x2="' + (cx + r2 * Math.cos(rad)) + '" y2="' + (cy + r2 * Math.sin(rad)) + '" stroke="rgba(255,255,255,' + (isTick30 ? '0.4' : '0.15') + ')" stroke-width="' + (isTick30 ? '2' : '1') + '"/>';
     }
 
-    // Cardinal labels (rotated with heading so they stay true-north aligned)
     var cardLabels = ['N','E','S','W'];
     var cardColors = ['#ef5350','#fff','#fff','#fff'];
     for (var ci = 0; ci < 4; ci++) {
@@ -7086,92 +7117,212 @@ function _renderCompass() {
         var lR = outerR - 22;
         var lx = cx + lR * Math.cos(cRad);
         var ly = cy + lR * Math.sin(cRad);
-        svg += '<text x="' + lx + '" y="' + ly + '" fill="' + cardColors[ci] + '" font-size="14" font-weight="800" text-anchor="middle" dominant-baseline="central" font-family="monospace">' + cardLabels[ci] + '</text>';
+        svg += '<text x="' + lx + '" y="' + ly + '" fill="' + cardColors[ci] + '" font-size="13" font-weight="800" text-anchor="middle" dominant-baseline="central" font-family="monospace">' + cardLabels[ci] + '</text>';
     }
 
-    // Heading indicator (top triangle — always points up = device direction)
     svg += '<polygon points="' + cx + ',' + (cy - outerR - 8) + ' ' + (cx - 6) + ',' + (cy - outerR + 2) + ' ' + (cx + 6) + ',' + (cy - outerR + 2) + '" fill="#e0b0ff"/>';
 
-    // Moon arrow — rotated to relAngle
     var arrowRad = (relAngle - 90) * Math.PI / 180;
     var arrowLen = outerR - 30;
     var ax = cx + arrowLen * Math.cos(arrowRad);
     var ay = cy + arrowLen * Math.sin(arrowRad);
-
-    // Arrow line
     svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + ax + '" y2="' + ay + '" stroke="' + (moonBelowHorizon ? 'rgba(176,190,197,0.4)' : '#f5f5dc') + '" stroke-width="3" filter="url(#compassGlow)"/>';
-
-    // Arrowhead
     var ahSize = 12;
     var ah1 = arrowRad - 0.35;
     var ah2 = arrowRad + 0.35;
     svg += '<polygon points="' + ax + ',' + ay + ' ' + (ax - ahSize * Math.cos(ah1)) + ',' + (ay - ahSize * Math.sin(ah1)) + ' ' + (ax - ahSize * Math.cos(ah2)) + ',' + (ay - ahSize * Math.sin(ah2)) + '" fill="' + (moonBelowHorizon ? 'rgba(176,190,197,0.5)' : '#ffd54f') + '" filter="url(#compassGlow)"/>';
+    svg += '<text x="' + (cx + (arrowLen + 15) * Math.cos(arrowRad)) + '" y="' + (cy + (arrowLen + 15) * Math.sin(arrowRad)) + '" font-size="20" text-anchor="middle" dominant-baseline="central">🌙</text>';
 
-    // Moon emoji at arrow tip
-    svg += '<text x="' + (cx + (arrowLen + 15) * Math.cos(arrowRad)) + '" y="' + (cy + (arrowLen + 15) * Math.sin(arrowRad)) + '" font-size="22" text-anchor="middle" dominant-baseline="central">🌙</text>';
-
-    // Sun position (if above horizon)
     if (sun) {
         var sunRelAngle = ((sun.azimuth - heading) % 360 + 360) % 360;
         var sunRad = (sunRelAngle - 90) * Math.PI / 180;
         var sunR = outerR - 35;
-        svg += '<text x="' + (cx + sunR * Math.cos(sunRad)) + '" y="' + (cy + sunR * Math.sin(sunRad)) + '" font-size="16" text-anchor="middle" dominant-baseline="central" opacity="' + (sun.altitude < 0 ? '0.25' : '0.8') + '">☀️</text>';
+        svg += '<text x="' + (cx + sunR * Math.cos(sunRad)) + '" y="' + (cy + sunR * Math.sin(sunRad)) + '" font-size="14" text-anchor="middle" dominant-baseline="central" opacity="' + (sun.altitude < 0 ? '0.25' : '0.8') + '">☀️</text>';
     }
 
-    // Center circle
     svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + innerR + '" fill="rgba(10,10,30,0.9)" stroke="rgba(155,89,182,0.3)" stroke-width="1"/>';
-    // Center info
     svg += '<text x="' + cx + '" y="' + (cy - 8) + '" fill="#ffd54f" font-size="11" text-anchor="middle" font-weight="700">' + moonAz.toFixed(1) + '°</text>';
     svg += '<text x="' + cx + '" y="' + (cy + 8) + '" fill="rgba(255,255,255,0.5)" font-size="10" text-anchor="middle">' + moonCardinal + '</text>';
-    svg += '<text x="' + cx + '" y="' + (cy + 22) + '" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">' + (moonAlt >= 0 ? '▲' : '▼') + moonAlt.toFixed(1) + '°</text>';
-
+    svg += '<text x="' + cx + '" y="' + (cy + 21) + '" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">' + (moonAlt >= 0 ? '▲' : '▼') + moonAlt.toFixed(1) + '°</text>';
     svg += '</svg>';
 
-    // Info panel below compass
-    var info = '<div style="margin-top:12px;font-size:0.85em;color:rgba(255,255,255,0.7);text-align:center;">';
+    // ===== INTERACTIVE ALTITUDE BAR (responds to phone tilt) =====
+    var info = '<div style="margin-top:10px;font-size:0.85em;color:rgba(255,255,255,0.7);text-align:center;">';
 
-    // Altitude bar
-    var altBarWidth = 200;
-    var altPct = Math.max(0, Math.min(100, (moonAlt + 90) / 180 * 100));
+    // Device tilt indicator: beta 0=flat, 90=upright. Map to viewing angle
+    var deviceViewAngle = Math.max(-90, Math.min(90, _compassDeviceBeta - 90)); // when phone vertical, viewAngle=0 (horizon)
+    var altBarWidth = 240;
+    var moonAltPct = Math.max(0, Math.min(100, (moonAlt + 90) / 180 * 100));
+    var deviceAltPct = Math.max(0, Math.min(100, (deviceViewAngle + 90) / 180 * 100));
+
     info += '<div style="margin-bottom:8px;">';
-    info += '<div style="font-size:0.78em;color:rgba(255,255,255,0.4);margin-bottom:3px;">' + (L ? 'ALTITUD' : 'ALTITUDE') + '</div>';
-    info += '<div style="position:relative;width:' + altBarWidth + 'px;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;margin:0 auto;">';
-    info += '<div style="position:absolute;left:50%;top:0;width:1px;height:100%;background:rgba(255,255,255,0.2);"></div>';
-    info += '<div style="position:absolute;left:' + altPct + '%;top:-2px;width:12px;height:12px;background:' + (moonBelowHorizon ? '#616161' : '#ffd54f') + ';border-radius:50%;transform:translateX(-50%);box-shadow:0 0 6px ' + (moonBelowHorizon ? 'transparent' : 'rgba(255,213,79,0.5)') + ';"></div>';
+    info += '<div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:3px;letter-spacing:1px;">' + (L ? 'ALTITUD / HORIZONTE' : 'ALTITUDE / HORIZON') + '</div>';
+    info += '<div style="position:relative;width:' + altBarWidth + 'px;height:14px;background:linear-gradient(to right,rgba(100,100,255,0.08),rgba(255,255,255,0.06),rgba(255,200,50,0.08));border-radius:7px;margin:0 auto;border:1px solid rgba(255,255,255,0.1);">';
+    // Horizon line
+    info += '<div style="position:absolute;left:50%;top:0;width:2px;height:100%;background:rgba(255,255,255,0.25);border-radius:1px;"></div>';
+    // Device viewing angle indicator (phone tilt)
+    info += '<div style="position:absolute;left:' + deviceAltPct + '%;top:-1px;width:4px;height:16px;background:rgba(224,176,255,0.6);border-radius:2px;transform:translateX(-50%);transition:left 0.1s;"></div>';
+    // Moon altitude dot
+    info += '<div style="position:absolute;left:' + moonAltPct + '%;top:1px;width:12px;height:12px;background:' + (moonBelowHorizon ? '#616161' : '#ffd54f') + ';border-radius:50%;transform:translateX(-50%);box-shadow:0 0 8px ' + (moonBelowHorizon ? 'transparent' : 'rgba(255,213,79,0.6)') + ';z-index:2;"></div>';
     info += '</div>';
-    info += '<div style="display:flex;justify-content:space-between;width:' + altBarWidth + 'px;margin:2px auto 0;font-size:0.7em;color:rgba(255,255,255,0.25);"><span>-90°</span><span>' + (L ? 'Horizonte' : 'Horizon') + '</span><span>+90°</span></div>';
-    info += '</div>';
-
-    info += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;text-align:center;">';
-    info += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:6px;">';
-    info += '<div style="font-size:0.72em;color:rgba(255,255,255,0.35);text-transform:uppercase;">' + (L ? 'Azimut' : 'Azimuth') + '</div>';
-    info += '<div style="font-weight:700;color:#ffd54f;">' + moonAz.toFixed(1) + '° ' + moonCardinal + '</div></div>';
-
-    info += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:6px;">';
-    info += '<div style="font-size:0.72em;color:rgba(255,255,255,0.35);text-transform:uppercase;">' + (L ? 'Altitud' : 'Altitude') + '</div>';
-    info += '<div style="font-weight:700;color:' + (moonBelowHorizon ? '#616161' : '#b0bec5') + ';">' + (moonAlt >= 0 ? '+' : '') + moonAlt.toFixed(1) + '°</div></div>';
-
-    info += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:6px;">';
-    info += '<div style="font-size:0.72em;color:rgba(255,255,255,0.35);text-transform:uppercase;">' + (L ? 'Iluminación' : 'Illumination') + '</div>';
-    info += '<div style="font-weight:700;color:#e0b0ff;">' + moonPhaseIllum + '</div></div>';
-
-    info += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:6px;">';
-    info += '<div style="font-size:0.72em;color:rgba(255,255,255,0.35);text-transform:uppercase;">' + (L ? 'Tu Heading' : 'Your Heading') + '</div>';
-    info += '<div style="font-weight:700;color:#e0b0ff;">' + heading.toFixed(0) + '°</div></div>';
+    info += '<div style="display:flex;justify-content:space-between;width:' + altBarWidth + 'px;margin:2px auto 0;font-size:0.65em;color:rgba(255,255,255,0.2);"><span>-90°</span><span style="color:rgba(224,176,255,0.4);">📱 ' + deviceViewAngle.toFixed(0) + '°</span><span>' + (L ? 'Horizonte' : 'Horizon') + '</span><span style="color:rgba(255,213,79,0.4);">🌙 ' + moonAlt.toFixed(0) + '°</span><span>+90°</span></div>';
     info += '</div>';
 
+    // ===== MOONRISE / MOONSET =====
+    var riseSet = _getMoonRiseSet(now, lat, lon);
+    info += '<div style="display:flex;gap:6px;margin-top:8px;justify-content:center;">';
+    info += '<div style="background:rgba(255,213,79,0.06);border:1px solid rgba(255,213,79,0.15);border-radius:8px;padding:6px 12px;flex:1;max-width:130px;">';
+    info += '<div style="font-size:0.65em;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.5px;">🌅 ' + (L ? 'Sale' : 'Rise') + '</div>';
+    info += '<div style="font-weight:700;color:#ffd54f;font-size:0.95em;">' + (riseSet.rise ? riseSet.rise.toLocaleTimeString(L?'es':'en', {hour:'2-digit',minute:'2-digit',hour12:false}) : '—') + '</div></div>';
+    info += '<div style="background:rgba(126,200,255,0.06);border:1px solid rgba(126,200,255,0.15);border-radius:8px;padding:6px 12px;flex:1;max-width:130px;">';
+    info += '<div style="font-size:0.65em;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.5px;">🌇 ' + (L ? 'Pone' : 'Set') + '</div>';
+    info += '<div style="font-weight:700;color:#7ec8ff;font-size:0.95em;">' + (riseSet.set ? riseSet.set.toLocaleTimeString(L?'es':'en', {hour:'2-digit',minute:'2-digit',hour12:false}) : '—') + '</div></div>';
+    info += '</div>';
+
+    // ===== DATA GRID =====
+    info += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-top:8px;text-align:center;">';
+    var cells = [
+        { label: L?'Azimut':'Azimuth', val: moonAz.toFixed(1) + '° ' + moonCardinal, color: '#ffd54f' },
+        { label: L?'Altitud':'Altitude', val: (moonAlt >= 0 ? '+' : '') + moonAlt.toFixed(1) + '°', color: moonBelowHorizon ? '#616161' : '#b0bec5' },
+        { label: L?'Fase':'Phase', val: moonPhaseIllum, color: '#e0b0ff' },
+        { label: 'Heading', val: heading.toFixed(0) + '°', color: '#e0b0ff' }
+    ];
+    cells.forEach(function(c) {
+        info += '<div style="background:rgba(255,255,255,0.03);border-radius:6px;padding:5px 3px;">';
+        info += '<div style="font-size:0.62em;color:rgba(255,255,255,0.3);text-transform:uppercase;">' + c.label + '</div>';
+        info += '<div style="font-weight:700;color:' + c.color + ';font-size:0.82em;">' + c.val + '</div></div>';
+    });
+    info += '</div>';
+
+    // ===== SUB-LUNAR POINT MAP =====
+    var subLunar = _getSubLunarPoint(now);
+    if (subLunar) {
+        // 2D/3D toggle
+        info += '<div style="margin-top:10px;">';
+        info += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">';
+        info += '<div style="font-size:0.72em;color:rgba(255,255,255,0.35);letter-spacing:1px;text-transform:uppercase;">' + (L ? 'PUNTO SUBLUNAR' : 'SUB-LUNAR POINT') + '</div>';
+        info += '<div style="display:flex;gap:4px;">';
+        info += '<button onclick="_compassMapMode=\'2d\';_renderCompass();" style="padding:2px 8px;font-size:0.7em;border-radius:4px;cursor:pointer;border:1px solid ' + (_compassMapMode === '2d' ? 'rgba(255,213,79,0.5)' : 'rgba(255,255,255,0.15)') + ';background:' + (_compassMapMode === '2d' ? 'rgba(255,213,79,0.15)' : 'rgba(255,255,255,0.03)') + ';color:' + (_compassMapMode === '2d' ? '#ffd54f' : 'rgba(255,255,255,0.4)') + ';">2D</button>';
+        info += '<button onclick="_compassMapMode=\'3d\';_renderCompass();" style="padding:2px 8px;font-size:0.7em;border-radius:4px;cursor:pointer;border:1px solid ' + (_compassMapMode === '3d' ? 'rgba(255,213,79,0.5)' : 'rgba(255,255,255,0.15)') + ';background:' + (_compassMapMode === '3d' ? 'rgba(255,213,79,0.15)' : 'rgba(255,255,255,0.03)') + ';color:' + (_compassMapMode === '3d' ? '#ffd54f' : 'rgba(255,255,255,0.4)') + ';">3D</button>';
+        info += '</div></div>';
+
+        if (_compassMapMode === '2d') {
+            // 2D equirectangular map
+            var mW = 280, mH = 140, mPad = 0;
+            var mapSvg = '<svg width="' + mW + '" height="' + mH + '" viewBox="0 0 ' + mW + ' ' + mH + '" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;border-radius:8px;border:1px solid rgba(255,255,255,0.1);">';
+            // NASA satellite background
+            mapSvg += '<image href="https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Blue_Marble_2002.png/1280px-Blue_Marble_2002.png" x="0" y="0" width="' + mW + '" height="' + mH + '" preserveAspectRatio="none" opacity="0.5"/>';
+            mapSvg += '<rect x="0" y="0" width="' + mW + '" height="' + mH + '" fill="rgba(5,10,30,0.4)"/>';
+            // Grid lines
+            for (var gLon = -120; gLon <= 120; gLon += 60) {
+                var gx = (gLon + 180) / 360 * mW;
+                mapSvg += '<line x1="' + gx + '" y1="0" x2="' + gx + '" y2="' + mH + '" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>';
+            }
+            for (var gLat = -60; gLat <= 60; gLat += 30) {
+                var gy = (90 - gLat) / 180 * mH;
+                mapSvg += '<line x1="0" y1="' + gy + '" x2="' + mW + '" y2="' + gy + '" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>';
+            }
+            // Equator
+            mapSvg += '<line x1="0" y1="' + (mH/2) + '" x2="' + mW + '" y2="' + (mH/2) + '" stroke="rgba(255,255,255,0.12)" stroke-width="0.5" stroke-dasharray="4,4"/>';
+            // User position
+            var uX = (lon + 180) / 360 * mW;
+            var uY = (90 - lat) / 180 * mH;
+            mapSvg += '<circle cx="' + uX + '" cy="' + uY + '" r="3" fill="#4ecdc4" stroke="rgba(78,205,196,0.6)" stroke-width="1"/>';
+            mapSvg += '<text x="' + (uX + 6) + '" y="' + (uY + 3) + '" fill="#4ecdc4" font-size="7" font-weight="600">' + (L ? 'Tú' : 'You') + '</text>';
+            // Sub-lunar point
+            var slX = (subLunar.lon + 180) / 360 * mW;
+            var slY = (90 - subLunar.lat) / 180 * mH;
+            // Glow circle around sub-lunar point
+            mapSvg += '<circle cx="' + slX + '" cy="' + slY + '" r="14" fill="none" stroke="rgba(255,213,79,0.2)" stroke-width="1"><animate attributeName="r" from="8" to="18" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite"/></circle>';
+            mapSvg += '<circle cx="' + slX + '" cy="' + slY + '" r="4" fill="#ffd54f" stroke="rgba(255,213,79,0.8)" stroke-width="1.5"><animate attributeName="r" from="3" to="5" dur="1.5s" repeatCount="indefinite" values="3;5;3"/></circle>';
+            mapSvg += '<text x="' + slX + '" y="' + (slY - 8) + '" fill="#ffd54f" font-size="8" text-anchor="middle">🌙</text>';
+            // Line connecting user to sub-lunar point
+            mapSvg += '<line x1="' + uX + '" y1="' + uY + '" x2="' + slX + '" y2="' + slY + '" stroke="rgba(255,213,79,0.2)" stroke-width="0.5" stroke-dasharray="3,3"/>';
+            mapSvg += '</svg>';
+            info += mapSvg;
+        } else {
+            // 3D globe view
+            var gSize = 220, gCx = gSize/2, gCy = gSize/2, gR = 90;
+            var globeSvg = '<svg width="' + gSize + '" height="' + gSize + '" viewBox="0 0 ' + gSize + ' ' + gSize + '" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;">';
+            // Rotate globe so sub-lunar point faces us
+            var rotLon = subLunar.lon;
+            var rotLat = subLunar.lat;
+            // Globe background
+            globeSvg += '<defs><radialGradient id="globeGrad" cx="40%" cy="35%"><stop offset="0%" stop-color="#1a3a5c"/><stop offset="70%" stop-color="#0d1f33"/><stop offset="100%" stop-color="#050a14"/></radialGradient></defs>';
+            globeSvg += '<circle cx="' + gCx + '" cy="' + gCy + '" r="' + gR + '" fill="url(#globeGrad)" stroke="rgba(126,200,255,0.2)" stroke-width="1"/>';
+            // Grid: meridians and parallels
+            for (var mLon = -180; mLon < 180; mLon += 30) {
+                var pts = [];
+                for (var pLat = -90; pLat <= 90; pLat += 5) {
+                    var rLat = pLat * Math.PI / 180;
+                    var rLon = (mLon - rotLon) * Math.PI / 180;
+                    var x3 = Math.cos(rLat) * Math.sin(rLon);
+                    var y3 = Math.sin(rLat);
+                    var z3 = Math.cos(rLat) * Math.cos(rLon);
+                    if (z3 > 0) { // visible hemisphere
+                        pts.push((gCx + x3 * gR).toFixed(1) + ',' + (gCy - y3 * gR).toFixed(1));
+                    } else if (pts.length > 1) {
+                        globeSvg += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="rgba(126,200,255,0.08)" stroke-width="0.5"/>';
+                        pts = [];
+                    } else { pts = []; }
+                }
+                if (pts.length > 1) globeSvg += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="rgba(126,200,255,0.08)" stroke-width="0.5"/>';
+            }
+            for (var pLat2 = -60; pLat2 <= 60; pLat2 += 30) {
+                var pts2 = [];
+                for (var mLon2 = -180; mLon2 <= 180; mLon2 += 5) {
+                    var rLat2 = pLat2 * Math.PI / 180;
+                    var rLon2 = (mLon2 - rotLon) * Math.PI / 180;
+                    var x32 = Math.cos(rLat2) * Math.sin(rLon2);
+                    var y32 = Math.sin(rLat2);
+                    var z32 = Math.cos(rLat2) * Math.cos(rLon2);
+                    if (z32 > 0) {
+                        pts2.push((gCx + x32 * gR).toFixed(1) + ',' + (gCy - y32 * gR).toFixed(1));
+                    } else if (pts2.length > 1) {
+                        globeSvg += '<polyline points="' + pts2.join(' ') + '" fill="none" stroke="rgba(126,200,255,0.08)" stroke-width="0.5"/>';
+                        pts2 = [];
+                    } else { pts2 = []; }
+                }
+                if (pts2.length > 1) globeSvg += '<polyline points="' + pts2.join(' ') + '" fill="none" stroke="rgba(126,200,255,0.08)" stroke-width="0.5"/>';
+            }
+            // Sub-lunar point (always at center since globe rotated to face it)
+            globeSvg += '<circle cx="' + gCx + '" cy="' + (gCy - rotLat/90*gR).toFixed(1) + '" r="6" fill="rgba(255,213,79,0.3)" stroke="#ffd54f" stroke-width="1.5"><animate attributeName="r" from="4" to="10" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.8" to="0.1" dur="2s" repeatCount="indefinite"/></circle>';
+            globeSvg += '<circle cx="' + gCx + '" cy="' + (gCy - rotLat/90*gR).toFixed(1) + '" r="3" fill="#ffd54f"/>';
+            globeSvg += '<text x="' + gCx + '" y="' + (gCy - rotLat/90*gR - 10).toFixed(1) + '" fill="#ffd54f" font-size="10" text-anchor="middle">🌙</text>';
+            // User position on globe
+            var uLat3 = lat * Math.PI / 180;
+            var uLon3 = (lon - rotLon) * Math.PI / 180;
+            var ux3 = Math.cos(uLat3) * Math.sin(uLon3);
+            var uy3 = Math.sin(uLat3);
+            var uz3 = Math.cos(uLat3) * Math.cos(uLon3);
+            if (uz3 > 0) { // visible
+                var upx = gCx + ux3 * gR;
+                var upy = gCy - uy3 * gR;
+                globeSvg += '<circle cx="' + upx.toFixed(1) + '" cy="' + upy.toFixed(1) + '" r="3" fill="#4ecdc4" stroke="rgba(78,205,196,0.6)" stroke-width="1"/>';
+                globeSvg += '<text x="' + (upx + 6).toFixed(1) + '" y="' + (upy + 3).toFixed(1) + '" fill="#4ecdc4" font-size="7" font-weight="600">' + (L ? 'Tú' : 'You') + '</text>';
+            }
+            // Atmosphere glow
+            globeSvg += '<circle cx="' + gCx + '" cy="' + gCy + '" r="' + gR + '" fill="none" stroke="rgba(126,200,255,0.1)" stroke-width="3"/>';
+            globeSvg += '</svg>';
+            info += globeSvg;
+        }
+        // Sub-lunar coordinates
+        info += '<div style="font-size:0.68em;color:rgba(255,255,255,0.35);margin-top:4px;">' + subLunar.lat.toFixed(2) + '°' + (subLunar.lat >= 0 ? 'N' : 'S') + ' ' + Math.abs(subLunar.lon).toFixed(2) + '°' + (subLunar.lon >= 0 ? 'E' : 'W') + '</div>';
+        info += '</div>';
+    }
+
+    // Status message
     if (moonBelowHorizon) {
-        info += '<div style="margin-top:10px;padding:8px 12px;background:rgba(97,97,97,0.15);border:1px solid rgba(97,97,97,0.3);border-radius:8px;font-size:0.82em;color:#9e9e9e;">';
-        info += (L ? '🌙 La Luna está bajo el horizonte (' + moonAlt.toFixed(1) + '°). La flecha indica su dirección pero no es visible.' : '🌙 The Moon is below the horizon (' + moonAlt.toFixed(1) + '°). The arrow shows its direction but it is not visible.');
+        info += '<div style="margin-top:8px;padding:6px 10px;background:rgba(97,97,97,0.1);border:1px solid rgba(97,97,97,0.2);border-radius:8px;font-size:0.78em;color:#9e9e9e;">';
+        info += (L ? '🌙 Luna bajo el horizonte (' + moonAlt.toFixed(1) + '°)' : '🌙 Moon below horizon (' + moonAlt.toFixed(1) + '°)');
         info += '</div>';
     } else {
-        info += '<div style="margin-top:10px;padding:8px 12px;background:rgba(255,213,79,0.08);border:1px solid rgba(255,213,79,0.2);border-radius:8px;font-size:0.82em;color:#ffd54f;">';
-        info += (L ? '🌙 Apunta tu teléfono hacia la flecha para encontrar la Luna en el cielo.' : '🌙 Point your phone toward the arrow to find the Moon in the sky.');
+        info += '<div style="margin-top:8px;padding:6px 10px;background:rgba(255,213,79,0.06);border:1px solid rgba(255,213,79,0.15);border-radius:8px;font-size:0.78em;color:#ffd54f;">';
+        info += (L ? '🌙 Apunta tu teléfono hacia la flecha' : '🌙 Point your phone toward the arrow');
         info += '</div>';
     }
 
     info += '</div>';
-
     bodyEl.innerHTML = svg + info;
 }
 
@@ -20725,7 +20876,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v369';
+const APP_VERSION = 'v370';
 var _pendingSW = null;
 
 function showUpdateBanner() {
