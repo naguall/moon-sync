@@ -148,7 +148,7 @@
 
         .container { width: 100%; margin: 0 auto; padding: 0 8px; box-sizing: border-box; overflow-x: hidden; max-width: 100vw; }
 
-        header { text-align: center; margin-bottom: 4px; position: sticky; top: 0; z-index: 100; background: linear-gradient(180deg, #0a0a2e 85%, transparent); padding-top: 6px; }
+        header { text-align: center; margin-bottom: 4px; position: sticky; top: 0; z-index: 100; background: #0a0a2e; padding-top: 6px; padding-bottom: 2px; }
 
         h1 {
             font-family: 'Cinzel', serif;
@@ -467,6 +467,10 @@
         .natal-subtab { flex: 0 0 auto; padding: 8px 10px; border: none; background: transparent; color: rgba(255,255,255,0.45); font-size: 0.78em; font-weight: 600; cursor: pointer; transition: all 0.3s; text-align: center; border-bottom: 2px solid transparent; white-space: nowrap; }
         .natal-subtab:hover { color: rgba(255,255,255,0.7); background: rgba(155,89,182,0.1); }
         .natal-subtab.active { color: #c39bd3; background: rgba(155,89,182,0.15); border-bottom: 2px solid #c39bd3; }
+        /* Responsive Calendar button text: short in portrait, full in landscape */
+        .subtab-full { display: none; }
+        .subtab-short { display: inline; }
+        @media (orientation: landscape) { .subtab-full { display: inline; } .subtab-short { display: none; } }
         .natal-tab-content { animation: fadeInTab 0.3s ease; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes fadeInTab { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -682,10 +686,10 @@
 <body>
     <div class="container">
         <header>
-            <!-- Header row: title on the left, utility buttons on the right -->
-            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:6px;padding:0 4px;">
-                <h1 id="calendarTitle" style="margin:0;font-size:clamp(1.1em,4vw,1.6em);">🌙 Lunar</h1>
-                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <!-- Header row: title left, utility buttons right — always same line -->
+            <div id="headerTitleRow" style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:6px;padding:0 4px;flex-wrap:nowrap;">
+                <h1 id="calendarTitle" style="margin:0;font-size:clamp(1em,3.5vw,1.5em);flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🌙 Lunar</h1>
+                <div id="headerUtilBtns" style="display:flex;align-items:center;gap:5px;flex-shrink:0;margin-left:8px;">
                     <button id="savedReadingsBtn" onclick="openSavedReadingsModal()" style="background:transparent;border:1px solid rgba(255,255,255,0.25);border-radius:6px;padding:4px 6px;cursor:pointer;font-size:0.85em;color:rgba(255,255,255,0.7);line-height:1;">📚</button>
                     <button id="notifHistoryBtn" onclick="openNotifHistoryModal()" style="position:relative;background:transparent;border:1px solid rgba(255,255,255,0.25);border-radius:6px;padding:4px 6px;cursor:pointer;font-size:0.85em;color:rgba(255,255,255,0.8);line-height:1;">🔔<span id="notifBadge" style="display:none;position:absolute;top:-8px;right:-8px;background:#FF3B30;color:#fff;font-size:0.65em;font-weight:800;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;padding:0 3px;box-sizing:border-box;box-shadow:0 2px 6px rgba(255,59,48,0.6);border:2px solid #0a0a2e;">0</span></button>
                     <button id="preferencesBtn" onclick="openPreferencesModal()" style="background:transparent;border:1px solid rgba(255,255,255,0.25);border-radius:6px;padding:4px 6px;cursor:pointer;font-size:0.85em;color:rgba(255,255,255,0.7);line-height:1;">⚙️</button>
@@ -12061,7 +12065,7 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
     return `
         <div class="natal-subtabs">
             <button class="natal-subtab" onclick="switchNatalTab('hoy',this)">${L?'Hoy':'Today'}</button>
-            <button class="natal-subtab active" onclick="switchNatalTab('calendar',this)">${L?'Calendario':'Calendar'}</button>
+            <button class="natal-subtab active" onclick="switchNatalTab('calendar',this)"><span class="subtab-short">${L?'Calend':'Calend'}</span><span class="subtab-full">${L?'Calendario':'Calendar'}</span></button>
             <button class="natal-subtab" onclick="switchNatalTab('ciclos',this)">${L?'Ciclos':'Cycles'}</button>
             <button class="natal-subtab" onclick="switchNatalTab('chart',this)">${L?'Carta':'Chart'}</button>
             <button class="natal-subtab" onclick="switchNatalTab('tables',this)">${L?'Tablas':'Tables'}</button>
@@ -14018,10 +14022,9 @@ function renderPersonalCalendar() {
             <span style="color:#ff9800;">◑ = ${L?'Medio Cielo':'Half-Return'}</span>
             <span style="color:#ef5350;">🌑🌕 = ${L?'Eclipse':'Eclipse'}</span>
         </div>
-        </div><!-- close natalCalendarGrid -->
     `;
 
-    // ===== YEARLY EVENTS LIST =====
+    // ===== YEARLY EVENTS LIST (inside natalCalendarGrid so it only shows on Calendar tab) =====
     // Build a chronological list of all notable events for the year
     var yearEvents = [];
     var yearMonthNames = L ?
@@ -14134,6 +14137,7 @@ function renderPersonalCalendar() {
     yearEventsHTML += '</div></div>';
 
     calendarHTML += yearEventsHTML;
+    calendarHTML += '</div><!-- close natalCalendarGrid -->';
 
     container.innerHTML = calendarHTML;
 }
@@ -20165,7 +20169,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v349';
+const APP_VERSION = 'v350';
 var _pendingSW = null;
 
 function showUpdateBanner() {
