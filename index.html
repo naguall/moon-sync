@@ -326,7 +326,7 @@
         .ai-typing span { animation: aiDot 1.4s infinite; } .ai-typing span:nth-child(2) { animation-delay: 0.2s; } .ai-typing span:nth-child(3) { animation-delay: 0.4s; }
         @keyframes aiDot { 0%,60%,100% { opacity: 0.3; } 30% { opacity: 1; } }
 
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100vh; background-color: rgba(2,2,15,0.88); flex-direction: column; justify-content: center; align-items: center; overflow: hidden; padding: 20px 0; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100vh; background-color: rgba(2,2,15,0.88); flex-direction: column; justify-content: center; align-items: center; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px 0; }
         .modal.show { display: flex; }
         .modal-content {
             background: linear-gradient(170deg, rgba(7,9,42,0.99) 0%, rgba(4,5,25,0.99) 100%);
@@ -5898,7 +5898,7 @@ function viewDiaryEntry(dateKey) {
     html += '<button onclick="openSavedReadingsModal(\'diario\')" style="padding:6px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:rgba(255,255,255,0.7);font-size:0.85em;cursor:pointer;">← ' + (L ? 'Volver' : 'Back') + '</button>';
     html += '</div>';
     html += '<h3 style="color:#9b59b6;margin-bottom:10px;">📝 ' + dateKey + '</h3>';
-    html += '<div style="line-height:1.8;font-size:0.92em;color:rgba(255,255,255,0.88);background:rgba(155,89,182,0.05);border-radius:10px;padding:16px;white-space:pre-wrap;">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+    html += '<div style="line-height:1.8;font-size:0.92em;color:rgba(255,255,255,0.88);background:rgba(155,89,182,0.05);border-radius:10px;padding:16px;white-space:pre-wrap;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
     html += '<div style="display:flex;gap:10px;margin-top:16px;justify-content:center;">';
     html += '<button onclick="editDiaryEntry(\'' + dateKey.replace(/'/g,"\\'") + '\')" style="padding:8px 20px;background:rgba(78,205,196,0.15);border:1px solid rgba(78,205,196,0.3);border-radius:8px;color:#4ecdc4;font-size:0.9em;cursor:pointer;">✏️ ' + (L ? 'Editar' : 'Edit') + '</button>';
     html += '<button onclick="shareDiaryEntry(\'' + dateKey.replace(/'/g,"\\'") + '\')" style="padding:8px 20px;background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);border-radius:8px;color:#25d366;font-size:0.9em;cursor:pointer;">📤 ' + (L ? 'Compartir' : 'Share') + '</button>';
@@ -5978,7 +5978,7 @@ function viewFullReading(id) {
     html += '<h3 style="color:#c9a840;margin-bottom:5px;">' + r.title + '</h3>';
     var d = new Date(r.date);
     html += '<div style="color:rgba(255,255,255,0.35);font-size:0.8em;margin-bottom:15px;">' + d.toLocaleDateString(L?'es':'en',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}) + '</div>';
-    html += '<div style="line-height:1.7;font-size:0.92em;color:rgba(255,255,255,0.88);background:rgba(255,255,255,0.03);border-radius:10px;padding:16px;">' + r.html + '</div>';
+    html += '<div style="line-height:1.7;font-size:0.92em;color:rgba(255,255,255,0.88);background:rgba(255,255,255,0.03);border-radius:10px;padding:16px;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">' + r.html + '</div>';
     html += '<div style="display:flex;gap:10px;margin-top:16px;justify-content:center;">';
     html += '<button onclick="shareReadingById(\'' + r.id + '\')" style="padding:8px 20px;background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);border-radius:8px;color:#25d366;font-size:0.9em;cursor:pointer;">📤 ' + (L ? 'Compartir' : 'Share') + '</button>';
     html += '<button onclick="if(confirm(\'' + (L?'¿Eliminar?':'Delete?') + '\')){deleteReading(\'' + r.id + '\');openSavedReadingsModal();}" style="padding:8px 20px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.25);border-radius:8px;color:#ff6b6b;font-size:0.9em;cursor:pointer;">🗑️ ' + (L ? 'Eliminar' : 'Delete') + '</button>';
@@ -20168,7 +20168,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v351';
+const APP_VERSION = 'v352';
 var _pendingSW = null;
 
 function showUpdateBanner() {
