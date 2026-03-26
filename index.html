@@ -11475,11 +11475,13 @@ function switchToPersonalMode() {
     document.body.classList.remove('gregorian-mode');
     document.body.classList.add('personal-mode');
 
-    // Hide other panels
+    // Hide other panels and navigation
     ['lunarWeeks', 'solarWeeks', 'gregorianCalendar', 'solarInfoPanel', 'earthInfoPanel', 'solarSystemPanel', 'aspects2026Panel', 'lunarInfoBanner', 'currentDayInfo', 'planetaryAspectsSection'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
+    const nav = document.querySelector('.navigation');
+    if (nav) nav.style.display = 'none';
 
     document.getElementById('calendarTitle').innerHTML = currentLang === 'es' ? 'Carta Natal' : 'Natal Chart';
 
@@ -16502,9 +16504,7 @@ document.getElementById('langEN').addEventListener('click', function() {
     changeLanguage('en');
 });
 
-// Initialize calendar based on saved mode — remove flash-prevention styles
-var _flashFix = document.getElementById('modeFlashFix');
-if (_flashFix) _flashFix.remove();
+// Initialize calendar based on saved mode
 updateModeButtons();
 if (calendarMode === 'solar') {
     document.body.classList.add('solar-mode');
@@ -16524,6 +16524,9 @@ if (calendarMode === 'solar') {
 } else {
     renderCalendar();
 }
+// Remove flash-prevention styles AFTER mode is fully initialized
+var _flashFix = document.getElementById('modeFlashFix');
+if (_flashFix) _flashFix.remove();
 
 // Start sublunar position auto-refresh (coords every 10s, full every 30s)
 startSublunaryRefresh();
@@ -18947,7 +18950,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v336';
+const APP_VERSION = 'v337';
 var _pendingSW = null;
 
 function showUpdateBanner() {
