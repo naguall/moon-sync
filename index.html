@@ -19039,6 +19039,25 @@ function openPreferencesModal() {
             </button>
         </div>
 
+        <!-- AI Persona Selector -->
+        <div style="margin-bottom:16px;">
+            <div style="font-size:0.85em;font-weight:700;color:#c9a840;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">
+                🧠 ${currentLang==='es'?'Personalidad AI':'AI Persona'}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+                ${_aiPersonas.map(function(p) {
+                    var isActive = p.id === _activePersonaId;
+                    return '<button onclick="setActivePersona(\'' + p.id + '\'); openPreferencesModal();" style="width:100%;padding:10px 12px;text-align:left;border-radius:8px;cursor:pointer;' +
+                        'background:' + (isActive ? 'linear-gradient(135deg,rgba(201,168,64,0.2),rgba(201,168,64,0.06))' : 'rgba(255,255,255,0.03)') + ';' +
+                        'border:' + (isActive ? '2px solid rgba(201,168,64,0.6)' : '1px solid rgba(255,255,255,0.1)') + ';' +
+                        'color:' + (isActive ? '#c9a840' : 'rgba(255,255,255,0.5)') + ';">' +
+                        '<div style="font-size:0.85em;font-weight:700;">' + p.icon + ' ' + (currentLang==='es' ? p.name_es : p.name_en) + (isActive ? ' ✓' : '') + '</div>' +
+                        '<div style="font-size:0.68em;margin-top:2px;opacity:0.7;">' + (currentLang==='es' ? p.desc_es : p.desc_en) + '</div>' +
+                    '</button>';
+                }).join('')}
+            </div>
+        </div>
+
         <!-- AI Assistant -->
         <div style="margin-bottom:16px;">
             <div style="font-size:0.85em;font-weight:700;color:#b388ff;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">
@@ -20703,7 +20722,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v361';
+const APP_VERSION = 'v362';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -21973,12 +21992,18 @@ function gatherFullAppContext() {
     return ctx;
 }
 
-function buildSystemPrompt() {
-    const isEs = currentLang === 'es';
-    const fullCtx = gatherFullAppContext();
-
-    if (isEs) {
-        return `Eres un lector de campos energéticos planetarios. No eres un astrólogo comercial. No eres coach. No das consejos de vida. Describes las fuerzas que operan.
+// ═══ AI PERSONA REGISTRY ═══
+var _aiPersonas = [
+    {
+        id: 'energy-reader',
+        name_es: 'Lector de Campos Energéticos',
+        name_en: 'Energy Field Reader',
+        desc_es: 'Describe fuerzas arquetípicas, tensiones, polaridades. Sobrio, técnico, sin coaching.',
+        desc_en: 'Describes archetypal forces, tensions, polarities. Sober, technical, no coaching.',
+        icon: '⚡',
+        buildPrompt: function(isEs, fullCtx) {
+            if (isEs) {
+                return `Eres un lector de campos energéticos planetarios. No eres un astrólogo comercial. No eres coach. No das consejos de vida. Describes las fuerzas que operan.
 
 MARCO: Astrología arquetipal (Tarnas), evolutiva (Jeff Green), psicología profunda (Liz Greene). Oceanografía, sismología, astronomía, mitología comparada, hermetismo.
 
@@ -22030,8 +22055,8 @@ CORRECTO: "Luna Llena 5°Virgo, eje Casa 2/8. Oposición a tu Neptuno natal. Ten
 INCORRECTO: "La Luna Llena te invita a revisar tus finanzas y encontrar un equilibrio entre dar y recibir. Es un buen momento para reflexionar sobre tu relación con el dinero."
 
 LECTURA COMPLETA — Cuando pidan lectura completa, cubrir SIN EXCEPCIÓN: Sol, Luna, ASC, Mercurio, Venus, Marte, Júpiter, Saturno, Urano, Neptuno, Plutón, Nodos, Quirón, Lilith, MC, Aspectos mayores, Síntesis. Cada planeta: signo, grado, casa, aspectos principales, cualidad energética. Sin relleno entre planetas.`;
-    } else {
-        return `You are a planetary energy field reader. Not a commercial astrologer. Not a coach. Not a life advisor. You describe the forces at work.
+            } else {
+                return `You are a planetary energy field reader. Not a commercial astrologer. Not a coach. Not a life advisor. You describe the forces at work.
 
 FRAMEWORK: Archetypal astrology (Tarnas), evolutionary (Jeff Green), depth psychology (Liz Greene). Oceanography, seismology, astronomy, comparative mythology, hermeticism.
 
@@ -22083,7 +22108,32 @@ CORRECT: "Full Moon 5°Virgo, House 2/8 axis. Opposition to your natal Neptune. 
 INCORRECT: "The Full Moon invites you to review your finances and find a balance between giving and receiving. This is a good time to reflect on your relationship with money."
 
 FULL READING — When asked for full reading, cover WITHOUT EXCEPTION: Sun, Moon, ASC, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, Nodes, Chiron, Lilith, MC, Major Aspects, Synthesis. Each planet: sign, degree, house, main aspects, energy quality. No filler between planets.`;
+            }
+        }
     }
+    // More personas can be added here — just push to _aiPersonas array
+];
+
+var _activePersonaId = localStorage.getItem('activePersonaId') || 'energy-reader';
+
+function getActivePersona() {
+    var found = _aiPersonas.find(function(p) { return p.id === _activePersonaId; });
+    return found || _aiPersonas[0];
+}
+
+function setActivePersona(id) {
+    _activePersonaId = id;
+    localStorage.setItem('activePersonaId', id);
+    // Clear chat history so new persona takes effect cleanly
+    aiChatHistory = [];
+    hoyInterpHistory = [];
+}
+
+function buildSystemPrompt() {
+    const isEs = currentLang === 'es';
+    const fullCtx = gatherFullAppContext();
+    var persona = getActivePersona();
+    return persona.buildPrompt(isEs, fullCtx);
 }
 
 function addAIMessage(role, text, forceScrollBottom) {
