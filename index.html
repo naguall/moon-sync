@@ -4370,8 +4370,22 @@ async function gcalFetchEvents() {
                 if (!startRaw) continue;
 
                 const isAllDay = !item.start?.dateTime;
-                const startDate = new Date(startRaw);
-                const endDate = endRaw ? new Date(endRaw) : new Date(startDate);
+                // Fix: date-only strings like "2026-04-15" parse as UTC midnight,
+                // which becomes previous day in UTC-negative timezones. Parse as local instead.
+                let startDate;
+                if (isAllDay && /^\d{4}-\d{2}-\d{2}$/.test(startRaw)) {
+                    const sp = startRaw.split('-');
+                    startDate = new Date(parseInt(sp[0]), parseInt(sp[1]) - 1, parseInt(sp[2]));
+                } else {
+                    startDate = new Date(startRaw);
+                }
+                let endDate;
+                if (isAllDay && endRaw && /^\d{4}-\d{2}-\d{2}$/.test(endRaw)) {
+                    const ep = endRaw.split('-');
+                    endDate = new Date(parseInt(ep[0]), parseInt(ep[1]) - 1, parseInt(ep[2]));
+                } else {
+                    endDate = endRaw ? new Date(endRaw) : new Date(startDate);
+                }
 
                 const eventObj = {
                     title: item.summary || '(Sin título)',
@@ -7147,10 +7161,22 @@ function _renderCompass() {
     var moonBelowHorizon = moonAlt < 0;
 
     var moonPhaseIllum = '';
+    var moonPhaseEmoji = '\uD83C\uDF19'; // fallback 🌙
     try {
         var t = Astronomy.MakeTime(now);
         var illum = Astronomy.Illumination(Astronomy.Body.Moon, t);
         moonPhaseIllum = (illum.phase_fraction * 100).toFixed(1) + '%';
+        // Determine emoji from phase_angle (0=new, 90=first quarter, 180=full, 270=last quarter)
+        var pa = illum.phase_angle;
+        if (pa < 22.5) moonPhaseEmoji = '\uD83C\uDF11';       // 🌑 new
+        else if (pa < 67.5) moonPhaseEmoji = '\uD83C\uDF12';   // 🌒 waxing crescent
+        else if (pa < 112.5) moonPhaseEmoji = '\uD83C\uDF13';  // 🌓 first quarter
+        else if (pa < 157.5) moonPhaseEmoji = '\uD83C\uDF14';  // 🌔 waxing gibbous
+        else if (pa < 202.5) moonPhaseEmoji = '\uD83C\uDF15';  // 🌕 full
+        else if (pa < 247.5) moonPhaseEmoji = '\uD83C\uDF16';  // 🌖 waning gibbous
+        else if (pa < 292.5) moonPhaseEmoji = '\uD83C\uDF17';  // 🌗 last quarter
+        else if (pa < 337.5) moonPhaseEmoji = '\uD83C\uDF18';  // 🌘 waning crescent
+        else moonPhaseEmoji = '\uD83C\uDF11';                   // 🌑 new
     } catch(e) {}
 
     var cardinals = L ? ['N','NE','E','SE','S','SO','O','NO'] : ['N','NE','E','SE','S','SW','W','NW'];
@@ -7199,7 +7225,7 @@ function _renderCompass() {
     var ah1 = arrowRad - 0.35;
     var ah2 = arrowRad + 0.35;
     svg += '<polygon points="' + ax + ',' + ay + ' ' + (ax - ahSize * Math.cos(ah1)) + ',' + (ay - ahSize * Math.sin(ah1)) + ' ' + (ax - ahSize * Math.cos(ah2)) + ',' + (ay - ahSize * Math.sin(ah2)) + '" fill="' + (moonBelowHorizon ? 'rgba(176,190,197,0.5)' : '#ffd54f') + '" filter="url(#compassGlow)"/>';
-    svg += '<text x="' + (cx + (arrowLen + 15) * Math.cos(arrowRad)) + '" y="' + (cy + (arrowLen + 15) * Math.sin(arrowRad)) + '" font-size="20" text-anchor="middle" dominant-baseline="central">🌙</text>';
+    svg += '<text x="' + (cx + (arrowLen + 15) * Math.cos(arrowRad)) + '" y="' + (cy + (arrowLen + 15) * Math.sin(arrowRad)) + '" font-size="20" text-anchor="middle" dominant-baseline="central">' + moonPhaseEmoji + '</text>';
 
     if (sun) {
         var sunRelAngle = ((sun.azimuth - heading) % 360 + 360) % 360;
@@ -7250,16 +7276,22 @@ function _renderCompass() {
     info += '<div style="position:absolute;left:3px;top:3px;font-size:0.5em;color:rgba(100,100,200,0.5);font-weight:600;">-90°</div>';
     info += '<div style="position:absolute;left:50%;top:3px;transform:translateX(-50%);font-size:0.5em;color:rgba(255,255,255,0.45);font-weight:700;">0°</div>';
     info += '<div style="position:absolute;right:3px;top:3px;font-size:0.5em;color:rgba(255,200,50,0.5);font-weight:600;">+90°</div>';
+    // Proximity glow: how close phone tilt is to moon altitude (0-1 where 1=perfect alignment)
+    var altProximity = 1 - Math.min(Math.abs(phoneElevation - moonAlt) / 30, 1); // ramp up within 30°
+    var glowIntensity = altAligned ? 1 : altProximity * 0.7;
+    var phoneGlow = glowIntensity > 0.1 ? '0 0 ' + (6 + glowIntensity * 14) + 'px rgba(224,176,255,' + (0.3 + glowIntensity * 0.7) + ')' : 'none';
+    var moonGlowSize = moonBelowHorizon ? 0 : (8 + glowIntensity * 16);
+    var moonGlowAlpha = moonBelowHorizon ? 0 : (0.3 + glowIntensity * 0.7);
     // Phone tilt indicator (purple bar)
-    info += '<div style="position:absolute;left:' + phonePct + '%;top:-2px;width:5px;height:24px;background:rgba(224,176,255,' + (altAligned ? '1' : '0.6') + ');border-radius:2px;transform:translateX(-50%);transition:left 0.08s ease-out;box-shadow:' + (altAligned ? '0 0 10px rgba(224,176,255,0.9)' : 'none') + ';z-index:1;"></div>';
-    // Moon tilt dot (yellow)
-    info += '<div style="position:absolute;left:' + moonPct + '%;top:4px;width:12px;height:12px;background:' + (moonBelowHorizon ? '#616161' : '#ffd54f') + ';border-radius:50%;transform:translateX(-50%);box-shadow:0 0 8px ' + (moonBelowHorizon ? 'transparent' : 'rgba(255,213,79,0.6)') + ';z-index:2;"></div>';
+    info += '<div style="position:absolute;left:' + phonePct + '%;top:-2px;width:5px;height:24px;background:rgba(224,176,255,' + (0.4 + glowIntensity * 0.6) + ');border-radius:2px;transform:translateX(-50%);transition:left 0.08s ease-out;box-shadow:' + phoneGlow + ';z-index:1;"></div>';
+    // Moon tilt dot (yellow) — glows when phone approaches
+    info += '<div style="position:absolute;left:' + moonPct + '%;top:4px;width:12px;height:12px;background:' + (moonBelowHorizon ? '#616161' : '#ffd54f') + ';border-radius:50%;transform:translateX(-50%);box-shadow:0 0 ' + moonGlowSize + 'px rgba(255,213,79,' + moonGlowAlpha + ');z-index:2;"></div>';
     info += '</div>';
     // Labels below
     info += '<div style="display:flex;justify-content:space-between;width:' + altBarWidth + 'px;margin:3px auto 0;font-size:0.65em;color:rgba(255,255,255,0.25);">';
     info += '<span style="color:rgba(224,176,255,0.5);">📱 tilt ' + phoneTilt.toFixed(0) + '°</span>';
     info += '<span style="color:rgba(255,255,255,0.3);">0° = ' + (L ? 'plano' : 'flat') + '</span>';
-    info += '<span style="color:rgba(255,213,79,0.5);">🌙 alt ' + moonAlt.toFixed(0) + '°</span>';
+    info += '<span style="color:rgba(255,213,79,0.5);">' + moonPhaseEmoji + ' alt ' + moonAlt.toFixed(0) + '°</span>';
     info += '</div>';
     if (altAligned && !moonBelowHorizon) {
         info += '<div style="font-size:0.7em;color:#4ecdc4;text-align:center;margin-top:2px;">✓ ' + (L ? 'Apuntando a la Luna' : 'Pointing at the Moon') + '</div>';
@@ -7335,7 +7367,8 @@ function _renderCompass() {
             // Glow circle around sub-lunar point
             mapSvg += '<circle cx="' + slX + '" cy="' + slY + '" r="14" fill="none" stroke="rgba(255,213,79,0.2)" stroke-width="1"><animate attributeName="r" from="8" to="18" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite"/></circle>';
             mapSvg += '<circle cx="' + slX + '" cy="' + slY + '" r="4" fill="#ffd54f" stroke="rgba(255,213,79,0.8)" stroke-width="1.5"><animate attributeName="r" from="3" to="5" dur="1.5s" repeatCount="indefinite" values="3;5;3"/></circle>';
-            mapSvg += '<text x="' + slX + '" y="' + (slY - 8) + '" fill="#ffd54f" font-size="8" text-anchor="middle">🌙</text>';
+            // Sub-lunar label (no emoji, just text)
+            mapSvg += '<text x="' + slX + '" y="' + (slY - 8) + '" fill="#ffd54f" font-size="7" text-anchor="middle" opacity="0.7">' + (L ? 'Luna' : 'Moon') + '</text>';
             // Line connecting user to sub-lunar point
             mapSvg += '<line x1="' + uX + '" y1="' + uY + '" x2="' + slX + '" y2="' + slY + '" stroke="rgba(255,213,79,0.2)" stroke-width="0.5" stroke-dasharray="3,3"/>';
             mapSvg += '</svg>';
@@ -7385,10 +7418,45 @@ function _renderCompass() {
                 }
                 if (pts2.length > 1) globeSvg += '<polyline points="' + pts2.join(' ') + '" fill="none" stroke="rgba(126,200,255,0.08)" stroke-width="0.5"/>';
             }
+            // ── Simplified continent outlines ──
+            var continents = [
+                // North America
+                [[60,-140],[65,-168],[72,-168],[71,-155],[60,-140],[55,-130],[48,-125],[35,-120],[30,-115],[25,-110],[20,-105],[18,-97],[20,-90],[25,-80],[30,-82],[35,-75],[40,-72],[45,-67],[48,-55],[50,-60],[52,-55],[55,-60],[58,-65],[60,-65],[63,-75],[65,-85],[62,-95],[60,-100],[65,-110],[70,-115],[75,-120],[70,-140],[65,-145],[60,-140]],
+                // South America
+                [[12,-72],[10,-75],[5,-77],[2,-80],[-5,-81],[-8,-78],[-15,-75],[-20,-70],[-30,-70],[-35,-72],[-40,-65],[-45,-66],[-50,-70],[-55,-68],[-55,-64],[-50,-60],[-45,-58],[-35,-56],[-30,-48],[-25,-45],[-20,-40],[-15,-38],[-10,-35],[-5,-35],[0,-50],[5,-60],[8,-62],[10,-68],[12,-72]],
+                // Europe
+                [[36,-5],[38,0],[40,0],[43,3],[43,8],[45,12],[40,18],[38,22],[36,28],[40,28],[42,32],[45,28],[48,18],[50,14],[52,8],[54,10],[55,14],[58,18],[60,25],[62,30],[65,28],[68,25],[70,28],[70,20],[65,15],[60,5],[55,5],[52,0],[48,0],[45,-2],[43,-8],[38,-8],[36,-5]],
+                // Africa
+                [[36,10],[35,0],[30,-10],[25,-15],[22,-17],[15,-17],[10,-15],[5,-8],[5,2],[-5,12],[-10,14],[-15,12],[-20,15],[-25,17],[-28,25],[-30,28],[-35,20],[-34,27],[-28,33],[-20,35],[-10,40],[-2,42],[5,44],[10,45],[12,50],[15,42],[18,40],[20,38],[25,35],[30,32],[35,35],[36,28],[38,22],[37,10],[36,10]],
+                // Asia (simplified)
+                [[42,32],[45,40],[40,50],[25,55],[20,60],[22,70],[28,68],[30,75],[25,80],[20,85],[22,90],[25,88],[30,95],[20,100],[18,105],[22,108],[25,120],[30,122],[35,128],[38,125],[40,130],[42,132],[45,142],[50,140],[52,145],[55,138],[58,140],[60,150],[63,165],[68,170],[72,180],[76,100],[72,80],[70,60],[65,58],[60,50],[55,40],[48,32],[42,32]],
+                // Australia
+                [[-12,132],[-14,126],[-22,114],[-25,114],[-28,115],[-33,116],[-35,118],[-35,138],[-38,145],[-37,150],[-33,152],[-28,153],[-25,150],[-20,148],[-18,145],[-15,141],[-12,136],[-12,132]]
+            ];
+            for (var ci = 0; ci < continents.length; ci++) {
+                var cPts = [];
+                var cont = continents[ci];
+                for (var pi = 0; pi < cont.length; pi++) {
+                    var cLat = cont[pi][0] * Math.PI / 180;
+                    var cLon = (cont[pi][1] - rotLon) * Math.PI / 180;
+                    var cx3 = Math.cos(cLat) * Math.sin(cLon);
+                    var cy3 = Math.sin(cLat);
+                    var cz3 = Math.cos(cLat) * Math.cos(cLon);
+                    if (cz3 > 0) {
+                        cPts.push((gCx + cx3 * gR).toFixed(1) + ',' + (gCy - cy3 * gR).toFixed(1));
+                    } else if (cPts.length > 1) {
+                        globeSvg += '<polyline points="' + cPts.join(' ') + '" fill="rgba(34,85,60,0.35)" stroke="rgba(78,175,120,0.4)" stroke-width="0.8" stroke-linejoin="round"/>';
+                        cPts = [];
+                    } else { cPts = []; }
+                }
+                if (cPts.length > 1) {
+                    globeSvg += '<polyline points="' + cPts.join(' ') + '" fill="rgba(34,85,60,0.35)" stroke="rgba(78,175,120,0.4)" stroke-width="0.8" stroke-linejoin="round"/>';
+                }
+            }
             // Sub-lunar point (always at center since globe rotated to face it)
             globeSvg += '<circle cx="' + gCx + '" cy="' + (gCy - rotLat/90*gR).toFixed(1) + '" r="6" fill="rgba(255,213,79,0.3)" stroke="#ffd54f" stroke-width="1.5"><animate attributeName="r" from="4" to="10" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.8" to="0.1" dur="2s" repeatCount="indefinite"/></circle>';
             globeSvg += '<circle cx="' + gCx + '" cy="' + (gCy - rotLat/90*gR).toFixed(1) + '" r="3" fill="#ffd54f"/>';
-            globeSvg += '<text x="' + gCx + '" y="' + (gCy - rotLat/90*gR - 10).toFixed(1) + '" fill="#ffd54f" font-size="10" text-anchor="middle">🌙</text>';
+            globeSvg += '<text x="' + gCx + '" y="' + (gCy - rotLat/90*gR - 10).toFixed(1) + '" fill="#ffd54f" font-size="10" text-anchor="middle">' + moonPhaseEmoji + '</text>';
             // User position on globe
             var uLat3 = lat * Math.PI / 180;
             var uLon3 = (lon - rotLon) * Math.PI / 180;
@@ -7414,11 +7482,11 @@ function _renderCompass() {
     // Status message
     if (moonBelowHorizon) {
         info += '<div style="margin-top:8px;padding:6px 10px;background:rgba(97,97,97,0.1);border:1px solid rgba(97,97,97,0.2);border-radius:8px;font-size:0.78em;color:#9e9e9e;">';
-        info += (L ? '🌙 Luna bajo el horizonte (' + moonAlt.toFixed(1) + '°)' : '🌙 Moon below horizon (' + moonAlt.toFixed(1) + '°)');
+        info += (L ? moonPhaseEmoji + ' Luna bajo el horizonte (' + moonAlt.toFixed(1) + '°)' : moonPhaseEmoji + ' Moon below horizon (' + moonAlt.toFixed(1) + '°)');
         info += '</div>';
     } else {
         info += '<div style="margin-top:8px;padding:6px 10px;background:rgba(255,213,79,0.06);border:1px solid rgba(255,213,79,0.15);border-radius:8px;font-size:0.78em;color:#ffd54f;">';
-        info += (L ? '🌙 Apunta tu teléfono hacia la flecha' : '🌙 Point your phone toward the arrow');
+        info += (L ? moonPhaseEmoji + ' Apunta tu teléfono hacia la flecha' : moonPhaseEmoji + ' Point your phone toward the arrow');
         info += '</div>';
     }
     // Compass quality / calibration warning
@@ -11199,7 +11267,32 @@ function updateCurrentDayInfoForMode(mode) {
                 const sd = sg.start; const ed = sg.end;
                 const sm = currentLang==='es' ? ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'] : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                 const signDays = Math.ceil((ed - sd) / 86400000) + 1;
-                hoyBottomHTML = '<div style="font-size:0.75em;color:'+sg.color+';font-weight:800;line-height:1.2;">'+sg.name+'</div><div style="font-size:0.50em;color:'+sg.color+';opacity:0.7;line-height:1.2;">'+sd.getDate()+' '+sm[sd.getMonth()]+' - '+ed.getDate()+' '+sm[ed.getMonth()]+' · '+signDays+(currentLang==='es'?' días':' days')+'</div>';
+                // Find full and new moons within this sign's date range
+                var signMoons = [];
+                for (var nmi = 0; nmi < newMoonsLocal.length; nmi++) {
+                    var nmDate = newMoonsLocal[nmi];
+                    if (nmDate >= sd && nmDate <= ed) {
+                        signMoons.push({ type: 'new', date: nmDate, icon: '\u25CF', label: currentLang==='es' ? 'Nueva' : 'New' });
+                    }
+                }
+                for (var fmi = 0; fmi < fullMoonsLocal.length; fmi++) {
+                    var fmDate = fullMoonsLocal[fmi];
+                    if (fmDate >= sd && fmDate <= ed) {
+                        signMoons.push({ type: 'full', date: fmDate, icon: '\uD83C\uDF15', label: currentLang==='es' ? 'Llena' : 'Full' });
+                    }
+                }
+                signMoons.sort(function(a, b) { return a.date - b.date; });
+                var moonsHTML = '';
+                if (signMoons.length > 0) {
+                    moonsHTML = '<div style="font-size:0.45em;color:rgba(255,255,255,0.7);line-height:1.3;margin-top:2px;">';
+                    for (var mi = 0; mi < signMoons.length; mi++) {
+                        var m = signMoons[mi];
+                        var moonColor = m.type === 'full' ? '#ffd54f' : '#aaa';
+                        moonsHTML += '<div style="color:' + moonColor + ';">' + (m.type === 'full' ? '\uD83C\uDF15' : '\uD83C\uDF11') + ' ' + m.label + ' ' + m.date.getDate() + ' ' + sm[m.date.getMonth()] + '</div>';
+                    }
+                    moonsHTML += '</div>';
+                }
+                hoyBottomHTML = '<div style="font-size:0.75em;color:'+sg.color+';font-weight:800;line-height:1.2;">'+sg.name+'</div><div style="font-size:0.50em;color:'+sg.color+';opacity:0.7;line-height:1.2;">'+sd.getDate()+' '+sm[sd.getMonth()]+' - '+ed.getDate()+' '+sm[ed.getMonth()]+' · '+signDays+(currentLang==='es'?' días':' days')+'</div>' + moonsHTML;
             }
         }
 
@@ -11233,11 +11326,11 @@ function updateCurrentDayInfoForMode(mode) {
                     <div style="margin-top:auto;font-size: 1.1em; color: ${getMonthColor(today.getMonth())}; font-weight: 800; letter-spacing: 0.5px;">${currentLang === 'es' ? today.getDate() + ' ' + t('monthsLong')[today.getMonth()] : t('monthsLong')[today.getMonth()] + ' ' + today.getDate()}</div>
                     ` : `
                     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;">
-                        <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;">
+                        ${hoyBottomHTML}
+                        <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;margin-top:2px;">
                             <span style="font-size:${String(displayDay).length > 4 ? '1.2em' : '1.8em'};font-weight:800;color:#e8c84a;text-shadow:0 0 18px rgba(232,200,74,0.65);">${displayDay}</span>
                         </div>
                         <div style="font-size: 0.47em; color: #8899cc; opacity: 0.6; line-height:1.2;">${displayInfo}</div>
-                        ${hoyBottomHTML}
                     </div>
                     `}
                 </div>
@@ -20989,7 +21082,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v378';
+const APP_VERSION = 'v379';
 var _pendingSW = null;
 
 function showUpdateBanner() {
