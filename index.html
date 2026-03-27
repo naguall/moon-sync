@@ -878,25 +878,8 @@
                 <div onclick="selectDayOption('diario')" style="display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">
                     <span style="font-size:1.2em;width:28px;text-align:center;">📓</span>
                     <div>
-                        <div style="color:rgba(255,255,255,0.9);font-size:0.88em;font-weight:600;" data-i18n="dayOptDiary">Diario Personal</div>
-                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptDiaryDesc">Reflexiones, emociones, notas</div>
-                    </div>
-                    <span style="margin-left:auto;color:rgba(255,255,255,0.2);font-size:0.8em;">›</span>
-                </div>
-                <div onclick="selectDayOption('diario-dreams')" style="display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">
-                    <span style="font-size:1.2em;width:28px;text-align:center;">🌙</span>
-                    <div>
-                        <div style="color:#ce93d8;font-size:0.88em;font-weight:600;" data-i18n="dayOptDreams">Diario de Sueños</div>
-                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptDreamsDesc">Registra y analiza tus sueños</div>
-                    </div>
-                    <span style="margin-left:auto;color:rgba(255,255,255,0.2);font-size:0.8em;">›</span>
-                </div>
-                <div style="height:1px;background:rgba(255,255,255,0.06);margin:2px 16px;"></div>
-                <div onclick="selectDayOption('interpretacion')" id="interpretDayBtn" style="display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">
-                    <span style="font-size:1.2em;width:28px;text-align:center;">✨</span>
-                    <div>
-                        <div style="color:#b39ddb;font-size:0.88em;font-weight:600;" data-i18n="dayOptInterp">Interpretación del Día</div>
-                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptInterpDesc">Análisis astrológico</div>
+                        <div style="color:rgba(255,255,255,0.9);font-size:0.88em;font-weight:600;" data-i18n="dayOptDiary">Diarios y Reflexiones</div>
+                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptDiaryDesc">Reflexiones, emociones, sueños</div>
                     </div>
                     <span style="margin-left:auto;color:rgba(255,255,255,0.2);font-size:0.8em;">›</span>
                 </div>
@@ -3981,12 +3964,8 @@ function updateModalTranslations() {
         'dayOptAgendaDesc': L ? 'Citas, recordatorios, eventos' : 'Appointments, reminders, events',
         'dayOptAspects': L ? 'Aspectos Planetarios' : 'Planetary Aspects',
         'dayOptAspectsDesc': L ? 'Conjunciones, trígonos, cuadraturas' : 'Conjunctions, trines, squares',
-        'dayOptDiary': L ? 'Diario Personal' : 'Personal Diary',
-        'dayOptDiaryDesc': L ? 'Reflexiones, emociones, notas' : 'Reflections, emotions, notes',
-        'dayOptDreams': L ? 'Diario de Sueños' : 'Dream Journal',
-        'dayOptDreamsDesc': L ? 'Registra y analiza tus sueños' : 'Record and analyze your dreams',
-        'dayOptInterp': L ? 'Interpretación del Día' : 'Day Interpretation',
-        'dayOptInterpDesc': L ? 'Análisis astrológico' : 'Astrological analysis'
+        'dayOptDiary': L ? 'Diarios y Reflexiones' : 'Diaries & Reflections',
+        'dayOptDiaryDesc': L ? 'Reflexiones, emociones, sueños' : 'Reflections, emotions, dreams'
     };
     Object.keys(i18nMap).forEach(function(key) {
         var els = document.querySelectorAll('[data-i18n="' + key + '"]');
@@ -5500,7 +5479,7 @@ function handleDayClick(element) {
         var aspCount = aspectsBtn.querySelector('#aspectsCount') || document.getElementById('aspectsCount');
         if (aspCount) aspCount.textContent = allEvents;
         var diarioEl = modal.querySelector('button[onclick="selectDayOption(\'diario\')"]') || modal.querySelector('div[onclick="selectDayOption(\'diario\')"]');
-        if (diarioEl) { var diLabel = diarioEl.querySelector('[data-i18n="dayOptDiary"]'); if (diLabel) diLabel.textContent = t('diary'); }
+        if (diarioEl) { var diLabel = diarioEl.querySelector('[data-i18n="dayOptDiary"]'); if (diLabel) diLabel.textContent = currentLang === 'es' ? 'Diarios y Reflexiones' : 'Diaries & Reflections'; }
         var cancelEl = modal.querySelector('button[onclick="closeDayOptionsModal()"]');
         if (cancelEl) cancelEl.innerHTML = `❌ ${t('cancel')}`;
 
@@ -5508,13 +5487,6 @@ function handleDayClick(element) {
         const astroBtn = document.getElementById('astroOptionBtn');
         if (astroBtn) {
             astroBtn.innerHTML = currentLang === 'es' ? '🌊🌙 Info Lunar' : '🌊🌙 Lunar Info';
-        }
-
-        // Update interpretation button
-        const interpretBtn = document.getElementById('interpretDayBtn');
-        if (interpretBtn) {
-            var interpLabel = interpretBtn.querySelector('[data-i18n="dayOptInterp"]');
-            if (interpLabel) interpLabel.textContent = currentLang === 'es' ? 'Interpretación del Día' : 'Day Interpretation';
         }
 
         // IMPORTANTE: Mostrar botón de aspectos SIEMPRE (incluso si es 0)
@@ -23693,7 +23665,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v421';
+const APP_VERSION = 'v422';
 var _pendingSW = null;
 
 function showUpdateBanner() {
