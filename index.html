@@ -13350,13 +13350,15 @@ window.openPlanetaryHours = function(dateStr) {
         }
         var isCurrent = idx === currentHourIdx;
         var bg = isCurrent ? 'rgba(100,181,246,0.12);border:1px solid rgba(100,181,246,0.4)' : 'rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06)';
-        html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;margin:3px 0;border-radius:8px;background:' + bg + ';' + (isCurrent?'box-shadow:0 0 10px rgba(100,181,246,0.15);':'') + '">';
+        var hourDataAttr = h.planet + '|' + h.startTime + '|' + h.endTime + '|' + (idx < 12 ? (L?'Diurna':'Day') : (L?'Nocturna':'Night')) + '|' + (idx+1) + '|' + result.dayRuler + '|' + date.toISOString().split('T')[0];
+        html += '<div onclick="showPlanetaryHourDetail(\'' + hourDataAttr.replace(/'/g, "\\'") + '\')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;margin:3px 0;border-radius:8px;background:' + bg + ';cursor:pointer;transition:all 0.15s;' + (isCurrent?'box-shadow:0 0 10px rgba(100,181,246,0.15);':'') + '" onmouseenter="this.style.opacity=\'0.7\'" onmouseleave="this.style.opacity=\'1\'">';
         html += '<span style="font-size:1.3em;color:' + (pClrs[h.planet]||'#888') + ';">' + (pSyms[h.planet]||'?') + '</span>';
         html += '<div style="flex:1;">';
         html += '<div style="font-size:0.85em;font-weight:600;color:' + (pClrs[h.planet]||'#aaa') + ';">' + (pNms[h.planet]||h.planet) + (isCurrent ? ' <span style="color:#64B5F6;font-size:0.75em;">' + (L?'AHORA':'NOW') + '</span>' : '') + '</div>';
         html += '<div style="font-size:0.7em;color:rgba(255,255,255,0.35);">' + (pThemes[h.planet]||'') + '</div>';
         html += '</div>';
         html += '<div style="text-align:right;font-size:0.78em;color:rgba(255,255,255,0.5);">' + h.startTime + '<br><span style="font-size:0.85em;color:rgba(255,255,255,0.25);">' + h.endTime + '</span></div>';
+        html += '<span style="color:rgba(255,255,255,0.15);font-size:0.8em;margin-left:2px;">›</span>';
         html += '</div>';
     });
 
@@ -13374,6 +13376,77 @@ window.openPlanetaryHours = function(dateStr) {
     }
     document.getElementById('planetaryHoursContent').innerHTML = html;
     modal.classList.add('show');
+};
+
+// ── Planetary Hour Detail with AI ──
+window.showPlanetaryHourDetail = function(dataStr) {
+    var L = currentLang === 'es';
+    var parts = dataStr.split('|');
+    var planet = parts[0], startTime = parts[1], endTime = parts[2], period = parts[3], hourNum = parts[4], dayRuler = parts[5], dateStr = parts[6];
+
+    var pNames = {'sun':L?'Sol':'Sun','moon':L?'Luna':'Moon','mercury':L?'Mercurio':'Mercury','venus':'Venus','mars':L?'Marte':'Mars','jupiter':L?'Júpiter':'Jupiter','saturn':L?'Saturno':'Saturn'};
+    var pSyms = {'sun':'☉','moon':'☽','mercury':'☿','venus':'♀','mars':'♂','jupiter':'♃','saturn':'♄'};
+    var pClrs = {'sun':'#FFD700','moon':'#C0C0C0','mercury':'#87CEEB','venus':'#FF69B4','mars':'#FF4500','jupiter':'#9370DB','saturn':'#708090'};
+    var pThemesEs = {
+        'sun':'Vitalidad, autoridad, creatividad, propósito. Ideal para liderar, tomar decisiones importantes, iniciar proyectos creativos.',
+        'moon':'Emociones, intuición, hogar, receptividad. Buena para meditación, trabajo interior, conectar con sentimientos.',
+        'mercury':'Comunicación, aprendizaje, viajes cortos, comercio. Ideal para escribir, estudiar, negociar, hacer llamadas.',
+        'venus':'Amor, belleza, arte, placer, armonía. Perfecta para relaciones, arte, compras, encuentros sociales.',
+        'mars':'Acción, energía, competencia, coraje. Ideal para ejercicio, cirugía, debates, iniciar algo que requiera valor.',
+        'jupiter':'Expansión, suerte, abundancia, sabiduría. Ideal para inversiones, viajes, estudios superiores, asuntos legales.',
+        'saturn':'Disciplina, estructura, límites, responsabilidad. Ideal para planificar, organizar, trabajo serio, compromisos a largo plazo.'
+    };
+    var pThemesEn = {
+        'sun':'Vitality, authority, creativity, purpose. Ideal for leadership, important decisions, creative projects.',
+        'moon':'Emotions, intuition, home, receptivity. Good for meditation, inner work, connecting with feelings.',
+        'mercury':'Communication, learning, short trips, trade. Ideal for writing, studying, negotiating, making calls.',
+        'venus':'Love, beauty, art, pleasure, harmony. Perfect for relationships, art, shopping, social encounters.',
+        'mars':'Action, energy, competition, courage. Ideal for exercise, surgery, debates, starting bold ventures.',
+        'jupiter':'Expansion, luck, abundance, wisdom. Ideal for investments, travel, higher studies, legal matters.',
+        'saturn':'Discipline, structure, limits, responsibility. Ideal for planning, organizing, serious work, long-term commitments.'
+    };
+
+    var planetName = pNames[planet] || planet;
+    var themes = L ? pThemesEs : pThemesEn;
+
+    var html = '<div style="padding:16px;">';
+    html += '<div style="text-align:center;margin-bottom:14px;">';
+    html += '<span style="font-size:2.5em;color:' + (pClrs[planet]||'#888') + ';">' + (pSyms[planet]||'?') + '</span>';
+    html += '<h3 style="margin:6px 0 2px;color:' + (pClrs[planet]||'#aaa') + ';">' + (L?'Hora de ':'Hour of ') + planetName + '</h3>';
+    html += '<div style="font-size:0.82em;color:rgba(255,255,255,0.5);">' + startTime + ' — ' + endTime + ' • ' + period + ' • #' + hourNum + '</div>';
+    html += '<div style="font-size:0.75em;color:rgba(255,255,255,0.3);margin-top:2px;">' + (L?'Regente del día: ':'Day ruler: ') + (pSyms[dayRuler]||'') + ' ' + (pNames[dayRuler]||dayRuler) + '</div>';
+    html += '</div>';
+
+    // Themes
+    html += '<div style="padding:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:12px;">';
+    html += '<div style="font-size:0.72em;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">' + (L?'Temas y usos':'Themes & uses') + '</div>';
+    html += '<div style="font-size:0.85em;color:rgba(255,255,255,0.7);line-height:1.5;">' + (themes[planet]||'') + '</div>';
+    html += '</div>';
+
+    // AI interpret button
+    html += '<button onclick="interpretPlanetaryHour(\'' + planet + '\', \'' + startTime + '\', \'' + endTime + '\', \'' + period + '\', \'' + dayRuler + '\', \'' + dateStr + '\')" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(201,168,64,0.2),rgba(255,149,0,0.1));border:1px solid rgba(201,168,64,0.4);border-radius:10px;color:#ffd54f;font-size:0.85em;font-weight:600;cursor:pointer;">';
+    html += '✦ ' + (L ? 'Interpretar con AI' : 'Interpret with AI');
+    html += '</button>';
+    html += '<div id="planetaryHourInterpDiv" style="margin-top:10px;"></div>';
+
+    // Back button
+    html += '<button onclick="openPlanetaryHours(\'' + dateStr + '\')" style="width:100%;margin-top:10px;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.4);font-size:0.8em;cursor:pointer;">' + (L?'← Volver a horas':'← Back to hours') + '</button>';
+    html += '</div>';
+
+    document.getElementById('planetaryHoursContent').innerHTML = html;
+};
+
+window.interpretPlanetaryHour = function(planet, startTime, endTime, period, dayRuler, dateStr) {
+    var L = currentLang === 'es';
+    var pNames = {'sun':L?'Sol':'Sun','moon':L?'Luna':'Moon','mercury':L?'Mercurio':'Mercury','venus':'Venus','mars':L?'Marte':'Mars','jupiter':L?'Júpiter':'Jupiter','saturn':L?'Saturno':'Saturn'};
+    var planetName = pNames[planet] || planet;
+    var dayRulerName = pNames[dayRuler] || dayRuler;
+
+    var prompt = L
+        ? 'Interpreta esta hora planetaria en el contexto de mi carta natal y los tránsitos actuales.\n\nHora de ' + planetName + ' (' + startTime + ' a ' + endTime + ', ' + period + ')\nRegente del día: ' + dayRulerName + '\nFecha: ' + dateStr + '\n\nAnaliza: 1) Qué energía predomina en esta hora, 2) Cómo interactúa con los tránsitos actuales, 3) Qué actividades son ideales, 4) Qué evitar, 5) Cómo esta hora se conecta con mi carta natal (planetas en el signo regido por ' + planetName + ').'
+        : 'Interpret this planetary hour in the context of my natal chart and current transits.\n\nHour of ' + planetName + ' (' + startTime + ' to ' + endTime + ', ' + period + ')\nDay ruler: ' + dayRulerName + '\nDate: ' + dateStr + '\n\nAnalyze: 1) What energy predominates, 2) How it interacts with current transits, 3) Ideal activities, 4) What to avoid, 5) How this hour connects with my natal chart (planets in the sign ruled by ' + planetName + ').';
+
+    fetchAIInterpretation(prompt, 'planetaryHourInterpDiv', (L?'Hora de ':'Hour of ') + planetName);
 };
 
 // ===== RETURN CHARTS (Solar & Lunar) =====
@@ -23484,7 +23557,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v417';
+const APP_VERSION = 'v418';
 var _pendingSW = null;
 
 function showUpdateBanner() {
