@@ -23665,7 +23665,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v423';
+const APP_VERSION = 'v424';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -24758,10 +24758,7 @@ function gatherAstroContext() {
             const activeId = localStorage.getItem('activeProfileId');
             const profile = natal.find(p => p.id === activeId) || natal[0];
             if (profile) {
-                ctx += 'PERFIL ACTIVO: ' + (profile.name || 'Principal') + '\n';
-                ctx += 'IMPORTANTE: Todas las interpretaciones deben enfocarse EXCLUSIVAMENTE en este perfil.\n\n';
-                ctx += 'DATOS DE NACIMIENTO DEL USUARIO:\n';
-                ctx += 'Nombre: ' + (profile.name || 'Usuario') + '\n';
+                ctx += 'DATOS DE NACIMIENTO:\n';
                 ctx += 'Fecha: ' + (profile.date || localStorage.getItem('natalBirthDate') || '?') + '\n';
                 ctx += 'Hora: ' + (profile.time || localStorage.getItem('natalBirthTime') || '?') + '\n';
                 ctx += 'Ciudad: ' + (profile.city || localStorage.getItem('natalCityName') || '?') + '\n\n';
@@ -24839,71 +24836,6 @@ function gatherAstroContext() {
             ctx += 'TRÁNSITOS DE HOY SOBRE LA CARTA NATAL:\n';
             globalTodayTransits.forEach(function(t) {
                 ctx += (pN2[t.transitPlanet]||t.transitPlanet) + ' ' + t.type + ' natal ' + (pN2[t.natalPlanet]||t.natalPlanet) + ' (orbe: ' + t.orb + '°)\n';
-            });
-            ctx += '\n';
-        }
-    } catch(e) {}
-
-    // ========== USER EVENTS & DIARY ==========
-    try {
-        var eventsData = JSON.parse(localStorage.getItem('lunarCalendarEvents') || '{}');
-        var gcalData = JSON.parse(localStorage.getItem('gcalEvents') || '{}');
-        var today = new Date();
-        var monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-        var futureLimit = new Date(today.getTime() + 60*86400000); // 60 days ahead
-        var upcomingEvents = [];
-
-        // Local events
-        Object.entries(eventsData).forEach(function(entry) {
-            var dateKey = entry[0], evList = entry[1];
-            var d = new Date(dateKey + 'T12:00:00');
-            if (d >= monthStart && d <= futureLimit) {
-                evList.forEach(function(ev) {
-                    upcomingEvents.push({ date: dateKey, title: ev.title, type: ev.type || '', time: ev.time || '', desc: ev.description || '', source: 'local' });
-                });
-            }
-        });
-
-        // Google Calendar events
-        Object.entries(gcalData).forEach(function(entry) {
-            var dateKey = entry[0], evList = entry[1];
-            var d = new Date(dateKey + 'T12:00:00');
-            if (d >= monthStart && d <= futureLimit) {
-                evList.forEach(function(ev) {
-                    upcomingEvents.push({ date: dateKey, title: ev.title || ev.summary || '', type: 'google', time: ev.time || '', desc: ev.description || '', source: 'Google Calendar' });
-                });
-            }
-        });
-
-        if (upcomingEvents.length > 0) {
-            upcomingEvents.sort(function(a,b) { return a.date.localeCompare(b.date); });
-            ctx += 'EVENTOS/AGENDA DEL USUARIO (próximos 60 días):\n';
-            upcomingEvents.forEach(function(ev) {
-                ctx += ev.date + ': ' + ev.title + (ev.time ? ' a las ' + ev.time : '') + (ev.source === 'Google Calendar' ? ' [Google Calendar]' : (ev.type ? ' [' + ev.type + ']' : '')) + (ev.desc ? ' — ' + ev.desc : '') + '\n';
-            });
-            ctx += '\n';
-        }
-    } catch(e) {}
-
-    // Diary entries (last 7 days + today) — profile-specific
-    try {
-        var profileId = getActiveProfileId() || 'default';
-        var profileJournals = {};
-        try { profileJournals = JSON.parse(localStorage.getItem('lunarCalendarJournals_' + profileId) || '{}'); } catch(e2) {}
-        var diaryEntries = [];
-        for (var di = -7; di <= 0; di++) {
-            var dd = new Date();
-            dd.setDate(dd.getDate() + di);
-            var dk = dd.toISOString().split('T')[0];
-            var entry = profileJournals[dk] || localStorage.getItem('diary_' + dk);
-            if (entry && entry.trim()) {
-                diaryEntries.push({ date: dk, text: entry.trim().substring(0, 300) });
-            }
-        }
-        if (diaryEntries.length > 0) {
-            ctx += 'NOTAS DE DIARIO RECIENTES DEL USUARIO:\n';
-            diaryEntries.forEach(function(e) {
-                ctx += e.date + ': ' + e.text + '\n';
             });
             ctx += '\n';
         }
