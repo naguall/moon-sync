@@ -12733,8 +12733,8 @@ window.openReturnChart = function(type) {
 
     // Interpret full chart button
     var btnLabel = type === 'solar'
-        ? (L ? 'Interpretar Retorno Solar Completo' : 'Interpret Full Solar Return')
-        : (L ? 'Interpretar Retorno Lunar Completo' : 'Interpret Full Lunar Return');
+        ? (L ? 'Interpretar Retorno Solar' : 'Interpret Solar Return')
+        : (L ? 'Interpretar Retorno Lunar' : 'Interpret Lunar Return');
     html += '<div style="text-align:center;margin-top:14px;">';
     html += '<button id="returnInterpBtn" onclick="interpretReturnChartInline(\'' + type + '\')" style="padding:12px 20px;background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.5);border-radius:12px;color:#ffd54f;font-size:0.9em;font-weight:700;cursor:pointer;width:90%;max-width:400px;">';
     html += '✨ ' + btnLabel + '</button></div>';
@@ -13037,7 +13037,7 @@ function sendReturnInterpRequest(history, container, cacheKey) {
         var chatId = 'rc_' + Math.abs(chatHash).toString(36);
         var readingKey = '_rcReading_' + Date.now();
         var returnType = window._lastReturnType || 'solar';
-        var readingTitle = L ? ('Retorno ' + (returnType === 'solar' ? 'Solar' : 'Lunar') + ' Completo') : ('Full ' + (returnType === 'solar' ? 'Solar' : 'Lunar') + ' Return');
+        var readingTitle = L ? ('Retorno ' + (returnType === 'solar' ? 'Solar' : 'Lunar')) : ((returnType === 'solar' ? 'Solar' : 'Lunar') + ' Return');
         var specificPrompt = history[0] ? history[0].parts[0].text : '';
         window[readingKey] = { title: readingTitle, text: rawText, html: '<p>' + text + '</p>', prompt: specificPrompt };
 
@@ -13689,27 +13689,30 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
                 <button onclick="changeTransitDate(-1)" style="padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);font-size:0.9em;cursor:pointer;">&#9664;</button>
                 <div style="text-align:center;">
                     <h3 style="margin:0;">🌟 ${L ? 'Tránsitos' : 'Transits'}</h3>
-                    <div id="transitDateLabel" style="font-size:0.8em;color:rgba(255,255,255,0.5);">${today.toLocaleDateString(L?'es':'en', {weekday:'short',day:'numeric',month:'long'})}</div>
+                    <div id="transitDateLabel" style="font-size:0.8em;color:rgba(255,255,255,0.5);"><b>${L?'Hoy':'Today'}</b> — ${today.toLocaleDateString(L?'es':'en', {weekday:'short',day:'numeric',month:'long'})}</div>
                 </div>
                 <button onclick="changeTransitDate(1)" style="padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);font-size:0.9em;cursor:pointer;">&#9654;</button>
             </div>
             <div style="text-align:center;margin-bottom:8px;">
                 <button onclick="changeTransitDate(0)" style="padding:3px 10px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.35);font-size:0.68em;cursor:pointer;">${L ? 'Hoy' : 'Today'}</button>
             </div>
+            <!-- Wheel chart FIRST, above aspects -->
+            <div style="text-align:center;margin-bottom:12px;">
+                <div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">${L ? 'Carta Natal + Tránsitos' : 'Natal Chart + Transits'}</div>
+                <div id="hoyNatalWheelCanvas" style="max-width:100%;margin:0 auto;display:block;"></div>
+            </div>
+            <!-- Interpretation button -->
+            <div style="text-align:center;margin-bottom:12px;">
+                <button onclick="interpretarHoyCompleto()" style="padding:12px 20px;background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.5);border-radius:12px;color:#ffd54f;font-size:0.9em;font-weight:700;cursor:pointer;width:90%;max-width:400px;">
+                    ✨ ${L ? 'Interpretación del Día' : "Day's Interpretation"}
+                </button>
+            </div>
+            <!-- Aspects list below -->
             <div id="transitAspectsContainer">
             ${majorTransits.length > 0 ? '<div style="margin-bottom:8px;"><div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">' + (L ? 'Aspectos Mayores' : 'Major Aspects') + '</div>' + majorTransits.map(function(t, idx){ return renderTransitRow(t, idx, false); }).join('') + '</div>' : '<div style="font-size:0.8em;color:rgba(255,255,255,0.3);padding:8px;">' + (L ? 'Sin aspectos mayores' : 'No major aspects') + '</div>'}
             ${minorTransits.length > 0 ? '<div style="margin-bottom:8px;"><div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">' + (L ? 'Aspectos Menores' : 'Minor Aspects') + '</div>' + minorTransits.map(function(t, idx){ var gIdx = majorTransits.length + idx; return renderTransitRow(t, gIdx, false); }).join('') + '</div>' : ''}
             ${moonTransits.length > 0 ? '<div><div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">☽ ' + (L ? 'Luna transitando' : 'Moon transiting') + '</div>' + moonTransits.map(function(t, idx){ var gIdx = majorTransits.length + minorTransits.length + idx; return renderTransitRow(t, gIdx, true); }).join('') + '</div>' : ''}
             </div>
-        </div>
-        <div style="text-align:center;margin-top:10px;">
-            <button onclick="interpretarHoyCompleto()" style="padding:12px 20px;background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.5);border-radius:12px;color:#ffd54f;font-size:0.9em;font-weight:700;cursor:pointer;width:90%;max-width:400px;">
-                ✨ ${L ? 'Interpretación del Día' : "Day's Interpretation"}
-            </button>
-        </div>
-        <div class="personal-natal-card" style="text-align:center;margin-top:8px;">
-            <div style="font-size:0.72em;color:rgba(255,255,255,0.35);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">${L ? 'Carta Natal + Tránsitos' : 'Natal Chart + Transits'}</div>
-            <div id="hoyNatalWheelCanvas" style="max-width:100%;margin:0 auto;display:block;"></div>
         </div>`;
 
     // Transit date navigation function
@@ -14046,7 +14049,7 @@ function switchNatalTab(tabName, btn) {
         }, 150);
     }
     if (tabName === 'hoy') {
-        setTimeout(function() { drawNatalWheelOnCanvas('hoyNatalWheelCanvas', window._transitViewDate || new Date()); }, 100);
+        setTimeout(function() { if (typeof refreshTransitView === 'function') refreshTransitView(); else drawNatalWheelOnCanvas('hoyNatalWheelCanvas', window._transitViewDate || new Date()); }, 100);
     }
     if (tabName === 'tables') {
         setTimeout(function() {
@@ -22876,7 +22879,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v405';
+const APP_VERSION = 'v406';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -23516,11 +23519,16 @@ function interpretarHoyCompleto() {
     var isEs = currentLang === 'es';
     var modal = document.getElementById('hoyInterpModal');
     modal.classList.add('show');
-    var today = new Date();
-    var dateKey = today.getFullYear() + '-' + (today.getMonth()+1) + '-' + today.getDate();
+    // Use the transit view date (selected via arrows) or today
+    var viewDate = window._transitViewDate || new Date();
+    var isToday = viewDate.toDateString() === new Date().toDateString();
+    var dateKey = viewDate.getFullYear() + '-' + (viewDate.getMonth()+1) + '-' + viewDate.getDate();
     currentInterpCacheKey = 'day_' + dateKey;
-    document.getElementById('hoyInterpTitle').textContent = isEs ? 'Interpretación de Hoy' : "Today's Interpretation";
-    document.getElementById('hoyInterpDate').textContent = today.toLocaleDateString(isEs?'es':'en', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    var dateTitle = isToday
+        ? (isEs ? 'Interpretación de Hoy' : "Today's Interpretation")
+        : (isEs ? 'Interpretación del Día' : 'Day Interpretation');
+    document.getElementById('hoyInterpTitle').textContent = dateTitle;
+    document.getElementById('hoyInterpDate').textContent = viewDate.toLocaleDateString(isEs?'es':'en', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
     // Check cache
     var cached = getInterpCache(currentInterpCacheKey);
@@ -23535,10 +23543,11 @@ function interpretarHoyCompleto() {
     updateDeleteBtnVisibility(false);
     var container = document.getElementById('hoyInterpMessages');
     container.innerHTML = '<div class="ai-msg loading">✨ ' + (isEs ? 'Analizando los cielos para ti...' : 'Analyzing the skies for you...') + '</div>';
-    // Auto-send interpretation request
+    // Auto-send interpretation request using selected date
+    var dateStr = viewDate.toLocaleDateString(isEs?'es':'en', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
     var prompt = isEs
-        ? 'Dame una interpretación completa y detallada del día de hoy para mi perfil natal. Incluye: 1) Todos los tránsitos planetarios activos hoy y cómo me afectan personalmente, 2) La fase lunar actual y su influencia, 3) La energía general del día, 4) Consejos prácticos para hoy, 5) Cualquier advertencia importante. Hazlo personalizado según mi carta natal.'
-        : 'Give me a complete and detailed interpretation of today for my natal profile. Include: 1) All active planetary transits today and how they affect me personally, 2) The current lunar phase and its influence, 3) The general energy of the day, 4) Practical advice for today, 5) Any important warnings. Make it personalized based on my natal chart.';
+        ? 'Dame una interpretación completa y detallada del día ' + dateStr + ' para mi perfil natal. Incluye: 1) Todos los tránsitos planetarios activos ese día y cómo me afectan personalmente, 2) La fase lunar y su influencia, 3) La energía general del día, 4) Consejos prácticos, 5) Cualquier advertencia importante. Hazlo personalizado según mi carta natal.'
+        : 'Give me a complete and detailed interpretation of ' + dateStr + ' for my natal profile. Include: 1) All active planetary transits that day and how they affect me personally, 2) The lunar phase and its influence, 3) The general energy of the day, 4) Practical advice, 5) Any important warnings. Make it personalized based on my natal chart.';
     hoyInterpHistory.push({role: 'user', parts: [{text: prompt}]});
     sendHoyInterpRequest();
 }
