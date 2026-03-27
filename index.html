@@ -1000,24 +1000,57 @@
                 <span class="close" onclick="closeDiarioModal()">&times;</span>
             </div>
             <div style="padding: 20px;">
-                <p id="diarioDate" style="text-align: center; color: rgba(255,255,255,0.7); margin-bottom: 20px;"></p>
-                <div style="position: relative;">
-                    <textarea 
-                        class="journal-textarea" 
-                        id="diarioText"
-                        placeholder=""
-                        style="width: 100%; min-height: 300px; padding: 15px 60px 15px 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 1em; resize: vertical;"></textarea>
-                    <button 
-                        id="voiceInputBtn" 
-                        onclick="toggleVoiceInput()" 
-                        style="position: absolute; top: 10px; right: 10px; width: 45px; height: 45px; border-radius: 50%; background: rgba(78,205,196,0.2); border: 2px solid rgba(78,205,196,0.5); cursor: pointer; font-size: 1.5em; display: flex; align-items: center; justify-content: center; transition: all 0.3s;"
-                        title="" id="voiceBtnTitle">
-                        🎤
-                    </button>
+                <p id="diarioDate" style="text-align: center; color: rgba(255,255,255,0.7); margin-bottom: 12px;"></p>
+                <!-- Diary tabs -->
+                <div style="display:flex;gap:0;margin-bottom:16px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);">
+                    <button id="diarioTabPersonal" onclick="switchDiarioTab('personal')" style="flex:1;padding:10px;background:rgba(201,168,64,0.2);border:none;color:#ffd54f;font-size:0.9em;font-weight:700;cursor:pointer;transition:all 0.2s;">📓 <span data-i18n="diaryPersonal">Diario Personal</span></button>
+                    <button id="diarioTabDreams" onclick="switchDiarioTab('dreams')" style="flex:1;padding:10px;background:rgba(255,255,255,0.04);border:none;border-left:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:0.9em;font-weight:700;cursor:pointer;transition:all 0.2s;">🌙 <span data-i18n="diaryDreams">Diario de Sueños</span></button>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                    <div id="diarioSaveStatus" style="color: #4ecdc4;"></div>
-                    <div id="diarioWordCount" style="color: #a8b2d1;"></div>
+                <!-- Personal diary tab -->
+                <div id="diarioPanelPersonal">
+                    <div style="position: relative;">
+                        <textarea
+                            class="journal-textarea"
+                            id="diarioText"
+                            placeholder=""
+                            style="width: 100%; min-height: 280px; padding: 15px 60px 15px 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 1em; resize: vertical;"></textarea>
+                        <button
+                            id="voiceInputBtn"
+                            onclick="toggleVoiceInput()"
+                            style="position: absolute; top: 10px; right: 10px; width: 45px; height: 45px; border-radius: 50%; background: rgba(78,205,196,0.2); border: 2px solid rgba(78,205,196,0.5); cursor: pointer; font-size: 1.5em; display: flex; align-items: center; justify-content: center; transition: all 0.3s;"
+                            title="" id="voiceBtnTitle">
+                            🎤
+                        </button>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                        <div id="diarioSaveStatus" style="color: #4ecdc4;"></div>
+                        <div id="diarioWordCount" style="color: #a8b2d1;"></div>
+                    </div>
+                </div>
+                <!-- Dreams diary tab -->
+                <div id="diarioPanelDreams" style="display:none;">
+                    <div style="position: relative;">
+                        <textarea
+                            class="journal-textarea"
+                            id="dreamText"
+                            placeholder=""
+                            style="width: 100%; min-height: 200px; padding: 15px 60px 15px 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(138,43,226,0.2); border-radius: 8px; color: white; font-size: 1em; resize: vertical;"></textarea>
+                        <button
+                            id="voiceDreamBtn"
+                            onclick="toggleVoiceInput('dream')"
+                            style="position: absolute; top: 10px; right: 10px; width: 45px; height: 45px; border-radius: 50%; background: rgba(138,43,226,0.2); border: 2px solid rgba(138,43,226,0.5); cursor: pointer; font-size: 1.5em; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">
+                            🎤
+                        </button>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                        <div id="dreamSaveStatus" style="color: #9b59b6;"></div>
+                        <div id="dreamWordCount" style="color: #a8b2d1;"></div>
+                    </div>
+                    <!-- AI Dream Interpretation -->
+                    <button id="dreamInterpBtn" onclick="interpretDream()" style="width:100%;padding:12px;margin-top:12px;background:linear-gradient(135deg,rgba(138,43,226,0.3),rgba(75,0,130,0.2));border:1px solid rgba(138,43,226,0.5);border-radius:10px;color:#ce93d8;font-size:0.9em;font-weight:700;cursor:pointer;">
+                        ✨ <span data-i18n="dreamInterpret">Interpretar Sueño con AI</span>
+                    </button>
+                    <div id="dreamInterpContainer" style="margin-top:12px;"></div>
                 </div>
                 <button onclick="closeDiarioModal()" style="width: 100%; padding: 12px; margin-top: 15px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; cursor: pointer;">Cerrar</button>
             </div>
@@ -6931,28 +6964,38 @@ function showNatalDetail(type, data) {
 
 function openDiarioModal(date, lunarDay) {
     const dateKey = getDateKey(date); // Use local date to avoid timezone mismatch
+    window._currentDiarioDateKey = dateKey;
+    var L = currentLang === 'es';
 
-    document.getElementById('diarioDate').textContent = `🌙 ${formatLongDate(date)} - ${t('day')} ${currentLang === 'es' ? 'Lunar' : ''} ${lunarDay}`;
+    document.getElementById('diarioDate').textContent = `🌙 ${formatLongDate(date)} - ${t('day')} ${L ? 'Lunar' : ''} ${lunarDay}`;
     document.getElementById('diarioModalTitle').textContent = `📓 ${t('diaryTitle')}`;
     const voiceBtn = document.getElementById('voiceBtnTitle');
     if (voiceBtn) voiceBtn.title = t('dictateVoice');
 
-    // Load diary: try profile journals first, then diary_ key
-    const savedDiary = getDiaryText(dateKey);
+    // Update tab labels for language
+    var tabPLabel = document.querySelector('#diarioTabPersonal span');
+    var tabDLabel = document.querySelector('#diarioTabDreams span');
+    if (tabPLabel) tabPLabel.textContent = L ? 'Diario Personal' : 'Personal Diary';
+    if (tabDLabel) tabDLabel.textContent = L ? 'Diario de Sueños' : 'Dream Journal';
+    var dreamInterpLabel = document.querySelector('#dreamInterpBtn span');
+    if (dreamInterpLabel) dreamInterpLabel.textContent = L ? 'Interpretar Sueño con AI' : 'Interpret Dream with AI';
 
+    // Reset to personal tab
+    switchDiarioTab('personal');
+
+    // ── Personal diary ──
+    const savedDiary = getDiaryText(dateKey);
     const textarea = document.getElementById('diarioText');
     textarea.value = savedDiary;
-    textarea.placeholder = t('diaryFullPlaceholder');
+    textarea.placeholder = L ? 'Escribe sobre tu día, reflexiones, emociones...' : 'Write about your day, reflections, emotions...';
 
-    // Auto-save on typing
+    // Auto-save personal diary
     let saveTimeout;
     textarea.oninput = function() {
         clearTimeout(saveTimeout);
         saveTimeout = setTimeout(() => {
-            // Save to both diary_ key AND profile journals
             localStorage.setItem(`diary_${dateKey}`, textarea.value);
             saveDiaryText(dateKey, textarea.value);
-            // Save astro snapshot for this diary date
             try {
                 var diaryDate = new Date(dateKey + 'T12:00:00');
                 var snap = typeof getAstroSnapshot === 'function' ? getAstroSnapshot(diaryDate) : {};
@@ -6960,28 +7003,104 @@ function openDiarioModal(date, lunarDay) {
             } catch(e) {}
             if (typeof scheduleAutoBackup === 'function') scheduleAutoBackup();
             document.getElementById('diarioSaveStatus').textContent = t('saved');
-            setTimeout(() => {
-                document.getElementById('diarioSaveStatus').textContent = '';
-            }, 2000);
+            setTimeout(() => { document.getElementById('diarioSaveStatus').textContent = ''; }, 2000);
         }, 1000);
-        
-        // Word count
         const words = textarea.value.trim().split(/\s+/).filter(w => w.length > 0).length;
-        const wordLabel = currentLang === 'es' ? 'palabras' : 'words';
-        document.getElementById('diarioWordCount').textContent = `${words} ${wordLabel}`;
+        document.getElementById('diarioWordCount').textContent = `${words} ${L ? 'palabras' : 'words'}`;
     };
-    
-    // Initial word count
     const words = savedDiary.trim().split(/\s+/).filter(w => w.length > 0).length;
-    const wordLabel = currentLang === 'es' ? 'palabras' : 'words';
-    document.getElementById('diarioWordCount').textContent = savedDiary ? `${words} ${wordLabel}` : '';
-    
+    document.getElementById('diarioWordCount').textContent = savedDiary ? `${words} ${L ? 'palabras' : 'words'}` : '';
+
+    // ── Dream diary ──
+    const savedDream = getDreamText(dateKey);
+    const dreamArea = document.getElementById('dreamText');
+    dreamArea.value = savedDream;
+    dreamArea.placeholder = L ? 'Describe tu sueño con todos los detalles que recuerdes: imágenes, emociones, personas, lugares, colores, sensaciones...' : 'Describe your dream with all the details you remember: images, emotions, people, places, colors, sensations...';
+
+    // Auto-save dream diary
+    let dreamSaveTimeout;
+    dreamArea.oninput = function() {
+        clearTimeout(dreamSaveTimeout);
+        dreamSaveTimeout = setTimeout(() => {
+            saveDreamText(dateKey, dreamArea.value);
+            if (typeof scheduleAutoBackup === 'function') scheduleAutoBackup();
+            document.getElementById('dreamSaveStatus').textContent = L ? '✓ Guardado' : '✓ Saved';
+            setTimeout(() => { document.getElementById('dreamSaveStatus').textContent = ''; }, 2000);
+        }, 1000);
+        const dw = dreamArea.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+        document.getElementById('dreamWordCount').textContent = `${dw} ${L ? 'palabras' : 'words'}`;
+    };
+    const dw = savedDream.trim().split(/\s+/).filter(w => w.length > 0).length;
+    document.getElementById('dreamWordCount').textContent = savedDream ? `${dw} ${L ? 'palabras' : 'words'}` : '';
+
+    // Clear previous dream interpretation
+    document.getElementById('dreamInterpContainer').innerHTML = '';
+
     document.getElementById('diarioModal').classList.add('show');
 }
 
 function closeDiarioModal() {
     if (isRecording) stopVoiceInput();
     document.getElementById('diarioModal').classList.remove('show');
+}
+
+// ── Diary Tab Switching ──
+var _activeDiarioTab = 'personal';
+function switchDiarioTab(tab) {
+    _activeDiarioTab = tab;
+    var tabP = document.getElementById('diarioTabPersonal');
+    var tabD = document.getElementById('diarioTabDreams');
+    var panelP = document.getElementById('diarioPanelPersonal');
+    var panelD = document.getElementById('diarioPanelDreams');
+    if (tab === 'personal') {
+        tabP.style.background = 'rgba(201,168,64,0.2)';
+        tabP.style.color = '#ffd54f';
+        tabD.style.background = 'rgba(255,255,255,0.04)';
+        tabD.style.color = 'rgba(255,255,255,0.5)';
+        panelP.style.display = 'block';
+        panelD.style.display = 'none';
+    } else {
+        tabD.style.background = 'rgba(138,43,226,0.2)';
+        tabD.style.color = '#ce93d8';
+        tabP.style.background = 'rgba(255,255,255,0.04)';
+        tabP.style.color = 'rgba(255,255,255,0.5)';
+        panelP.style.display = 'none';
+        panelD.style.display = 'block';
+    }
+}
+
+// ── Dream Diary Storage ──
+function getDreamText(dateKey) {
+    var profileId = getActiveProfileId() || 'default';
+    var dreamsData = {};
+    try { dreamsData = JSON.parse(localStorage.getItem('dreamJournal_' + profileId) || '{}'); } catch(e) {}
+    if (dreamsData[dateKey]) return dreamsData[dateKey];
+    return '';
+}
+
+function saveDreamText(dateKey, text) {
+    var profileId = getActiveProfileId() || 'default';
+    var dreamsData = {};
+    try { dreamsData = JSON.parse(localStorage.getItem('dreamJournal_' + profileId) || '{}'); } catch(e) {}
+    dreamsData[dateKey] = text;
+    localStorage.setItem('dreamJournal_' + profileId, JSON.stringify(dreamsData));
+}
+
+// ── Dream AI Interpretation ──
+function interpretDream() {
+    var L = currentLang === 'es';
+    var dreamText = document.getElementById('dreamText').value.trim();
+    if (!dreamText) {
+        alert(L ? 'Escribe tu sueño primero para poder interpretarlo.' : 'Write your dream first so it can be interpreted.');
+        return;
+    }
+    var container = document.getElementById('dreamInterpContainer');
+    var prompt = L
+        ? 'Interpreta el siguiente sueño desde una perspectiva astrológica, psicológica y simbólica. Considera mi carta natal y los tránsitos actuales. Explica los símbolos principales, el mensaje del inconsciente, y cómo se conecta con mi momento astrológico actual. Mi sueño:\n\n' + dreamText
+        : 'Interpret the following dream from an astrological, psychological, and symbolic perspective. Consider my natal chart and current transits. Explain the main symbols, the unconscious message, and how it connects to my current astrological moment. My dream:\n\n' + dreamText;
+    var readingTitle = L ? 'Sueño — ' + (window._currentDiarioDateKey || '') : 'Dream — ' + (window._currentDiarioDateKey || '');
+    container.innerHTML = '<div id="dreamAiInterpDiv"></div>';
+    fetchAIInterpretation(prompt, 'dreamAiInterpDiv', readingTitle);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -22879,7 +22998,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v406';
+const APP_VERSION = 'v407';
 var _pendingSW = null;
 
 function showUpdateBanner() {
