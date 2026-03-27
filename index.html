@@ -844,24 +844,58 @@
 
     <!-- Modal de Opciones del Día -->
     <div id="dayOptionsModal" class="modal" onclick="if(event.target===this)closeDayOptionsModal()"
-        <div class="modal-content" style="max-width: 400px;">
-            <h2>Opciones del Día</h2>
-            <p id="dayOptionsDate" style="text-align: center; margin-bottom: 20px;"></p>
-            <button onclick="selectDayOption('agenda')" style="width: 100%; padding: 15px; margin-bottom: 10px; background: #4ecdc4; border: none; border-radius: 8px; color: white; font-size: 1em; cursor: pointer; transition: all 0.2s;">
-                📅 Agenda / Eventos
-            </button>
-            <button id="aspectsOptionBtn" onclick="selectDayOption('aspectos')" style="width: 100%; padding: 15px; margin-bottom: 10px; background: #f0e68c; border: none; border-radius: 8px; color: #1a1a2e; font-size: 1em; cursor: pointer; transition: all 0.2s; font-weight: bold;">
-                ⭐ Aspectos Planetarios (<span id="aspectsCount">0</span>)
-            </button>
-            <button onclick="selectDayOption('diario')" style="width: 100%; padding: 15px; margin-bottom: 10px; background: #9b59b6; border: none; border-radius: 8px; color: white; font-size: 1em; cursor: pointer; transition: all 0.2s;">
-                📝 Diario Personal y Reflexiones
-            </button>
-            <button id="interpretDayBtn" onclick="selectDayOption('interpretacion')" style="width: 100%; padding: 15px; margin-bottom: 10px; background: linear-gradient(135deg,#667eea,#764ba2); border: none; border-radius: 8px; color: white; font-size: 1em; cursor: pointer; transition: all 0.2s; font-weight: bold;">
-                ✨ Interpretación del día
-            </button>
-            <button onclick="closeDayOptionsModal()" style="width: 100%; padding: 15px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; font-size: 1em; cursor: pointer; transition: all 0.2s;">
-                ❌ Cancelar
-            </button>
+        <div class="modal-content" style="max-width: 360px;padding:0;border-radius:16px;overflow:hidden;">
+            <div style="padding:14px 16px;background:rgba(201,168,64,0.08);border-bottom:1px solid rgba(201,168,64,0.15);">
+                <div style="text-align:center;font-weight:700;color:#ffd54f;font-size:0.95em;" id="dayOptionsTitle">Opciones del Día</div>
+                <p id="dayOptionsDate" style="text-align:center;color:rgba(255,255,255,0.5);font-size:0.78em;margin:4px 0 0;"></p>
+            </div>
+            <div style="padding:6px 0;">
+                <div onclick="selectDayOption('agenda')" style="display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">
+                    <span style="font-size:1.2em;width:28px;text-align:center;">📅</span>
+                    <div>
+                        <div style="color:rgba(255,255,255,0.9);font-size:0.88em;font-weight:600;" data-i18n="dayOptAgenda">Agenda / Eventos</div>
+                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptAgendaDesc">Citas, recordatorios, eventos</div>
+                    </div>
+                    <span style="margin-left:auto;color:rgba(255,255,255,0.2);font-size:0.8em;">›</span>
+                </div>
+                <div onclick="selectDayOption('aspectos')" id="aspectsOptionBtn" style="display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">
+                    <span style="font-size:1.2em;width:28px;text-align:center;">⭐</span>
+                    <div>
+                        <div style="color:#f0e68c;font-size:0.88em;font-weight:600;"><span data-i18n="dayOptAspects">Aspectos Planetarios</span> (<span id="aspectsCount">0</span>)</div>
+                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptAspectsDesc">Conjunciones, trígonos, cuadraturas</div>
+                    </div>
+                    <span style="margin-left:auto;color:rgba(255,255,255,0.2);font-size:0.8em;">›</span>
+                </div>
+                <div style="height:1px;background:rgba(255,255,255,0.06);margin:2px 16px;"></div>
+                <div onclick="selectDayOption('diario')" style="display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">
+                    <span style="font-size:1.2em;width:28px;text-align:center;">📓</span>
+                    <div>
+                        <div style="color:rgba(255,255,255,0.9);font-size:0.88em;font-weight:600;" data-i18n="dayOptDiary">Diario Personal</div>
+                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptDiaryDesc">Reflexiones, emociones, notas</div>
+                    </div>
+                    <span style="margin-left:auto;color:rgba(255,255,255,0.2);font-size:0.8em;">›</span>
+                </div>
+                <div onclick="selectDayOption('diario-dreams')" style="display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">
+                    <span style="font-size:1.2em;width:28px;text-align:center;">🌙</span>
+                    <div>
+                        <div style="color:#ce93d8;font-size:0.88em;font-weight:600;" data-i18n="dayOptDreams">Diario de Sueños</div>
+                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptDreamsDesc">Registra y analiza tus sueños con AI</div>
+                    </div>
+                    <span style="margin-left:auto;color:rgba(255,255,255,0.2);font-size:0.8em;">›</span>
+                </div>
+                <div style="height:1px;background:rgba(255,255,255,0.06);margin:2px 16px;"></div>
+                <div onclick="selectDayOption('interpretacion')" id="interpretDayBtn" style="display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">
+                    <span style="font-size:1.2em;width:28px;text-align:center;">✨</span>
+                    <div>
+                        <div style="color:#b39ddb;font-size:0.88em;font-weight:600;" data-i18n="dayOptInterp">Interpretación del Día</div>
+                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptInterpDesc">Análisis astrológico con AI</div>
+                    </div>
+                    <span style="margin-left:auto;color:rgba(255,255,255,0.2);font-size:0.8em;">›</span>
+                </div>
+            </div>
+            <div style="padding:8px 16px 12px;border-top:1px solid rgba(255,255,255,0.06);">
+                <button onclick="closeDayOptionsModal()" style="width:100%;padding:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.5);font-size:0.82em;cursor:pointer;">Cerrar</button>
+            </div>
         </div>
     </div>
 
@@ -3904,31 +3938,39 @@ function updateUILanguage() {
 }
 
 function updateModalTranslations() {
-    // Update Day Options Modal (static HTML)
-    const dayOptionsModal = document.getElementById('dayOptionsModal');
-    if (dayOptionsModal) {
-        const h2 = dayOptionsModal.querySelector('h2');
-        if (h2) h2.textContent = t('dayOptions');
-        
-        const buttons = dayOptionsModal.querySelectorAll('button');
-        if (buttons[0]) buttons[0].innerHTML = t('agenda');
-        if (buttons[1]) buttons[1].innerHTML = `${t('aspects')} (<span id="aspectsCount">0</span>)`;
-        if (buttons[2]) buttons[2].innerHTML = t('diary');
-        if (buttons[3]) buttons[3].innerHTML = `❌ ${t('cancel')}`;
-    }
-    
+    var L = currentLang === 'es';
+    // Update Day Options Modal (dropdown list format)
+    var dayTitle = document.getElementById('dayOptionsTitle');
+    if (dayTitle) dayTitle.textContent = L ? 'Opciones del Día' : 'Day Options';
+    // Update data-i18n labels in day options
+    var i18nMap = {
+        'dayOptAgenda': L ? 'Agenda / Eventos' : 'Agenda / Events',
+        'dayOptAgendaDesc': L ? 'Citas, recordatorios, eventos' : 'Appointments, reminders, events',
+        'dayOptAspects': L ? 'Aspectos Planetarios' : 'Planetary Aspects',
+        'dayOptAspectsDesc': L ? 'Conjunciones, trígonos, cuadraturas' : 'Conjunctions, trines, squares',
+        'dayOptDiary': L ? 'Diario Personal' : 'Personal Diary',
+        'dayOptDiaryDesc': L ? 'Reflexiones, emociones, notas' : 'Reflections, emotions, notes',
+        'dayOptDreams': L ? 'Diario de Sueños' : 'Dream Journal',
+        'dayOptDreamsDesc': L ? 'Registra y analiza tus sueños con AI' : 'Record and analyze your dreams with AI',
+        'dayOptInterp': L ? 'Interpretación del Día' : 'Day Interpretation',
+        'dayOptInterpDesc': L ? 'Análisis astrológico con AI' : 'Astrological analysis with AI'
+    };
+    Object.keys(i18nMap).forEach(function(key) {
+        var els = document.querySelectorAll('[data-i18n="' + key + '"]');
+        els.forEach(function(el) { el.textContent = i18nMap[key]; });
+    });
+    var closeBtn = document.querySelector('#dayOptionsModal > div > div:last-child > button');
+    if (closeBtn) closeBtn.textContent = L ? 'Cerrar' : 'Close';
+
     // Update Aspects Modal title placeholder
     const aspectsModalTitle = document.getElementById('aspectsModalTitle');
     if (aspectsModalTitle && aspectsModalTitle.textContent.includes('Día') && currentLang === 'en') {
         // Will be updated when modal opens
     }
-    
+
     // Update Diary Modal
     const diarioModalTitle = document.getElementById('diarioModalTitle');
     if (diarioModalTitle) diarioModalTitle.textContent = t('diaryTitle');
-    
-    const diarioTextarea = document.getElementById('journalText');
-    if (diarioTextarea) diarioTextarea.placeholder = t('diaryPlaceholder');
 }
 
 // ==============================================
@@ -5535,6 +5577,9 @@ function selectDayOption(option) {
         openAspectsModal(window.selectedDayDate, window.selectedDayLunarDay, window.selectedDayData);
     } else if (option === 'diario') {
         openDiarioModal(window.selectedDayDate, window.selectedDayLunarDay);
+    } else if (option === 'diario-dreams') {
+        openDiarioModal(window.selectedDayDate, window.selectedDayLunarDay);
+        setTimeout(function() { switchDiarioTab('dreams'); }, 50);
     } else if (option === 'astronomia') {
         openAstroModal(window.selectedDayDate, window.selectedDayLunarDay);
     } else if (option === 'interpretacion') {
@@ -22998,7 +23043,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v407';
+const APP_VERSION = 'v408';
 var _pendingSW = null;
 
 function showUpdateBanner() {
