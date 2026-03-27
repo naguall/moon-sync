@@ -12694,7 +12694,23 @@ window.openReturnChart = function(type) {
     }
     html += '</div>';
 
+    // Interpret button
+    var btnLabel = type === 'solar'
+        ? (L ? 'Interpretar Retorno Solar' : 'Interpret Solar Return')
+        : (L ? 'Interpretar Retorno Lunar' : 'Interpret Lunar Return');
+    html += '<div style="text-align:center;margin-top:14px;">';
+    html += '<button id="returnInterpBtn" onclick="interpretReturnChartInline(\'' + type + '\')" style="padding:12px 20px;background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.5);border-radius:12px;color:#ffd54f;font-size:0.9em;font-weight:700;cursor:pointer;width:90%;max-width:400px;">';
+    html += '✨ ' + btnLabel + '</button></div>';
+
+    // Container for inline interpretation
+    html += '<div id="returnInterpContainer" style="display:none;margin-top:14px;"></div>';
+
     html += '</div>';
+
+    // Store return chart data for interpretation
+    window._lastReturnChart = returnChart;
+    window._lastReturnType = type;
+    window._lastReturnDate = returnDate;
 
     // Create/reuse modal
     var modal = document.getElementById('returnChartModal');
@@ -12718,6 +12734,121 @@ window.openReturnChart = function(type) {
         localStorage.setItem('natalChart', origChart);
     }, 150);
 };
+
+// Interpret return chart inline within the modal
+window.interpretReturnChartInline = function(type) {
+    var L = currentLang === 'es';
+    var natal = getNatalData();
+    if (!natal) return;
+    var nc = null;
+    try {
+        var pch = localStorage.getItem('natalChart_' + natal.id);
+        nc = pch ? JSON.parse(pch) : JSON.parse(localStorage.getItem('natalChart'));
+    } catch(e) { return; }
+    if (!nc || !nc.planets) return;
+
+    var returnChart = window._lastReturnChart;
+    var returnDate = window._lastReturnDate;
+    if (!returnChart || !returnDate) return;
+
+    // Hide the button, show container
+    var btn = document.getElementById('returnInterpBtn');
+    if (btn) btn.style.display = 'none';
+    var container = document.getElementById('returnInterpContainer');
+    container.style.display = 'block';
+    container.innerHTML = '<div style="text-align:center;padding:16px;color:rgba(255,255,255,0.5);font-size:0.85em;">✨ ' + (L ? 'Interpretando...' : 'Interpreting...') + '</div>';
+
+    // Build detailed prompt with return chart positions
+    var natalSummary = (L ? 'Perfil' : 'Profile') + ': ' + (natal.name || natal.cityName) + ', ' + (L ? 'nacido' : 'born') + ' ' + natal.date + ' ' + natal.time + ' ' + (L ? 'en' : 'in') + ' ' + natal.cityName + '. ';
+    natalSummary += 'Sol: ' + (nc.planets.sun?.formatted || '?') + ', Luna: ' + (nc.planets.moon?.formatted || '?');
+    if (nc.houses) natalSummary += ', ASC: ' + (nc.houses.ascFormatted || '?') + ', MC: ' + (nc.houses.mcFormatted || '?');
+    natalSummary += '. ';
+
+    // Return chart positions summary
+    var rcPositions = '';
+    var mainPlanets = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto'];
+    mainPlanets.forEach(function(p) {
+        if (returnChart.planets[p]) {
+            var pl = returnChart.planets[p];
+            rcPositions += p + ': ' + pl.formatted + (pl.isRetrograde ? ' R' : '') + ', ';
+        }
+    });
+    if (returnChart.houses) {
+        rcPositions += 'ASC: ' + (returnChart.houses.ascFormatted || '?') + ', MC: ' + (returnChart.houses.mcFormatted || '?');
+    }
+
+    var dateStr = returnDate.toLocaleDateString(L ? 'es' : 'en', {day:'numeric', month:'long', year:'numeric'});
+    var prompt = '';
+
+    if (type === 'solar') {
+        prompt = L
+            ? natalSummary + 'CARTA DE RETORNO SOLAR para el ' + dateStr + '. Posiciones del retorno solar: ' + rcPositions + '. Interpreta en detalle: 1) El Ascendente del retorno solar y qué tono marca para el año, 2) La Luna del retorno solar y las necesidades emocionales del año, 3) Planetas en casas angulares (1, 4, 7, 10) y su impacto, 4) Aspectos importantes en la carta de retorno, 5) Temas principales y consejos para este año solar.'
+            : natalSummary + 'SOLAR RETURN CHART for ' + dateStr + '. Solar return positions: ' + rcPositions + '. Interpret in detail: 1) The solar return Ascendant and what tone it sets for the year, 2) The solar return Moon and the emotional needs of the year, 3) Planets in angular houses (1, 4, 7, 10) and their impact, 4) Important aspects in the return chart, 5) Main themes and advice for this solar year.';
+    } else {
+        prompt = L
+            ? natalSummary + 'CARTA DE RETORNO LUNAR para el ' + dateStr + '. Posiciones del retorno lunar: ' + rcPositions + '. Interpreta en detalle: 1) El Ascendente del retorno lunar y el tono emocional del mes, 2) Planetas en casas angulares y su influencia en las próximas 4 semanas, 3) Aspectos importantes en la carta de retorno lunar, 4) Qué área de vida se activa emocionalmente, 5) Consejos para navegar este ciclo lunar de ~27 días.'
+            : natalSummary + 'LUNAR RETURN CHART for ' + dateStr + '. Lunar return positions: ' + rcPositions + '. Interpret in detail: 1) The lunar return Ascendant and the emotional tone of the month, 2) Planets in angular houses and their influence in the next 4 weeks, 3) Important aspects in the lunar return chart, 4) What life area is emotionally activated, 5) Advice for navigating this ~27-day lunar cycle.';
+    }
+
+    // Use the existing AI system
+    var cacheKey = 'returnChart_' + type + '_' + returnDate.toISOString().split('T')[0];
+    var cached = getInterpCache(cacheKey);
+    if (cached && cached.html) {
+        container.innerHTML = cached.html;
+        return;
+    }
+
+    // Send to AI
+    var history = [{role: 'user', parts: [{text: prompt}]}];
+
+    sendReturnInterpRequest(history, container, cacheKey);
+};
+
+function sendReturnInterpRequest(history, container, cacheKey) {
+    var L = currentLang === 'es';
+    var systemPrompt = L
+        ? 'Eres un astrólogo profesional interpretando una carta de retorno. Responde en español de forma clara, profunda y personal. Usa párrafos, no listas. Máximo 600 palabras.'
+        : 'You are a professional astrologer interpreting a return chart. Respond clearly, deeply and personally. Use paragraphs, not lists. Maximum 600 words.';
+
+    var personalKey = getGeminiKey();
+    var apiUrl = personalKey
+        ? 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + personalKey
+        : AI_PROXY_URL;
+
+    var body = {
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: history,
+        generationConfig: { maxOutputTokens: 2048, temperature: 0.85 }
+    };
+
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        var text = '';
+        try {
+            text = data.candidates[0].content.parts[0].text || '';
+        } catch(e) {
+            text = L ? 'No se pudo obtener la interpretación.' : 'Could not get interpretation.';
+        }
+        // Simple markdown-like formatting
+        text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        text = text.replace(/\n/g, '<br>');
+
+        var resultHtml = '<div style="padding:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;font-size:0.82em;color:rgba(255,255,255,0.75);line-height:1.6;">' + text + '</div>';
+        container.innerHTML = resultHtml;
+
+        // Cache it
+        if (cacheKey) {
+            saveInterpCache(cacheKey, history, resultHtml);
+        }
+    }).catch(function(err) {
+        container.innerHTML = '<div style="padding:12px;color:#e74c3c;font-size:0.82em;">Error: ' + err.message + '</div>';
+        var btn = document.getElementById('returnInterpBtn');
+        if (btn) btn.style.display = 'block';
+    });
+}
 
 // --- Multi-Profile Birth Data Storage ---
 function getNatalProfiles() {
@@ -22529,7 +22660,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v396';
+const APP_VERSION = 'v397';
 var _pendingSW = null;
 
 function showUpdateBanner() {
