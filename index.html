@@ -14300,6 +14300,30 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
             '<td style="text-align:center;">' + (data.declinationFormatted || '-') + '</td>' +
             '</tr>';
     });
+    // Add ASC row
+    if (natalChart.houses && natalChart.houses.ascendant != null) {
+        var ascInfo = getZodiacSignWithDegree(natalChart.houses.ascendant);
+        planetsTableRows += '<tr onclick="showNatalDetail(\'house\', 1)" style="cursor:pointer;transition:all 0.2s;border-top:2px solid rgba(201,168,64,0.3);" onmouseover="this.style.backgroundColor=\'rgba(201,168,64,0.15)\';" onmouseout="this.style.backgroundColor=\'\';">' +
+            '<td style="white-space:nowrap;font-weight:700;color:#c9a840;">ASC</td>' +
+            '<td>' + ascInfo.sign + '</td>' +
+            '<td>' + ascInfo.degree + '°' + (ascInfo.minute < 10 ? '0' : '') + ascInfo.minute + "'" + '</td>' +
+            '<td style="text-align:center;">1</td>' +
+            '<td style="text-align:center;">-</td>' +
+            '<td style="text-align:center;">-</td>' +
+            '</tr>';
+    }
+    // Add MC row
+    if (natalChart.houses && natalChart.houses.mc != null) {
+        var mcInfo = getZodiacSignWithDegree(natalChart.houses.mc);
+        planetsTableRows += '<tr onclick="showNatalDetail(\'house\', 10)" style="cursor:pointer;transition:all 0.2s;" onmouseover="this.style.backgroundColor=\'rgba(201,168,64,0.15)\';" onmouseout="this.style.backgroundColor=\'\';">' +
+            '<td style="white-space:nowrap;font-weight:700;color:#c9a840;">MC</td>' +
+            '<td>' + mcInfo.sign + '</td>' +
+            '<td>' + mcInfo.degree + '°' + (mcInfo.minute < 10 ? '0' : '') + mcInfo.minute + "'" + '</td>' +
+            '<td style="text-align:center;">10</td>' +
+            '<td style="text-align:center;">-</td>' +
+            '<td style="text-align:center;">-</td>' +
+            '</tr>';
+    }
 
     // --- Houses Table ---
     let housesTableRows = '';
@@ -14348,8 +14372,8 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
 
     const tablesTab = `
         <div class="personal-natal-card">
-            <h3>📊 ${L ? 'Tabla de Planetas' : 'Planet Table'}</h3>
-            <div style="overflow-x:auto;">
+            <h3>${L ? 'Tabla de Planetas' : 'Planet Table'}</h3>
+            <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;" class="table-scroll-container">
                 <table class="natal-data-table">
                     <thead><tr>
                         <th>${L?'Planeta':'Planet'}</th><th>${L?'Signo':'Sign'}</th><th>${L?'Grado':'Degree'}</th>
@@ -14358,19 +14382,27 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
                     <tbody>${planetsTableRows}</tbody>
                 </table>
             </div>
+            <button onclick="interpretTableSection('planets')" style="width:100%;margin-top:10px;padding:10px;background:linear-gradient(135deg,rgba(201,168,64,0.2),rgba(255,149,0,0.1));border:1px solid rgba(201,168,64,0.4);border-radius:10px;color:#ffd54f;font-size:0.82em;font-weight:600;cursor:pointer;">
+                ✦ ${L ? 'Interpretar Planetas' : 'Interpret Planets'}
+            </button>
+            <div id="interpretPlanetsDiv" style="margin-top:8px;"></div>
         </div>
         <div class="personal-natal-card">
-            <h3>🏠 ${L ? 'Cúspides de Casas' : 'House Cusps'}</h3>
-            <div style="overflow-x:auto;">
+            <h3>${L ? 'Cúspides de Casas' : 'House Cusps'}</h3>
+            <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;" class="table-scroll-container">
                 <table class="natal-data-table">
                     <thead><tr><th>${L?'Casa':'House'}</th><th>${L?'Signo':'Sign'}</th><th>${L?'Grado':'Degree'}</th></tr></thead>
                     <tbody>${housesTableRows}</tbody>
                 </table>
             </div>
+            <button onclick="interpretTableSection('cusps')" style="width:100%;margin-top:10px;padding:10px;background:linear-gradient(135deg,rgba(201,168,64,0.2),rgba(255,149,0,0.1));border:1px solid rgba(201,168,64,0.4);border-radius:10px;color:#ffd54f;font-size:0.82em;font-weight:600;cursor:pointer;">
+                ✦ ${L ? 'Interpretar Cúspides' : 'Interpret Cusps'}
+            </button>
+            <div id="interpretCuspsDiv" style="margin-top:8px;"></div>
         </div>
         <div class="personal-natal-card">
-            <h3>🔗 ${L ? 'Aspectos Natales' : 'Natal Aspects'}</h3>
-            <div style="overflow-x:auto;">
+            <h3>${L ? 'Aspectos Natales' : 'Natal Aspects'}</h3>
+            <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;" class="table-scroll-container">
                 <table class="natal-data-table" id="natalAspectsTable">
                     <thead><tr>
                         <th class="sortable-th" onclick="sortAspectsTable(0)" style="cursor:pointer;">${L?'Planeta':'Planet'} <span id="aspSort0" style="font-size:0.7em;opacity:0.4;">▼</span></th>
@@ -14383,6 +14415,10 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
                     <tbody>${aspectsTableRows}</tbody>
                 </table>
             </div>
+            <button onclick="interpretTableSection('aspects')" style="width:100%;margin-top:10px;padding:10px;background:linear-gradient(135deg,rgba(201,168,64,0.2),rgba(255,149,0,0.1));border:1px solid rgba(201,168,64,0.4);border-radius:10px;color:#ffd54f;font-size:0.82em;font-weight:600;cursor:pointer;">
+                ✦ ${L ? 'Interpretar Aspectos' : 'Interpret Aspects'}
+            </button>
+            <div id="interpretAspectsDiv" style="margin-top:8px;"></div>
         </div>`;
 
     // ===== (Elements content now inline in Chart tab above) =====
@@ -21522,9 +21558,9 @@ window.openAstroModal = openAstroModal;
         if (Math.abs(dx) < MIN_SWIPE_DIST) return;
         if (Math.abs(dy) * MAX_VERTICAL_RATIO > Math.abs(dx)) return;
 
-        // Don't swipe inside modals or AI chat
+        // Don't swipe inside modals, AI chat, or scrollable tables
         const target = e.target;
-        if (target.closest && (target.closest('.modal-content') || target.closest('#aiChatPanel') || target.closest('.preferences-modal') || target.closest('input') || target.closest('textarea'))) return;
+        if (target.closest && (target.closest('.modal-content') || target.closest('#aiChatPanel') || target.closest('.preferences-modal') || target.closest('input') || target.closest('textarea') || target.closest('.table-scroll-container') || target.closest('.natal-data-table') || target.closest('#natalTabTables'))) return;
 
         if (dx < 0) {
             // Swipe LEFT → next
@@ -23448,7 +23484,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v416';
+const APP_VERSION = 'v417';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -24246,6 +24282,67 @@ window.interpretCosmicCycle = interpretCosmicCycle;
 window.interpretAstroCartography = interpretAstroCartography;
 window.interpretAstroLocation = interpretAstroLocation;
 window.deleteCurrentInterp = deleteCurrentInterp;
+
+// ── Interpret specific table sections (Planets, Cusps, Aspects) ──
+function interpretTableSection(section) {
+    var isEs = currentLang === 'es';
+    var divId = 'interpret' + section.charAt(0).toUpperCase() + section.slice(1) + 'Div';
+    var targetDiv = document.getElementById(divId);
+    if (!targetDiv) return;
+    targetDiv.innerHTML = '<div style="padding:12px;text-align:center;color:rgba(255,255,255,0.4);font-size:0.85em;">✨ ' + (isEs ? 'Interpretando...' : 'Interpreting...') + '</div>';
+
+    var prompt = '';
+    if (section === 'planets') {
+        // Gather planet positions
+        var planetLines = [];
+        if (globalNatalChart && globalNatalChart.planets) {
+            Object.entries(globalNatalChart.planets).forEach(function(entry) {
+                var p = entry[0], d = entry[1];
+                var house = globalNatalChart.houses ? getHouseForLongitude(d.longitude, globalNatalChart.houses.cusps) : '?';
+                planetLines.push((planetNms[p]||p) + ' en ' + d.sign + ' ' + d.degree + '° Casa ' + house + (d.isRetrograde ? ' R' : ''));
+            });
+            if (globalNatalChart.houses && globalNatalChart.houses.ascendant != null) {
+                var ascI = getZodiacSignWithDegree(globalNatalChart.houses.ascendant);
+                planetLines.push('ASC en ' + ascI.sign + ' ' + ascI.degree + '°');
+            }
+            if (globalNatalChart.houses && globalNatalChart.houses.mc != null) {
+                var mcI = getZodiacSignWithDegree(globalNatalChart.houses.mc);
+                planetLines.push('MC en ' + mcI.sign + ' ' + mcI.degree + '°');
+            }
+        }
+        prompt = isEs
+            ? 'Interpreta la tabla de planetas natales en profundidad. Posiciones:\n' + planetLines.join('\n') + '\n\nAnaliza: distribución por elementos y modalidades, planetas retrógrados, stelliums, dispositor final, hemisferios dominantes, patrones clave.'
+            : 'Interpret the natal planet table in depth. Positions:\n' + planetLines.join('\n') + '\n\nAnalyze: element/modality distribution, retrograde planets, stelliums, final dispositor, dominant hemispheres, key patterns.';
+    } else if (section === 'cusps') {
+        var cuspLines = [];
+        if (globalNatalChart && globalNatalChart.houses && globalNatalChart.houses.cusps) {
+            globalNatalChart.houses.cusps.forEach(function(cusp, i) {
+                var info = getZodiacSignWithDegree(cusp);
+                cuspLines.push('Casa ' + (i+1) + ': ' + info.sign + ' ' + info.degree + '°' + info.minute + "'");
+            });
+        }
+        prompt = isEs
+            ? 'Interpreta las cúspides de casas natales. Cúspides:\n' + cuspLines.join('\n') + '\n\nAnaliza: signos interceptados, casas interceptadas, regente de cada casa angular (1, 4, 7, 10), ejes temáticos principales, áreas de vida más activadas.'
+            : 'Interpret the natal house cusps. Cusps:\n' + cuspLines.join('\n') + '\n\nAnalyze: intercepted signs, intercepted houses, angular house rulers (1, 4, 7, 10), main thematic axes, most activated life areas.';
+    } else if (section === 'aspects') {
+        var aspectLines = [];
+        if (globalNatalChart && globalNatalChart.natalAspects) {
+            globalNatalChart.natalAspects.forEach(function(a) {
+                aspectLines.push((planetNms[a.planet1]||a.planet1) + ' ' + a.aspect.name + ' ' + (planetNms[a.planet2]||a.planet2) + ' (orbe ' + a.orbFormatted + ')');
+            });
+        }
+        prompt = isEs
+            ? 'Interpreta los aspectos natales en profundidad. Aspectos:\n' + aspectLines.join('\n') + '\n\nAnaliza: aspectos más exactos (orbe menor), configuraciones (T-cuadrada, Gran Trígono, Yod, Gran Cruz), aspectos dominantes, tensiones vs armonías, aspectos a luminarias (Sol, Luna).'
+            : 'Interpret natal aspects in depth. Aspects:\n' + aspectLines.join('\n') + '\n\nAnalyze: tightest aspects (smallest orb), configurations (T-square, Grand Trine, Yod, Grand Cross), dominant aspects, tensions vs harmonies, luminaries aspects (Sun, Moon).';
+    }
+
+    var title = isEs
+        ? (section === 'planets' ? 'Planetas Natales' : section === 'cusps' ? 'Cúspides de Casas' : 'Aspectos Natales')
+        : (section === 'planets' ? 'Natal Planets' : section === 'cusps' ? 'House Cusps' : 'Natal Aspects');
+
+    fetchAIInterpretation(prompt, divId, title);
+}
+window.interpretTableSection = interpretTableSection;
 
 // Toggle planet visibility on cartography map
 window.toggleCartoPlanet = function(btn) {
