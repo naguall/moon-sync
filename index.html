@@ -887,7 +887,7 @@
                     <span style="font-size:1.2em;width:28px;text-align:center;">🌙</span>
                     <div>
                         <div style="color:#ce93d8;font-size:0.88em;font-weight:600;" data-i18n="dayOptDreams">Diario de Sueños</div>
-                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptDreamsDesc">Registra y analiza tus sueños con AI</div>
+                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptDreamsDesc">Registra y analiza tus sueños</div>
                     </div>
                     <span style="margin-left:auto;color:rgba(255,255,255,0.2);font-size:0.8em;">›</span>
                 </div>
@@ -896,7 +896,7 @@
                     <span style="font-size:1.2em;width:28px;text-align:center;">✨</span>
                     <div>
                         <div style="color:#b39ddb;font-size:0.88em;font-weight:600;" data-i18n="dayOptInterp">Interpretación del Día</div>
-                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptInterpDesc">Análisis astrológico con AI</div>
+                        <div style="color:rgba(255,255,255,0.35);font-size:0.7em;" data-i18n="dayOptInterpDesc">Análisis astrológico</div>
                     </div>
                     <span style="margin-left:auto;color:rgba(255,255,255,0.2);font-size:0.8em;">›</span>
                 </div>
@@ -1095,7 +1095,7 @@
                     </div>
                     <!-- AI Dream Interpretation -->
                     <button id="dreamInterpBtn" onclick="interpretDream()" style="width:100%;padding:12px;margin-top:8px;background:linear-gradient(135deg,rgba(138,43,226,0.3),rgba(75,0,130,0.2));border:1px solid rgba(138,43,226,0.5);border-radius:10px;color:#ce93d8;font-size:0.9em;font-weight:700;cursor:pointer;">
-                        ✨ <span data-i18n="dreamInterpret">Interpretar Sueño con AI</span>
+                        ✨ <span data-i18n="dreamInterpret">Interpretar Sueño</span>
                     </button>
                     <div id="dreamInterpContainer" style="margin-top:12px;"></div>
                     <!-- Dream Alarm (Ensueños) -->
@@ -3984,9 +3984,9 @@ function updateModalTranslations() {
         'dayOptDiary': L ? 'Diario Personal' : 'Personal Diary',
         'dayOptDiaryDesc': L ? 'Reflexiones, emociones, notas' : 'Reflections, emotions, notes',
         'dayOptDreams': L ? 'Diario de Sueños' : 'Dream Journal',
-        'dayOptDreamsDesc': L ? 'Registra y analiza tus sueños con AI' : 'Record and analyze your dreams with AI',
+        'dayOptDreamsDesc': L ? 'Registra y analiza tus sueños' : 'Record and analyze your dreams',
         'dayOptInterp': L ? 'Interpretación del Día' : 'Day Interpretation',
-        'dayOptInterpDesc': L ? 'Análisis astrológico con AI' : 'Astrological analysis with AI'
+        'dayOptInterpDesc': L ? 'Análisis astrológico' : 'Astrological analysis'
     };
     Object.keys(i18nMap).forEach(function(key) {
         var els = document.querySelectorAll('[data-i18n="' + key + '"]');
@@ -5706,7 +5706,7 @@ function openDayInterpretationModal(date, lunarDay, dayData) {
     html += '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;font-size:0.78em;color:rgba(255,255,255,0.6);white-space:pre-line;line-height:1.5;max-height:160px;overflow-y:auto;">';
     html += summaryText.replace(/</g,'&lt;');
     html += '</div></div>';
-    html += '<div style="margin-top:12px;"><h4 style="color:#c9a840;margin-bottom:8px;">✦ ' + (L ? 'Interpretación AI' : 'AI Interpretation') + '</h4><div id="aiInterpDiv"></div></div>';
+    html += '<div style="margin-top:12px;"><h4 style="color:#c9a840;margin-bottom:8px;">✦ ' + (L ? 'Interpretación' : 'Interpretation') + '</h4><div id="aiInterpDiv"></div></div>';
     bodyEl.innerHTML = html;
     modal.classList.add('show');
 
@@ -6283,7 +6283,7 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
     var div = document.getElementById(targetDivId);
     if (!div) return;
     var L = currentLang === 'es';
-    var _readingTitle = readingTitle || (L ? 'Lectura AI' : 'AI Reading');
+    var _readingTitle = readingTitle || (L ? 'Lectura' : 'Reading');
     div.innerHTML = '<div style="text-align:center;padding:15px;"><div style="display:inline-block;width:24px;height:24px;border:3px solid rgba(201,168,64,0.3);border-top-color:#c9a840;border-radius:50%;animation:spin 0.8s linear infinite;"></div><div style="margin-top:8px;font-size:0.8em;color:rgba(255,255,255,0.4);">' + (L ? 'Consultando las estrellas...' : 'Consulting the stars...') + '</div></div>';
 
     try {
@@ -6395,7 +6395,7 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
         }
     } catch(e) {
         console.warn('AI interpretation error:', e);
-        div.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.85em;">' + (L ? 'Error al consultar AI: ' + e.message : 'AI query error: ' + e.message) + '</p>';
+        div.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.85em;">' + (L ? 'Error al consultar: ' + e.message : 'Query error: ' + e.message) + '</p>';
     }
 }
 
@@ -7074,7 +7074,7 @@ function openDiarioModal(date, lunarDay) {
     if (tabPLabel) tabPLabel.textContent = L ? 'Diario Personal' : 'Personal Diary';
     if (tabDLabel) tabDLabel.textContent = L ? 'Diario de Sueños' : 'Dream Journal';
     var dreamInterpLabel = document.querySelector('#dreamInterpBtn span');
-    if (dreamInterpLabel) dreamInterpLabel.textContent = L ? 'Interpretar Sueño con AI' : 'Interpret Dream with AI';
+    if (dreamInterpLabel) dreamInterpLabel.textContent = L ? 'Interpretar Sueño' : 'Interpret Dream';
 
     // Reset to personal tab
     switchDiarioTab('personal');
@@ -9381,7 +9381,7 @@ function showHistoricAspectsModal() {
         html += '<div style="font-size:0.82em;color:#cfd8dc;line-height:1.5;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:6px;">' + ev.meaning + '</div>';
         // AI interpretation button
         var evClickText = (ev.planet1 + ' ' + ev.symbol + ' ' + ev.planet2 + ' ' + ev.date + ' ' + ev.meaning).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        html += '<div onclick="event.stopPropagation();closeHistoricAspectsModal();setTimeout(function(){showBannerAspectDetail(\'' + evClickText + '\');},300);" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;margin-bottom:10px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.3);border-radius:8px;font-size:0.78em;color:#c9a840;font-weight:600;transition:background 0.2s;" onmouseover="this.style.background=\'rgba(201,168,64,0.25)\'" onmouseout="this.style.background=\'rgba(201,168,64,0.15)\'">' + (L ? '✨ Interpretar con IA' : '✨ Interpret with AI') + '</div>';
+        html += '<div onclick="event.stopPropagation();closeHistoricAspectsModal();setTimeout(function(){showBannerAspectDetail(\'' + evClickText + '\');},300);" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;margin-bottom:10px;background:rgba(201,168,64,0.15);border:1px solid rgba(201,168,64,0.3);border-radius:8px;font-size:0.78em;color:#c9a840;font-weight:600;transition:background 0.2s;" onmouseover="this.style.background=\'rgba(201,168,64,0.25)\'" onmouseout="this.style.background=\'rgba(201,168,64,0.15)\'">' + (L ? '✨ Interpretar' : '✨ Interpret') + '</div>';
         if (ev.history && ev.history.length) {
             var hid = 'hist_' + ev.planet1.replace(/[^a-z]/gi,'') + '_' + ev.symbol.charCodeAt(0);
             html += '<div style="margin-top:8px;">';
@@ -13105,7 +13105,7 @@ window.openSynastryView = function(profileId) {
     // AI Interpretation button
     html += '<div style="margin-top:14px;">';
     html += '<button onclick="interpretSynastry(\'' + name1.replace(/'/g,"\\'") + '\',\'' + name2.replace(/'/g,"\\'") + '\')" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(102,126,234,0.2),rgba(155,89,182,0.15));border:1px solid rgba(155,89,182,0.4);border-radius:10px;color:#c39bd3;font-size:0.88em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">';
-    html += '✨ ' + (L?'Interpretar Sinastría con AI':'Interpret Synastry with AI');
+    html += '✨ ' + (L?'Interpretar Sinastría':'Interpret Synastry');
     html += '</button></div>';
     html += '<div id="synastryInterpContainer"></div>';
 
@@ -13425,7 +13425,7 @@ window.showPlanetaryHourDetail = function(dataStr) {
 
     // AI interpret button
     html += '<button onclick="interpretPlanetaryHour(\'' + planet + '\', \'' + startTime + '\', \'' + endTime + '\', \'' + period + '\', \'' + dayRuler + '\', \'' + dateStr + '\')" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(201,168,64,0.2),rgba(255,149,0,0.1));border:1px solid rgba(201,168,64,0.4);border-radius:10px;color:#ffd54f;font-size:0.85em;font-weight:600;cursor:pointer;">';
-    html += '✦ ' + (L ? 'Interpretar con AI' : 'Interpret with AI');
+    html += '✦ ' + (L ? 'Interpretar' : 'Interpret');
     html += '</button>';
     html += '<div id="planetaryHourInterpDiv" style="margin-top:10px;"></div>';
 
@@ -17256,7 +17256,7 @@ function openNatalInterpretationModal() {
     html += '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;font-size:0.78em;color:rgba(255,255,255,0.6);white-space:pre-line;line-height:1.5;max-height:180px;overflow-y:auto;">';
     html += text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
     html += '</div></div>';
-    html += '<div style="margin-top:12px;"><h4 style="color:#c9a840;margin-bottom:8px;">✦ ' + (L ? 'Interpretación AI' : 'AI Interpretation') + '</h4><div id="aiInterpDiv"></div></div>';
+    html += '<div style="margin-top:12px;"><h4 style="color:#c9a840;margin-bottom:8px;">✦ ' + (L ? 'Interpretación' : 'Interpretation') + '</h4><div id="aiInterpDiv"></div></div>';
     bodyEl.innerHTML = html;
     modal.classList.add('show');
 
@@ -21858,11 +21858,11 @@ function openPreferencesModal() {
         '</div>'
     );
 
-    // ── Nombre en AI ──
+    // ── Nombre ──
     var useNameOn = localStorage.getItem('prefUseName') === 'true';
-    sectionsHtml += _s('👤', currentLang==='es'?'Nombre en AI':'Name in AI', '#7ec8ff',
+    sectionsHtml += _s('👤', currentLang==='es'?'Nombre':'Name', '#7ec8ff',
         '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;">' +
-            '<div style="flex:1;font-size:0.78em;color:rgba(255,255,255,0.6);">' + (currentLang==='es'?'Permitir que el AI use tu nombre en las respuestas':'Allow AI to use your name in responses') + '</div>' +
+            '<div style="flex:1;font-size:0.78em;color:rgba(255,255,255,0.6);">' + (currentLang==='es'?'Permitir que use tu nombre en las respuestas':'Allow use of your name in responses') + '</div>' +
             '<label style="position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0;"><input type="checkbox" ' + (useNameOn?'checked':'') + ' onchange="localStorage.setItem(\'prefUseName\',this.checked?\'true\':\'false\');openPreferencesModal();" style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:' + (useNameOn?'rgba(78,205,196,0.5)':'rgba(255,255,255,0.15)') + ';border-radius:26px;transition:0.3s;"><span style="position:absolute;height:20px;width:20px;left:' + (useNameOn?'24px':'3px') + ';bottom:3px;background:white;border-radius:50%;transition:0.3s;display:block;"></span></span></label>' +
         '</div>'
     );
@@ -21896,19 +21896,19 @@ function openPreferencesModal() {
         '<button onclick="closePreferencesModal();setTimeout(()=>openLocationSelector(),200);" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(74,158,255,0.15),rgba(74,158,255,0.05));border:1px solid rgba(74,158,255,0.35);border-radius:8px;color:#7ec8ff;font-size:0.85em;font-weight:600;cursor:pointer;">📍 ' + (currentLang==='es'?'Cambiar ubicación':'Change location') + '</button>'
     );
 
-    // ── Personalidad AI ──
+    // ── Personalidad ──
     var personaContent = '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;">';
     _aiPersonas.forEach(function(p) {
         var isActive = p.id === _activePersonaId;
         personaContent += '<button onclick="setActivePersona(\'' + p.id + '\');openPreferencesModal();" style="width:100%;padding:8px 10px;text-align:left;border-radius:8px;cursor:pointer;background:' + (isActive?'linear-gradient(135deg,rgba(201,168,64,0.2),rgba(201,168,64,0.06))':'rgba(255,255,255,0.03)') + ';border:' + (isActive?'2px solid rgba(201,168,64,0.6)':'1px solid rgba(255,255,255,0.1)') + ';color:' + (isActive?'#c9a840':'rgba(255,255,255,0.5)') + ';"><div style="font-size:0.82em;font-weight:700;">' + p.icon + ' ' + (currentLang==='es'?p.name_es:p.name_en) + (isActive?' ✓':'') + '</div><div style="font-size:0.65em;margin-top:1px;opacity:0.7;">' + (currentLang==='es'?p.desc_es:p.desc_en) + '</div></button>';
     });
     personaContent += '</div>';
-    personaContent += '<button onclick="resetAllAIChats();this.textContent=currentLang===\'es\'?\'✓ Chats reiniciados\':\'✓ Chats reset\';this.style.color=\'#4ecdc4\';setTimeout(()=>{this.textContent=currentLang===\'es\'?\'🗑 Reiniciar todos los chats AI\':\'🗑 Reset all AI chats\';this.style.color=\'#ff6b6b\';},2000);" style="width:100%;padding:8px;background:rgba(255,107,107,0.06);border:1px solid rgba(255,107,107,0.3);border-radius:8px;color:#ff6b6b;font-size:0.75em;font-weight:600;cursor:pointer;">🗑 ' + (currentLang==='es'?'Reiniciar todos los chats AI':'Reset all AI chats') + '</button>';
+    personaContent += '<button onclick="resetAllAIChats();this.textContent=currentLang===\'es\'?\'✓ Chats reiniciados\':\'✓ Chats reset\';this.style.color=\'#4ecdc4\';setTimeout(()=>{this.textContent=currentLang===\'es\'?\'🗑 Reiniciar todos los chats\':\'🗑 Reset all chats\';this.style.color=\'#ff6b6b\';},2000);" style="width:100%;padding:8px;background:rgba(255,107,107,0.06);border:1px solid rgba(255,107,107,0.3);border-radius:8px;color:#ff6b6b;font-size:0.75em;font-weight:600;cursor:pointer;">🗑 ' + (currentLang==='es'?'Reiniciar todos los chats':'Reset all chats') + '</button>';
     var activeP = getActivePersona();
-    sectionsHtml += _s('🧠', (currentLang==='es'?'Personalidad AI':'AI Persona') + ' <span style="font-size:0.75em;opacity:0.6;font-weight:400;">(' + (activeP?activeP.icon+' '+(currentLang==='es'?activeP.name_es:activeP.name_en):'—') + ')</span>', '#7ec8ff', personaContent);
+    sectionsHtml += _s('🧠', (currentLang==='es'?'Personalidad':'Persona') + ' <span style="font-size:0.75em;opacity:0.6;font-weight:400;">(' + (activeP?activeP.icon+' '+(currentLang==='es'?activeP.name_es:activeP.name_en):'—') + ')</span>', '#7ec8ff', personaContent);
 
-    // ── Personalidad AI Sueños (independent) ──
-    var dreamPersonaContent = '<div style="font-size:0.72em;color:rgba(255,255,255,0.4);margin-bottom:8px;">' + (currentLang==='es'?'Selecciona la personalidad AI que interpreta tus sueños (independiente de la principal):':'Select the AI personality that interprets your dreams (independent from main):') + '</div>';
+    // ── Personalidad Sueños (independent) ──
+    var dreamPersonaContent = '<div style="font-size:0.72em;color:rgba(255,255,255,0.4);margin-bottom:8px;">' + (currentLang==='es'?'Selecciona la personalidad que interpreta tus sueños (independiente de la principal):':'Select the personality that interprets your dreams (independent from main):') + '</div>';
     dreamPersonaContent += '<div style="display:flex;flex-direction:column;gap:5px;">';
     var dreamPId = getDreamPersonaId();
     _aiPersonas.forEach(function(p) {
@@ -21917,9 +21917,9 @@ function openPreferencesModal() {
     });
     dreamPersonaContent += '</div>';
     var activeDreamP = getDreamPersona();
-    sectionsHtml += _s('🌙', (currentLang==='es'?'AI Sueños':'Dream AI') + ' <span style="font-size:0.75em;opacity:0.6;font-weight:400;">(' + (activeDreamP?activeDreamP.icon+' '+(currentLang==='es'?activeDreamP.name_es:activeDreamP.name_en):'—') + ')</span>', '#7ec8ff', dreamPersonaContent);
+    sectionsHtml += _s('🌙', (currentLang==='es'?'Sueños':'Dreams') + ' <span style="font-size:0.75em;opacity:0.6;font-weight:400;">(' + (activeDreamP?activeDreamP.icon+' '+(currentLang==='es'?activeDreamP.name_es:activeDreamP.name_en):'—') + ')</span>', '#7ec8ff', dreamPersonaContent);
 
-    // ── Asistente AI / API Key ──
+    // ── Asistente / API Key ──
     var aiContent = '<div style="font-size:0.75em;color:#b388ff;margin-bottom:4px;">✓ ' + (currentLang==='es'?'Asistente Moon Sync activo':'Moon Sync Assistant active') + '</div>' +
         '<div style="font-size:0.68em;color:rgba(255,255,255,0.3);margin-bottom:8px;">Gemini 2.5 Flash Lite</div>' +
         (localStorage.getItem('geminiApiKey')?'<div style="font-size:0.72em;color:#80cbc4;margin-bottom:6px;">🔑 ' + (currentLang==='es'?'Usando tu API key personal':'Using your personal API key') + '</div>':'') +
@@ -21928,7 +21928,7 @@ function openPreferencesModal() {
             '<input type="password" id="prefGeminiKey" value="' + (localStorage.getItem('geminiApiKey')||'') + '" placeholder="AIza..." style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(179,136,255,0.3);border-radius:8px;color:white;font-size:0.82em;outline:none;" />' +
             '<button onclick="var k=document.getElementById(\'prefGeminiKey\').value.trim();if(k){localStorage.setItem(\'geminiApiKey\',k);}else{localStorage.removeItem(\'geminiApiKey\');}this.textContent=\'✓\';setTimeout(()=>{this.textContent=currentLang===\'es\'?\'Guardar\':\'Save\';},1500);" style="padding:8px 14px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:8px;color:white;font-size:0.8em;font-weight:700;cursor:pointer;">' + (currentLang==='es'?'Guardar':'Save') + '</button>' +
         '</div>';
-    sectionsHtml += _s('✨', currentLang==='es'?'Asistente AI':'AI Assistant', '#7ec8ff', aiContent);
+    sectionsHtml += _s('✨', currentLang==='es'?'Asistente':'Assistant', '#7ec8ff', aiContent);
 
     // ── Google Calendar ──
     var gcalContent = '';
@@ -23557,7 +23557,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v418';
+const APP_VERSION = 'v419';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -23797,7 +23797,7 @@ DOMTokenList.prototype.add = function() {
 </script>
 
 <!-- AI Chat FAB Button -->
-<button id="aiChatFab" onclick="openAIChat()" title="AI Assistant">✨</button>
+<button id="aiChatFab" onclick="openAIChat()" title="Assistant">✨</button>
 
 <!-- Hoy Interpretation Modal -->
 <div id="hoyInterpModal">
@@ -25527,7 +25527,7 @@ function addAIMessage(role, text, forceScrollBottom) {
             shareBtn.innerHTML = '📤 ' + (currentLang === 'es' ? 'Compartir' : 'Share');
             shareBtn.style.cssText = 'padding:4px 10px;font-size:0.72em;background:rgba(78,205,196,0.2);border:1px solid rgba(78,205,196,0.35);border-radius:6px;color:#7dd3c8;cursor:pointer;font-weight:600;';
             shareBtn.onclick = function() {
-                navigator.share({ title: 'Moon Sync AI', text: rawText }).catch(() => {});
+                navigator.share({ title: 'Moon Sync', text: rawText }).catch(() => {});
             };
             btnBar.appendChild(shareBtn);
         }
@@ -25646,7 +25646,7 @@ async function sendAIMessage() {
                 if (personalKey) {
                     addAIMessage('error', currentLang === 'es' ? '🔑 API key inválida. Ve a ⚙️ Preferencias para cambiarla.' : '🔑 Invalid API key. Go to ⚙️ Preferences to change it.');
                 } else {
-                    addAIMessage('error', currentLang === 'es' ? '⚠️ El servicio AI tiene un problema temporal. Intenta de nuevo más tarde.' : '⚠️ AI service has a temporary issue. Try again later.');
+                    addAIMessage('error', currentLang === 'es' ? '⚠️ El servicio tiene un problema temporal. Intenta de nuevo más tarde.' : '⚠️ Service has a temporary issue. Try again later.');
                 }
             } else {
                 addAIMessage('error', '❌ ' + errMsg);
@@ -25684,7 +25684,7 @@ async function sendAIMessage() {
                 var diDate = match[1].trim();
                 var diText = match[2].trim();
                 var existingDiary = localStorage.getItem('diary_' + diDate) || '';
-                localStorage.setItem('diary_' + diDate, existingDiary + (existingDiary ? '\n\n' : '') + '✨ AI: ' + diText);
+                localStorage.setItem('diary_' + diDate, existingDiary + (existingDiary ? '\n\n' : '') + '✨ ' + diText);
                 if (typeof scheduleAutoBackup === 'function') scheduleAutoBackup();
                 actionsExecuted.push((currentLang === 'es' ? '✅ Nota de diario creada: ' : '✅ Diary note created: ') + diDate);
             } catch(ae) { console.warn('AI create diary error:', ae); }
