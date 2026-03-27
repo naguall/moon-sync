@@ -18804,174 +18804,348 @@ function goToToday() {
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
+// Build cache of lunar phase times for the current/next cycles
+function buildPhaseTimesCache() {
+    if (window._phaseTimesCache && window._phaseTimesCache.builtAt && (Date.now() - window._phaseTimesCache.builtAt < 86400000)) return;
+    var now = new Date();
+    var nm = findNearestNewMoon(now);
+    var phases = [
+        { deg: 0, es: 'Luna Nueva', en: 'New Moon', icon: '🌑' },
+        { deg: 90, es: 'Cuarto Creciente', en: 'First Quarter', icon: '🌓' },
+        { deg: 180, es: 'Luna Llena', en: 'Full Moon', icon: '🌕' },
+        { deg: 270, es: 'Cuarto Menguante', en: 'Last Quarter', icon: '🌗' }
+    ];
+    var times = [];
+    var searchDate = new Date(nm);
+    for (var i = 0; i < phases.length; i++) {
+        var exactTime = findExactPerfection(searchDate, phases[i].deg);
+        times.push(Object.assign({}, phases[i], { exactTime: exactTime }));
+        searchDate = new Date(exactTime);
+        searchDate.setDate(searchDate.getDate() + 1);
+    }
+    // Also compute next cycle's first phase (new moon)
+    var nextNm = findNearestNewMoon(new Date(times[times.length-1].exactTime.getTime() + 86400000*2));
+    if (nextNm) {
+        var nextExact = findExactPerfection(nextNm, 0);
+        times.push(Object.assign({}, phases[0], { exactTime: nextExact }));
+    }
+    window._phaseTimesCache = { times: times, builtAt: Date.now() };
+}
+
+function getLunarPhaseEnrichment(phaseDate) {
+    var moonPos = getMoonPosition(phaseDate);
+    var distance = moonPos.distance;
+    var zodiacSign = getZodiacSignFromLongitude(moonPos.longitude);
+    var aspects = calculateAspects(phaseDate);
+    var moonAspects = aspects.filter(function(a) { return a.planet1 === 'Luna' || a.planet2 === 'Luna'; });
+    var shortAspects = moonAspects.slice(0, 2).map(function(a) {
+        var other = a.planet1 === 'Luna' ? a.planet2 : a.planet1;
+        return a.symbol + ' ' + other;
+    }).join(', ');
+    return {
+        distance: Math.round(distance),
+        zodiacSign: zodiacSign,
+        moonAspects: shortAspects
+    };
+}
+
 function checkNotifications() {
-    console.log("🔔 checkNotifications running at", new Date().toLocaleTimeString(), "events:", Object.keys(events).length, "events object:", events);
-    // Check if notifications are enabled by user
-    const notificationsEnabled = localStorage.getItem('notificationsEnabled') !== 'false';
+    console.log("🔔 checkNotifications running at", new Date().toLocaleTimeString());
     
-    if (!notificationsEnabled) {
-        console.log("❌ Notifications disabled by user");
-        return;
-    }
-    if (!('Notification' in window)) {
-        console.log("❌ Notification API not available");
-        return;
-    }
-    if (Notification.permission !== 'granted') {
-        console.log("❌ Notification permission not granted. Current permission:", Notification.permission);
+    // Check if notifications are enabled
+    var notificationsEnabled = localStorage.getItem('notificationsEnabled') !== 'false';
+    if (!notificationsEnabled || !('Notification' in window) || Notification.permission !== 'granted') {
+        console.log("❌ Notifications disabled or unavailable");
         return;
     }
     
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayKey = getDateKey(today);
-
-    console.log("📅 Today's date key:", todayKey, "Available keys:", Object.keys(events));
-
-    // Check user events - uses saved reminders from each event
-    const todayEvents = events[todayKey] || [];
-    console.log("📅 Today's events:", todayEvents.length, "events:", todayEvents);
-    todayEvents.forEach(event => {
-        if (event.time) {
-            const [hours, minutes] = event.time.split(':');
-            const eventTime = new Date(today);
-            eventTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-            
-            // Use saved reminders, or default to 15 min and at-time
-            const reminders = event.reminders && event.reminders.length > 0 
-                ? event.reminders 
-                : [{minutes: 15, label: '15 min'}, {minutes: 0, label: 'at time'}];
-            
-            reminders.forEach(reminder => {
-                const reminderKey = `notified-${todayKey}-${event.title}-${reminder.minutes}`;
-                if (localStorage.getItem(reminderKey)) return; // Already notified for this reminder
+    var now = new Date();
+    var todayKey = getDateKey(now);
+    var L = currentLang === 'es';
+    
+    // Load notification preferences
+    var notifPrefs = JSON.parse(localStorage.getItem('notifPrefs') || '{"lunarPhases":true,"eclipses":true,"retrogrades":true,"signChanges":true,"interPlanetaryAspects":true,"astronomicalEvents":true,"userEvents":true}');
+    
+    // 1. Check lunar phase notifications (hour-precise)
+    if (notifPrefs.lunarPhases) {
+        buildPhaseTimesCache();
+        if (window._phaseTimesCache && window._phaseTimesCache.times) {
+            var times = window._phaseTimesCache.times;
+            for (var pi = 0; pi < times.length; pi++) {
+                var phaseTime = times[pi].exactTime;
+                var phaseName = L ? times[pi].es : times[pi].en;
+                var phaseId = times[pi].es.replace(/\s+/g, '-');
                 
-                const notifyTime = new Date(eventTime.getTime() - reminder.minutes * 60 * 1000);
-                const windowEnd = new Date(notifyTime.getTime() + 5 * 60 * 1000); // 2 min window
+                // Check 12-hour before
+                var time12hBefore = new Date(phaseTime.getTime() - 12*3600000);
+                var min12hBefore = new Date(time12hBefore.getTime() - 60000);
+                var max12hBefore = new Date(time12hBefore.getTime() + 60000);
+                var key12h = 'notif-lunarPhases-' + phaseId + '-12h';
                 
-                if (now >= notifyTime && now <= windowEnd) {
-                    const timeLabel = reminder.minutes === 0 
-                        ? (currentLang === 'es' ? 'Ahora' : 'Now')
-                        : (currentLang === 'es' ? `En ${reminder.minutes} min` : `In ${reminder.minutes} min`);
-                    
-                    sendNotif((currentLang === 'es' ? 'Evento: ' : 'Event: ') + event.title, {
-                        body: `${timeLabel} - ${event.time} ${event.title}`,
-                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">📅</text></svg>',
-                        tag: `event-${todayKey}-${event.title}-${reminder.minutes}`,
+                if (now >= min12hBefore && now <= max12hBefore && !localStorage.getItem(key12h)) {
+                    var enrich = getLunarPhaseEnrichment(phaseTime);
+                    var body12h = L 
+                        ? 'En 12 horas: ' + phaseName + ' en ' + enrich.zodiacSign + ' | ' + enrich.distance + ' km'
+                        : 'In 12h: ' + phaseName + ' in ' + enrich.zodiacSign + ' | ' + enrich.distance + ' km';
+                    sendNotif(times[pi].icon + ' ' + phaseName, {
+                        body: body12h,
+                        tag: 'lunar-phase-12h-' + phaseId,
+                        requireInteraction: false
+                    });
+                    localStorage.setItem(key12h, 'true');
+                    console.log('🌙 12h before lunar phase:', phaseName);
+                }
+                
+                // Check 5 minutes before
+                var time5mBefore = new Date(phaseTime.getTime() - 5*60000);
+                var min5m = new Date(time5mBefore.getTime() - 60000);
+                var max5m = new Date(time5mBefore.getTime() + 60000);
+                var key5m = 'notif-lunarPhases-' + phaseId + '-5m';
+                
+                if (now >= min5m && now <= max5m && !localStorage.getItem(key5m)) {
+                    var enrich2 = getLunarPhaseEnrichment(phaseTime);
+                    var body5m = phaseName + ' en ' + enrich2.zodiacSign + ' | ' + enrich2.distance + ' km' + (enrich2.moonAspects ? ' | ' + enrich2.moonAspects : '');
+                    sendNotif(times[pi].icon + ' ' + phaseName, {
+                        body: body5m,
+                        tag: 'lunar-phase-5m-' + phaseId,
                         requireInteraction: true
                     });
-                    
-                    localStorage.setItem(reminderKey, 'true');
-                    console.log(`🔔 Notification sent: ${event.title} (${reminder.label})`);
+                    localStorage.setItem(key5m, 'true');
+                    console.log('🌙 5min before lunar phase:', phaseName);
                 }
-            });
+                
+                // Catch-up on app open (if both were missed)
+                var keyCatchup = 'notif-lunarPhases-' + phaseId + '-catchup';
+                if (!localStorage.getItem(key12h) && !localStorage.getItem(key5m) && phaseTime < now && phaseTime > new Date(now.getTime() - 24*3600000)) {
+                    if (!localStorage.getItem(keyCatchup)) {
+                        var enrich3 = getLunarPhaseEnrichment(phaseTime);
+                        var bodyCatch = phaseName + ' en ' + enrich3.zodiacSign + ' | ' + enrich3.distance + ' km' + (enrich3.moonAspects ? ' | ' + enrich3.moonAspects : '');
+                        sendNotif(times[pi].icon + ' ' + phaseName + ' (' + (L ? 'hoy' : 'today') + ')', {
+                            body: bodyCatch,
+                            tag: 'lunar-phase-catchup-' + phaseId,
+                            requireInteraction: true
+                        });
+                        localStorage.setItem(keyCatchup, 'true');
+                        console.log('🌙 Catch-up lunar phase:', phaseName);
+                    }
+                }
+            }
         }
-    });
+    }
     
-    // Check planetary events (once per day)
-    const notifiedKey = `notified-${todayKey}`;
-    if (!localStorage.getItem(notifiedKey)) {
-        const planetaryEvents = getAllPlanetaryEvents(today);
-        const astronomicalEvent = isAstronomicalEvent(today);
-        const eclipse = getEclipseInfo(today);
-
-        // Check if today is start of a lunar phase
-        const lunarPhaseNotified = checkLunarPhaseStart(today);
-
-        if (planetaryEvents.totalCount > 0 || lunarPhaseNotified || astronomicalEvent || eclipse) {
-            const messages = [];
-
-            // Astronomical events (equinox, solstice)
-            if (astronomicalEvent) {
-                messages.push(currentLang === 'es' ? astronomicalEvent.es : astronomicalEvent.en);
-            }
-
-            // Eclipses
-            if (eclipse) {
-                messages.push(`${eclipse.type === 'solar' ? '☀️' : '🌒'} ${eclipse.name}`);
-            } else if (planetaryEvents.eclipse) {
-                messages.push(`${planetaryEvents.eclipse.type === 'solar' ? '☀️' : '🌕'} ${planetaryEvents.eclipse.name}`);
-            }
-
-            // Inter-planetary aspects (major ones)
-            planetaryEvents.interPlanetaryAspects.forEach(asp => {
-                if (asp.isGenerational || asp.isImportant) {
-                    messages.push(`${asp.planet1} ${asp.symbol} ${asp.planet2}`);
-                }
-            });
-
-            // Sign changes (only important ones)
-            planetaryEvents.signChanges.forEach(change => {
-                if (change.isGenerational || change.isCritical || change.isImportant) {
-                    messages.push(`${change.planet} → ${change.toSign}`);
-                }
-            });
-
-            if (messages.length > 0) {
-                sendNotif('⭐ ' + (currentLang === 'es' ? 'Eventos Astrológicos Hoy' : 'Astrological Events Today'), {
-                    body: messages.slice(0, 3).join('\n'),
-                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">⭐</text></svg>',
-                    tag: `astro-${todayKey}`,
+    // 2. Check eclipse notifications (date-based)
+    if (notifPrefs.eclipses) {
+        var eclipse = getEclipseInfo(now);
+        var eclipseTomorrow = getEclipseInfo(new Date(now.getTime() + 24*3600000));
+        
+        if (eclipseTomorrow && now.getHours() >= 20) {
+            var keyEcl12h = 'notif-eclipses-' + todayKey + '-12h';
+            if (!localStorage.getItem(keyEcl12h)) {
+                sendNotif(L ? 'Eclipse Mañana' : 'Eclipse Tomorrow', {
+                    body: (L ? 'Mañana: ' : 'Tomorrow: ') + eclipseTomorrow.name,
+                    tag: 'eclipse-12h-' + todayKey,
                     requireInteraction: false
                 });
-
-                localStorage.setItem(notifiedKey, 'true');
-                console.log(`🔔 Astronomical event notification sent: ${messages.join(', ')}`);
+                localStorage.setItem(keyEcl12h, 'true');
+                console.log('☀️ 12h before eclipse:', eclipseTomorrow.name);
+            }
+        }
+        
+        if (eclipse && now.getHours() < 6) {
+            var keyEclDay = 'notif-eclipses-' + todayKey + '-day';
+            if (!localStorage.getItem(keyEclDay)) {
+                sendNotif(L ? 'Eclipse Hoy' : 'Eclipse Today', {
+                    body: eclipse.name,
+                    tag: 'eclipse-day-' + todayKey,
+                    requireInteraction: true
+                });
+                localStorage.setItem(keyEclDay, 'true');
+                console.log('☀️ Eclipse today:', eclipse.name);
             }
         }
     }
-
-    // Enhanced notifications for specific event types
-    // Send separate notifications for eclipses in the morning
-    const eclipseNotificationKey = `notified-eclipse-${todayKey}`;
-    if (!localStorage.getItem(eclipseNotificationKey)) {
-        const eclipse = getEclipseInfo(today);
-        if (eclipse && new Date().getHours() < 12) {
-            sendNotif('☀️ ' + (currentLang === 'es' ? 'Eclipse Hoy' : 'Eclipse Today'), {
-                body: eclipse.name,
-                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">☀️</text></svg>',
-                tag: `eclipse-${todayKey}`,
-                requireInteraction: true
+    
+    // 3. Check retrograde notifications (date-based)
+    if (notifPrefs.retrogrades) {
+        var retrogrades = getRetrogrades(now);
+        if (retrogrades.length > 0) {
+            var retroTomorrow = getRetrogrades(new Date(now.getTime() + 24*3600000));
+            var newRetros = retroTomorrow.filter(function(r) {
+                return !retrogrades.find(function(x) { return x.planet === r.planet; });
             });
-            localStorage.setItem(eclipseNotificationKey, 'true');
-            console.log(`🔔 Eclipse notification sent: ${eclipse.name}`);
+            
+            if (newRetros.length > 0 && now.getHours() >= 20) {
+                newRetros.forEach(function(r) {
+                    var keyRet12h = 'notif-retrogrades-' + r.planet + '-12h';
+                    if (!localStorage.getItem(keyRet12h)) {
+                        sendNotif(L ? r.planet + ' Retrógrado' : r.planet + ' Retrograde', {
+                            body: (L ? 'Comienza mañana' : 'Starts tomorrow'),
+                            tag: 'retrograde-12h-' + r.planet,
+                            requireInteraction: false
+                        });
+                        localStorage.setItem(keyRet12h, 'true');
+                        console.log('🔄 Retrograde starting tomorrow:', r.planet);
+                    }
+                });
+            }
+            
+            newRetros.forEach(function(r) {
+                var keyRetDay = 'notif-retrogrades-' + r.planet + '-day';
+                if (!localStorage.getItem(keyRetDay) && now.getHours() < 6) {
+                    sendNotif(L ? r.planet + ' Retrógrado' : r.planet + ' Retrograde', {
+                        body: (L ? 'Hoy comienza' : 'Starts today'),
+                        tag: 'retrograde-day-' + r.planet,
+                        requireInteraction: true
+                    });
+                    localStorage.setItem(keyRetDay, 'true');
+                    console.log('🔄 Retrograde started today:', r.planet);
+                }
+            });
         }
     }
-
-    // Separate notifications for equinoxes and solstices
-    const seasonalEventKey = `notified-seasonal-${todayKey}`;
-    if (!localStorage.getItem(seasonalEventKey)) {
-        const seasonalEvent = isAstronomicalEvent(today);
-        if (seasonalEvent && new Date().getHours() < 12) {
-            sendNotif('🌍 ' + (currentLang === 'es' ? 'Evento Astronómico' : 'Astronomical Event'), {
-                body: currentLang === 'es' ? seasonalEvent.es : seasonalEvent.en,
-                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🌍</text></svg>',
-                tag: `seasonal-${todayKey}`,
-                requireInteraction: false
+    
+    // 4. Check sign change notifications (date-based)
+    if (notifPrefs.signChanges) {
+        var signChanges = getSignChanges(now);
+        if (signChanges.length > 0) {
+            var changesTomorrow = getSignChanges(new Date(now.getTime() + 24*3600000));
+            var newChanges = changesTomorrow.filter(function(c) {
+                return !signChanges.find(function(x) { return x.planet === c.planet; });
             });
-            localStorage.setItem(seasonalEventKey, 'true');
-            console.log(`🔔 Seasonal event notification sent: ${seasonalEvent.es || seasonalEvent.en}`);
+            
+            if (newChanges.length > 0 && now.getHours() >= 20) {
+                newChanges.forEach(function(c) {
+                    var keySch12h = 'notif-signChanges-' + c.planet + '-12h';
+                    if (!localStorage.getItem(keySch12h)) {
+                        sendNotif(L ? c.planet + ' entra en ' + c.toSign : c.planet + ' enters ' + c.toSign, {
+                            body: (L ? 'Mañana' : 'Tomorrow'),
+                            tag: 'signchange-12h-' + c.planet,
+                            requireInteraction: false
+                        });
+                        localStorage.setItem(keySch12h, 'true');
+                        console.log('→ Sign change tomorrow:', c.planet, c.toSign);
+                    }
+                });
+            }
+            
+            newChanges.forEach(function(c) {
+                var keySchDay = 'notif-signChanges-' + c.planet + '-day';
+                if (!localStorage.getItem(keySchDay) && now.getHours() < 6) {
+                    sendNotif(L ? c.planet + ' entra en ' + c.toSign : c.planet + ' enters ' + c.toSign, {
+                        body: (L ? 'Hoy' : 'Today'),
+                        tag: 'signchange-day-' + c.planet,
+                        requireInteraction: true
+                    });
+                    localStorage.setItem(keySchDay, 'true');
+                    console.log('→ Sign change today:', c.planet, c.toSign);
+                }
+            });
         }
     }
-
-    // Separate notifications for major planetary aspects
-    const majorAspectsKey = `notified-aspects-${todayKey}`;
-    if (!localStorage.getItem(majorAspectsKey)) {
-        const planetaryEvents = getAllPlanetaryEvents(today);
-        const majorAspects = planetaryEvents.interPlanetaryAspects.filter(asp => asp.isGenerational || asp.isImportant || asp.isMajor);
-        if (majorAspects.length > 0 && new Date().getHours() < 12) {
-            const aspectMessages = majorAspects.slice(0, 3).map(asp => `${asp.planet1} ${asp.symbol} ${asp.planet2}`);
-            sendNotif('⚛️ ' + (currentLang === 'es' ? 'Aspectos Planetarios' : 'Planetary Aspects'), {
-                body: aspectMessages.join('\n'),
-                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">⚛️</text></svg>',
-                tag: `aspects-${todayKey}`,
-                requireInteraction: false
+    
+    // 5. Check inter-planetary aspects (date-based)
+    if (notifPrefs.interPlanetaryAspects) {
+        var aspects = getInterPlanetaryAspects(now);
+        var majorAspects = aspects.filter(function(a) { return a.isGenerational || a.isImportant || a.isMajor; });
+        
+        if (majorAspects.length > 0) {
+            var aspectsTomorrow = getInterPlanetaryAspects(new Date(now.getTime() + 24*3600000));
+            var newAspects = majorAspects.filter(function(a) {
+                return !aspectsTomorrow.find(function(x) { return x.planet1 === a.planet1 && x.planet2 === a.planet2 && x.aspect === a.aspect; });
             });
-            localStorage.setItem(majorAspectsKey, 'true');
-            console.log(`🔔 Major aspects notification sent: ${aspectMessages.join(', ')}`);
+            
+            if (newAspects.length > 0 && now.getHours() >= 20) {
+                var keyAsp12h = 'notif-interPlanetaryAspects-12h-' + todayKey;
+                if (!localStorage.getItem(keyAsp12h)) {
+                    var aspMsg = newAspects.slice(0, 2).map(function(a) { return a.planet1 + ' ' + a.symbol + ' ' + a.planet2; }).join(', ');
+                    sendNotif(L ? 'Aspectos Planetarios' : 'Planetary Aspects', {
+                        body: (L ? 'Mañana: ' : 'Tomorrow: ') + aspMsg,
+                        tag: 'aspects-12h-' + todayKey,
+                        requireInteraction: false
+                    });
+                    localStorage.setItem(keyAsp12h, 'true');
+                    console.log('⚛️ Major aspects tomorrow');
+                }
+            }
+            
+            if (newAspects.length > 0 && now.getHours() < 6) {
+                var keyAspDay = 'notif-interPlanetaryAspects-day-' + todayKey;
+                if (!localStorage.getItem(keyAspDay)) {
+                    var aspMsg2 = newAspects.slice(0, 2).map(function(a) { return a.planet1 + ' ' + a.symbol + ' ' + a.planet2; }).join(', ');
+                    sendNotif(L ? 'Aspectos Planetarios' : 'Planetary Aspects', {
+                        body: aspMsg2,
+                        tag: 'aspects-day-' + todayKey,
+                        requireInteraction: true
+                    });
+                    localStorage.setItem(keyAspDay, 'true');
+                    console.log('⚛️ Major aspects today');
+                }
+            }
         }
+    }
+    
+    // 6. Check astronomical events (equinoxes, solstices)
+    if (notifPrefs.astronomicalEvents) {
+        var astroEvent = isAstronomicalEvent(now);
+        if (astroEvent && now.getHours() < 6) {
+            var keyAstro = 'notif-astronomicalEvents-' + todayKey;
+            if (!localStorage.getItem(keyAstro)) {
+                var astroText = L ? astroEvent.es : astroEvent.en;
+                sendNotif(L ? 'Evento Astronómico' : 'Astronomical Event', {
+                    body: astroText,
+                    tag: 'astro-' + todayKey,
+                    requireInteraction: false
+                });
+                localStorage.setItem(keyAstro, 'true');
+                console.log('🌍 Astronomical event:', astroText);
+            }
+        }
+    }
+    
+    // 7. Check user calendar events
+    if (notifPrefs.userEvents) {
+        var todayEvents = events[todayKey] || [];
+        todayEvents.forEach(function(event) {
+            if (event.time) {
+                var parts = event.time.split(':');
+                var eventTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+                var reminders = (event.reminders && event.reminders.length > 0) 
+                    ? event.reminders 
+                    : [{minutes: 15, label: '15 min'}, {minutes: 0, label: 'at time'}];
+                
+                reminders.forEach(function(reminder) {
+                    var reminderKey = 'notif-userEvents-' + todayKey + '-' + event.title + '-' + reminder.minutes;
+                    if (!localStorage.getItem(reminderKey)) {
+                        var notifyTime = new Date(eventTime.getTime() - reminder.minutes * 60 * 1000);
+                        var min = new Date(notifyTime.getTime() - 60000);
+                        var max = new Date(notifyTime.getTime() + 60000);
+                        
+                        if (now >= min && now <= max) {
+                            var timeLabel = reminder.minutes === 0
+                                ? (L ? 'Ahora' : 'Now')
+                                : (L ? 'En ' + reminder.minutes + ' min' : 'In ' + reminder.minutes + ' min');
+                            sendNotif((L ? 'Evento: ' : 'Event: ') + event.title, {
+                                body: timeLabel + ' - ' + event.time,
+                                tag: 'event-' + todayKey + '-' + event.title + '-' + reminder.minutes,
+                                requireInteraction: true
+                            });
+                            localStorage.setItem(reminderKey, 'true');
+                            console.log('📅 Event reminder:', event.title);
+                        }
+                    }
+                });
+            }
+        });
     }
 }
+
+function handleNotifCategoryToggle(categoryId, enabled) {
+    var notifPrefs = JSON.parse(localStorage.getItem('notifPrefs') || '{"lunarPhases":true,"eclipses":true,"retrogrades":true,"signChanges":true,"interPlanetaryAspects":true,"astronomicalEvents":true,"userEvents":true}');
+    notifPrefs[categoryId] = enabled;
+    localStorage.setItem('notifPrefs', JSON.stringify(notifPrefs));
+    console.log('Notification preference updated:', categoryId, enabled);
+}
+
 
 // Check if today (or yesterday, if missed) is a lunar phase perfection day
 function checkLunarPhaseStart(date) {
@@ -19357,7 +19531,7 @@ function openPreferencesModal() {
             <div style="font-size:0.85em;font-weight:700;color:#7ec8ff;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">
                 ${currentLang==='es'?'Notificaciones':'Notifications'}
             </div>
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;margin-bottom:10px;">
                 <span style="font-size:1.3em;">${notifEnabled?'🔔':'🔕'}</span>
                 <div style="flex:1;">
                     <div style="font-size:0.88em;font-weight:600;color:${notifEnabled?'#4ecdc4':'rgba(255,255,255,0.5)'};">
@@ -19366,7 +19540,7 @@ function openPreferencesModal() {
                     <div style="font-size:0.72em;color:rgba(255,255,255,0.4);">
                         ${notifPermission==='denied'?(currentLang==='es'?'Bloqueadas en el navegador':'Blocked in browser'):
                           notifPermission==='unsupported'?(currentLang==='es'?'No soportadas':'Not supported'):
-                          (currentLang==='es'?'Eventos: 15 min antes | Aspectos: inicio del día':'Events: 15 min before | Aspects: start of day')}
+                          (currentLang==='es'?'Múltiples categorías disponibles':'Multiple categories available')}
                     </div>
                 </div>
                 <label style="position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0;">
@@ -19381,13 +19555,59 @@ function openPreferencesModal() {
                 </label>
             </div>
             ${notifPermission==='denied'?`
-            <div style="margin-top:8px;padding:8px;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);border-radius:6px;font-size:0.72em;color:#ff6b6b;">
+            <div style="margin-top:8px;padding:8px;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);border-radius:6px;font-size:0.72em;color:#ff6b6b;margin-bottom:10px;">
                 ${currentLang==='es'?
                 '⚠️ Las notificaciones están bloqueadas en tu navegador. Haz clic en el candado 🔒 de la barra de direcciones → Configuración del sitio → Notificaciones → Permitir':
                 '⚠️ Notifications are blocked in your browser. Click the lock 🔒 in the address bar → Site settings → Notifications → Allow'}
             </div>`:''}
+            <div style="font-size:0.75em;color:rgba(255,255,255,0.5);margin-bottom:8px;font-weight:600;">
+                ${currentLang==='es'?'Categorías:':'Categories:'}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <div style="padding:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:6px;display:flex;align-items:center;gap:6px;">
+                    <input type="checkbox" id="notifLunar" checked onchange="handleNotifCategoryToggle('lunarPhases',this.checked); openPreferencesModal();" style="cursor:pointer;">
+                    <label for="notifLunar" style="cursor:pointer;font-size:0.75em;color:#e8eaf6;">
+                        ${currentLang==='es'?'Fases Lunares':'Lunar Phases'}
+                    </label>
+                </div>
+                <div style="padding:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:6px;display:flex;align-items:center;gap:6px;">
+                    <input type="checkbox" id="notifEclipse" checked onchange="handleNotifCategoryToggle('eclipses',this.checked); openPreferencesModal();" style="cursor:pointer;">
+                    <label for="notifEclipse" style="cursor:pointer;font-size:0.75em;color:#e8eaf6;">
+                        ${currentLang==='es'?'Eclipses':'Eclipses'}
+                    </label>
+                </div>
+                <div style="padding:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:6px;display:flex;align-items:center;gap:6px;">
+                    <input type="checkbox" id="notifRetro" checked onchange="handleNotifCategoryToggle('retrogrades',this.checked); openPreferencesModal();" style="cursor:pointer;">
+                    <label for="notifRetro" style="cursor:pointer;font-size:0.75em;color:#e8eaf6;">
+                        ${currentLang==='es'?'Retrogrades':'Retrogrades'}
+                    </label>
+                </div>
+                <div style="padding:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:6px;display:flex;align-items:center;gap:6px;">
+                    <input type="checkbox" id="notifSigns" checked onchange="handleNotifCategoryToggle('signChanges',this.checked); openPreferencesModal();" style="cursor:pointer;">
+                    <label for="notifSigns" style="cursor:pointer;font-size:0.75em;color:#e8eaf6;">
+                        ${currentLang==='es'?'Cambios de Signo':'Sign Changes'}
+                    </label>
+                </div>
+                <div style="padding:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:6px;display:flex;align-items:center;gap:6px;">
+                    <input type="checkbox" id="notifAspects" checked onchange="handleNotifCategoryToggle('interPlanetaryAspects',this.checked); openPreferencesModal();" style="cursor:pointer;">
+                    <label for="notifAspects" style="cursor:pointer;font-size:0.75em;color:#e8eaf6;">
+                        ${currentLang==='es'?'Aspectos':'Aspects'}
+                    </label>
+                </div>
+                <div style="padding:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:6px;display:flex;align-items:center;gap:6px;">
+                    <input type="checkbox" id="notifAstro" checked onchange="handleNotifCategoryToggle('astronomicalEvents',this.checked); openPreferencesModal();" style="cursor:pointer;">
+                    <label for="notifAstro" style="cursor:pointer;font-size:0.75em;color:#e8eaf6;">
+                        ${currentLang==='es'?'Eventos Astro':'Astro Events'}
+                    </label>
+                </div>
+                <div style="padding:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:6px;display:flex;align-items:center;gap:6px;">
+                    <input type="checkbox" id="notifUser" checked onchange="handleNotifCategoryToggle('userEvents',this.checked); openPreferencesModal();" style="cursor:pointer;">
+                    <label for="notifUser" style="cursor:pointer;font-size:0.75em;color:#e8eaf6;">
+                        ${currentLang==='es'?'Mis Eventos':'My Events'}
+                    </label>
+                </div>
+            </div>
         </div>
-
         <!-- Ubicación -->
         <div style="margin-bottom:16px;">
             <button onclick="closePreferencesModal(); setTimeout(()=>openLocationSelector(),200);"
@@ -21083,7 +21303,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v388';
+const APP_VERSION = 'v389';
 var _pendingSW = null;
 
 function showUpdateBanner() {
