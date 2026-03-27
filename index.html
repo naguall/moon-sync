@@ -12796,6 +12796,7 @@ window.interpretReturnAspect = function(idx) {
     var returnLabel = type === 'solar' ? (L ? 'Retorno Solar' : 'Solar Return') : (L ? 'Retorno Lunar' : 'Lunar Return');
 
     var modal = document.getElementById('natalDetailModal');
+    modal.style.zIndex = '1300';
     var titleEl = document.getElementById('natalDetailTitle');
     var bodyEl = document.getElementById('natalDetailBody');
 
@@ -12846,6 +12847,7 @@ window.interpretReturnPlanet = function(key) {
     var returnLabel = type === 'solar' ? (L ? 'Retorno Solar' : 'Solar Return') : (L ? 'Retorno Lunar' : 'Lunar Return');
 
     var modal = document.getElementById('natalDetailModal');
+    modal.style.zIndex = '1300';
     var titleEl = document.getElementById('natalDetailTitle');
     var bodyEl = document.getElementById('natalDetailBody');
 
@@ -12933,7 +12935,7 @@ window.interpretReturnChartInline = function(type) {
     }
 
     // Use the existing AI system
-    var cacheKey = 'returnChart_' + type + '_' + returnDate.toISOString().split('T')[0];
+    var cacheKey = 'returnChart_' + type + '_' + returnDate.toISOString().split('T')[0] + '_' + _activePersonaId;
     var cached = getInterpCache(cacheKey);
     if (cached && cached.html) {
         container.innerHTML = cached.html;
@@ -12948,9 +12950,8 @@ window.interpretReturnChartInline = function(type) {
 
 function sendReturnInterpRequest(history, container, cacheKey) {
     var L = currentLang === 'es';
-    var systemPrompt = L
-        ? 'Eres un astrólogo profesional interpretando una carta de retorno. Responde en español de forma clara, profunda y personal. Usa párrafos, no listas. Máximo 600 palabras.'
-        : 'You are a professional astrologer interpreting a return chart. Respond clearly, deeply and personally. Use paragraphs, not lists. Maximum 600 words.';
+    // Use the active AI persona's system prompt
+    var systemPrompt = buildSystemPrompt();
 
     var personalKey = getGeminiKey();
     var apiUrl = personalKey
@@ -22800,7 +22801,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v401';
+const APP_VERSION = 'v402';
 var _pendingSW = null;
 
 function showUpdateBanner() {
