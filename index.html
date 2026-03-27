@@ -21114,10 +21114,63 @@ function openLocationSelector() {
     document.getElementById('citySearch').value = '';
     filterCities('');
     modal.classList.add('show');
+    updateLocationTimeBanner();
+    startLocTimeBannerClock();
+}
+
+// Store the device's real timezone offset for comparison
+var _deviceTimezoneOffset = new Date().getTimezoneOffset(); // minutes, negative = east of UTC
+
+function updateLocationTimeBanner() {
+    var banner = document.getElementById('locTimeBanner');
+    if (!banner) return;
+    // Approximate timezone from longitude: 1 hour per 15 degrees
+    var selectedOffsetHours = Math.round(ASTRO_USER_LON / 15);
+    var deviceOffsetHours = -(_deviceTimezoneOffset / 60); // convert to hours east of UTC
+    var diffHours = selectedOffsetHours - deviceOffsetHours;
+    // Compute current time at selected location
+    var now = new Date();
+    var utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
+    var selectedTime = new Date(utcMs + (selectedOffsetHours * 3600000));
+    var hh = selectedTime.getHours();
+    var mm = selectedTime.getMinutes();
+    var timeStr = (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm;
+    // Format difference
+    var diffSign = diffHours >= 0 ? '+' : '';
+    var diffStr = diffSign + diffHours + 'h';
+    if (diffHours === 0) diffStr = currentLang === 'es' ? 'misma hora' : 'same time';
+    var L = currentLang === 'es';
+    var locationShort = ASTRO_USER_NAME.split(',')[0];
+    banner.style.display = 'block';
+    banner.innerHTML = '<div style="font-size:1.3em;font-weight:700;color:#e8eaf6;letter-spacing:1px;">' + timeStr + '</div>'
+        + '<div style="font-size:0.78em;color:rgba(255,255,255,0.5);margin-top:2px;">' + locationShort + '</div>'
+        + '<div style="font-size:0.72em;color:rgba(78,205,196,0.8);margin-top:4px;">'
+        + (diffHours === 0
+            ? (L ? 'Misma hora que tu ubicacion' : 'Same time as your location')
+            : (diffStr + (L ? ' vs tu ubicacion' : ' vs your location')))
+        + '</div>';
+}
+
+// Update banner clock every minute while modal is open
+var _locTimeBannerInterval = null;
+function startLocTimeBannerClock() {
+    stopLocTimeBannerClock();
+    _locTimeBannerInterval = setInterval(function() {
+        var modal = document.getElementById('locationModal');
+        if (modal && modal.classList.contains('show')) {
+            updateLocationTimeBanner();
+        } else {
+            stopLocTimeBannerClock();
+        }
+    }, 30000);
+}
+function stopLocTimeBannerClock() {
+    if (_locTimeBannerInterval) { clearInterval(_locTimeBannerInterval); _locTimeBannerInterval = null; }
 }
 
 function closeLocationSelector() {
     document.getElementById('locationModal').classList.remove('show');
+    stopLocTimeBannerClock();
     // If opened from tide modal and no location was selected, reopen tide modal
     if (window._reopenTideAfterLoc) {
         window._reopenTideAfterLoc = false;
@@ -21226,7 +21279,7 @@ function renderCityResults(cities, listEl) {
 
 function selectCity(lat, lon, name) {
     setUserLocation(lat, lon, name);
-    closeLocationSelector();
+    updateLocationTimeBanner();
 }
 
 function requestGPS() {
@@ -21267,12 +21320,12 @@ function requestGPS() {
                 }
                 if (!name) name = fallbackCityName();
                 setUserLocation(lat, lon, name);
-                closeLocationSelector();
+                updateLocationTimeBanner();
             })
             .catch(() => {
                 // Offline or API error — use local database
                 setUserLocation(lat, lon, fallbackCityName());
-                closeLocationSelector();
+                updateLocationTimeBanner();
             });
         },
         err => {
@@ -21289,6 +21342,9 @@ function setUserLocation(lat, lon, name) {
     localStorage.setItem('userLat', lat);
     localStorage.setItem('userLon', lon);
     localStorage.setItem('userName', name);
+    // Update currentLocDisplay if modal is open
+    var cld = document.getElementById('currentLocDisplay');
+    if (cld) cld.textContent = (currentLang==='es'?'Actual: ':'Current: ') + name + ' (' + lat + '\u00b0, ' + lon + '\u00b0)';
     // Re-render banner
     const today = new Date(); today.setHours(0,0,0,0);
     const todayNM = findNearestNewMoon(today);
@@ -21411,12 +21467,12 @@ function confirmMapLocation() {
         }
         if (!name) name = lat.toFixed(2) + '\u00b0' + (lat>=0?'N':'S') + ', ' + Math.abs(lon).toFixed(2) + '\u00b0' + (lon>=0?'E':'W');
         setUserLocation(lat, lon, name);
-        closeLocationSelector();
+        updateLocationTimeBanner();
     }).catch(function() {
         // Geocoding API not enabled fallback - use coordinates as name
         var name = lat.toFixed(2) + '\u00b0' + (lat>=0?'N':'S') + ', ' + Math.abs(lon).toFixed(2) + '\u00b0' + (lon>=0?'E':'W');
         setUserLocation(lat, lon, name);
-        closeLocationSelector();
+        updateLocationTimeBanner();
     });
 }
 
@@ -21537,6 +21593,7 @@ selectCity = function(lat, lon, name) {
         _locGoogleMap.setZoom(12);
     }
     _origSelectCity(lat, lon, name);
+    updateLocationTimeBanner();
 };
 
 window.openLocationSelector = openLocationSelector;
@@ -21547,6 +21604,7 @@ window.confirmMapLocation = confirmMapLocation;
 window.saveGoogleApiKey = saveGoogleApiKey;
 window.requestGPS = requestGPS;
 window.setUserLocation = setUserLocation;
+window.updateLocationTimeBanner = updateLocationTimeBanner;
 
 window.openLunarCalendar2026 = openLunarCalendar2026;
 window.closeLunarCalendar2026 = closeLunarCalendar2026;
@@ -21615,7 +21673,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v393';
+const APP_VERSION = 'v394';
 var _pendingSW = null;
 
 function showUpdateBanner() {
@@ -21746,6 +21804,7 @@ if ('serviceWorker' in navigator) {
                 <h2>📍 <span id="locModalTitle">Ubicación</span></h2>
                 <span class="close" onclick="closeLocationSelector()">×</span>
             </div>
+            <div id="locTimeBanner" style="display:none;padding:10px 12px;margin-bottom:10px;background:linear-gradient(135deg,rgba(74,158,255,0.12),rgba(201,168,64,0.08));border:1px solid rgba(74,158,255,0.3);border-radius:8px;text-align:center;"></div>
             <div id="locationModalBody" style="padding:4px 0;">
                 <!-- GPS -->
                 <button onclick="requestGPS()" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(78,205,196,0.25),rgba(78,205,196,0.08));border:1px solid rgba(78,205,196,0.45);border-radius:8px;color:#4ecdc4;font-size:0.9em;font-weight:600;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;">
