@@ -12681,6 +12681,30 @@ window.openReturnChart = function(type) {
     });
     html += '</tbody></table>';
 
+    // Key themes
+    html += '<div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:0.8em;color:rgba(255,255,255,0.5);">';
+    if (type === 'solar') {
+        var srAsc = returnChart.houses ? returnChart.houses.ascFormatted : '?';
+        var srMoon = returnChart.planets.moon ? returnChart.planets.moon.formatted : '?';
+        html += '<div style="margin-bottom:4px;"><b style="color:#ffd54f;">ASC:</b> ' + srAsc + ' — ' + (L?'El tono del año':'The tone of the year') + '</div>';
+        html += '<div style="margin-bottom:4px;"><b style="color:#b39ddb;">☽:</b> ' + srMoon + ' — ' + (L?'La necesidad emocional del año':'Emotional need of the year') + '</div>';
+    } else {
+        var lrAsc = returnChart.houses ? returnChart.houses.ascFormatted : '?';
+        html += '<div style="margin-bottom:4px;"><b style="color:#b39ddb;">ASC:</b> ' + lrAsc + ' — ' + (L?'El tono del mes lunar':'The tone of the lunar month') + '</div>';
+    }
+    html += '</div>';
+
+    // Interpret full chart button
+    var btnLabel = type === 'solar'
+        ? (L ? 'Interpretar Retorno Solar Completo' : 'Interpret Full Solar Return')
+        : (L ? 'Interpretar Retorno Lunar Completo' : 'Interpret Full Lunar Return');
+    html += '<div style="text-align:center;margin-top:14px;">';
+    html += '<button id="returnInterpBtn" onclick="interpretReturnChartInline(\'' + type + '\')" style="padding:12px 20px;background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.5);border-radius:12px;color:#ffd54f;font-size:0.9em;font-weight:700;cursor:pointer;width:90%;max-width:400px;">';
+    html += '✨ ' + btnLabel + '</button></div>';
+
+    // Container for inline interpretation
+    html += '<div id="returnInterpContainer" style="display:none;margin-top:14px;"></div>';
+
     // Aspects of the return chart (clickable for AI interpretation)
     var returnAspects = returnChart.natalAspects || [];
     var aspectSymbols = {'conjunction':'☌','sextile':'⚹','square':'□','trine':'△','opposition':'☍','semisextile':'⚺','quincunx':'⚻'};
@@ -12714,30 +12738,6 @@ window.openReturnChart = function(type) {
         });
         html += '</div>';
     }
-
-    // Key themes
-    html += '<div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:0.8em;color:rgba(255,255,255,0.5);">';
-    if (type === 'solar') {
-        var srAsc = returnChart.houses ? returnChart.houses.ascFormatted : '?';
-        var srMoon = returnChart.planets.moon ? returnChart.planets.moon.formatted : '?';
-        html += '<div style="margin-bottom:4px;"><b style="color:#ffd54f;">ASC:</b> ' + srAsc + ' — ' + (L?'El tono del año':'The tone of the year') + '</div>';
-        html += '<div style="margin-bottom:4px;"><b style="color:#b39ddb;">☽:</b> ' + srMoon + ' — ' + (L?'La necesidad emocional del año':'Emotional need of the year') + '</div>';
-    } else {
-        var lrAsc = returnChart.houses ? returnChart.houses.ascFormatted : '?';
-        html += '<div style="margin-bottom:4px;"><b style="color:#b39ddb;">ASC:</b> ' + lrAsc + ' — ' + (L?'El tono del mes lunar':'The tone of the lunar month') + '</div>';
-    }
-    html += '</div>';
-
-    // Interpret full chart button
-    var btnLabel = type === 'solar'
-        ? (L ? 'Interpretar Retorno Solar Completo' : 'Interpret Full Solar Return')
-        : (L ? 'Interpretar Retorno Lunar Completo' : 'Interpret Full Lunar Return');
-    html += '<div style="text-align:center;margin-top:14px;">';
-    html += '<button id="returnInterpBtn" onclick="interpretReturnChartInline(\'' + type + '\')" style="padding:12px 20px;background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.5);border-radius:12px;color:#ffd54f;font-size:0.9em;font-weight:700;cursor:pointer;width:90%;max-width:400px;">';
-    html += '✨ ' + btnLabel + '</button></div>';
-
-    // Container for inline interpretation
-    html += '<div id="returnInterpContainer" style="display:none;margin-top:14px;"></div>';
 
     html += '</div>';
 
@@ -13659,7 +13659,7 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
             <p style="font-size:0.78em;color:rgba(255,255,255,0.4);margin-bottom:14px;">${L ? 'Tus ciclos planetarios activos basados en tu carta natal.' : 'Your active planetary cycles based on your natal chart.'}</p>
 
             <!-- Solar Return -->
-            <div class="cosmic-cycle-card" onclick="interpretCosmicCycle('solarReturn')" style="cursor:pointer;">
+            <div class="cosmic-cycle-card" onclick="openReturnChart('solar')" style="cursor:pointer;">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
                     <span style="font-size:1.8em;">☉</span>
                     <div>
@@ -13670,11 +13670,10 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
                     <span style="margin-left:auto;font-size:0.8em;color:rgba(201,168,64,0.6);">✨</span>
                 </div>
                 <div style="font-size:0.75em;color:rgba(255,255,255,0.35);">${L ? 'El Sol regresa al grado exacto de tu nacimiento (' + (natalChart.planets.sun?.formatted || '?') + ').' : 'The Sun returns to your exact birth degree (' + (natalChart.planets.sun?.formatted || '?') + ').'}</div>
-                <button onclick="event.stopPropagation();openReturnChart('solar')" style="margin-top:8px;padding:6px 14px;background:linear-gradient(135deg,rgba(255,213,79,0.2),rgba(255,149,0,0.15));border:1px solid rgba(255,213,79,0.4);border-radius:8px;color:#ffd54f;font-size:0.78em;font-weight:600;cursor:pointer;">${L ? 'Ver Carta de Retorno Solar' : 'View Solar Return Chart'}</button>
             </div>
 
             <!-- Lunar Return -->
-            <div class="cosmic-cycle-card" onclick="interpretCosmicCycle('lunarReturn')" style="cursor:pointer;">
+            <div class="cosmic-cycle-card" onclick="openReturnChart('lunar')" style="cursor:pointer;">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
                     <span style="font-size:1.8em;">☽</span>
                     <div>
@@ -13685,7 +13684,6 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
                     <span style="margin-left:auto;font-size:0.8em;color:rgba(201,168,64,0.6);">✨</span>
                 </div>
                 <div style="font-size:0.75em;color:rgba(255,255,255,0.35);">${L ? 'La Luna regresa al grado exacto de tu nacimiento (' + (natalChart.planets.moon?.formatted || '?') + '). Ciclo emocional ~27 días.' : 'The Moon returns to your exact birth degree (' + (natalChart.planets.moon?.formatted || '?') + '). ~27-day emotional cycle.'}</div>
-                <button onclick="event.stopPropagation();openReturnChart('lunar')" style="margin-top:8px;padding:6px 14px;background:linear-gradient(135deg,rgba(179,157,219,0.2),rgba(155,89,182,0.15));border:1px solid rgba(179,157,219,0.4);border-radius:8px;color:#b39ddb;font-size:0.78em;font-weight:600;cursor:pointer;">${L ? 'Ver Carta de Retorno Lunar' : 'View Lunar Return Chart'}</button>
             </div>
 
             <!-- Solar Half-Return -->
@@ -22747,7 +22745,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v398';
+const APP_VERSION = 'v399';
 var _pendingSW = null;
 
 function showUpdateBanner() {
