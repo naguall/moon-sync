@@ -6552,8 +6552,8 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
             var chatHtml = '<div style="display:flex;flex-direction:column;max-height:60vh;">';
             // Scrollable messages area
             chatHtml += '<div id="interpChatMessages_' + chatId + '" style="flex:1;overflow-y:auto;min-height:80px;max-height:45vh;padding-bottom:8px;">';
-            // Initial AI response as chat bubble
-            chatHtml += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:92%;padding:10px 14px;border-radius:12px;font-size:0.85em;line-height:1.6;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.88);"><p>' + formattedHtml + '</p></div></div>';
+            // Initial AI response as chat bubble with read-aloud button
+            chatHtml += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:92%;padding:10px 14px;border-radius:12px;font-size:0.85em;line-height:1.6;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.88);"><div id="interpResp_' + chatId + '"><p>' + formattedHtml + '</p></div><button data-readaloud="interpResp_' + chatId + '" onclick="readAloud(\'interpResp_' + chatId + '\')" style="margin-top:6px;padding:3px 8px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.25);border-radius:12px;color:#667eea;font-size:0.75em;cursor:pointer;" title="' + (L ? 'Leer en voz alta' : 'Read aloud') + '">🔊 ' + (L ? 'Escuchar' : 'Listen') + '</button></div></div>';
             // Existing chat messages (if reopening)
             if (_existChat && _existChat.messages) {
                 _existChat.messages.forEach(function(msg) {
@@ -6564,8 +6564,11 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
             chatHtml += '</div>';
             // Sticky bottom: input + action buttons
             chatHtml += '<div style="position:sticky;bottom:0;background:rgba(5,7,30,0.98);padding-top:8px;border-top:1px solid rgba(201,168,64,0.15);flex-shrink:0;">';
-            // Input row
-            chatHtml += '<div style="display:flex;gap:6px;margin-bottom:8px;">';
+            // Input row with mic button
+            var _voiceBtnId = 'interpVoice_' + chatId;
+            var _sendFn = "sendInterpChatMessage('" + chatId + "','" + readingKey + "')";
+            chatHtml += '<div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">';
+            chatHtml += '<button id="' + _voiceBtnId + '" onclick="startGenericVoice(\'interpChatInput_' + chatId + '\',\'' + _sendFn.replace(/'/g, "\\'") + '\',\'' + _voiceBtnId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1em;cursor:pointer;flex-shrink:0;" title="' + (L ? 'Voz' : 'Voice') + '">🎙️</button>';
             chatHtml += '<input type="text" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\')sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;">';
             chatHtml += '<button onclick="sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="padding:8px 14px;background:rgba(201,168,64,0.2);border:1px solid rgba(201,168,64,0.4);border-radius:20px;color:#c9a840;font-size:0.85em;cursor:pointer;font-weight:600;">\u2192</button>';
             chatHtml += '</div>';
@@ -6819,8 +6822,9 @@ async function sendInterpChatMessage(chatId, readingKey) {
         }
 
         if (aiText) {
+            var _respId = 'interpFollowUp_' + chatId + '_' + Date.now();
             var formatted = aiText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
-            msgsDiv.innerHTML += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:85%;padding:8px 12px;border-radius:12px;font-size:0.85em;line-height:1.5;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85);">' + formatted + '</div></div>';
+            msgsDiv.innerHTML += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:85%;padding:8px 12px;border-radius:12px;font-size:0.85em;line-height:1.5;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85);"><div id="' + _respId + '">' + formatted + '</div><button data-readaloud="' + _respId + '" onclick="readAloud(\'' + _respId + '\')" style="margin-top:4px;padding:2px 6px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.25);border-radius:10px;color:#667eea;font-size:0.7em;cursor:pointer;">🔊 ' + (L ? 'Escuchar' : 'Listen') + '</button></div></div>';
 
             // Save AI response
             chat.messages.push({ role: 'model', text: aiText, timestamp: new Date().toISOString() });
@@ -24685,9 +24689,10 @@ DOMTokenList.prototype.add = function() {
         </div>
     </div>
     <div class="hoy-interp-messages" id="hoyInterpMessages"></div>
-    <div style="padding:10px 16px;border-top:1px solid rgba(201,168,64,0.15);background:rgba(5,5,25,0.95);display:flex;gap:8px;">
+    <div style="padding:10px 16px;border-top:1px solid rgba(201,168,64,0.15);background:rgba(5,5,25,0.95);display:flex;gap:6px;align-items:flex-end;">
+        <button id="hoyVoiceBtn" onclick="startGenericVoice('hoyInterpInput','sendHoyInterpMessage()','hoyVoiceBtn')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;flex-shrink:0;" title="Voz">🎙️</button>
         <textarea id="hoyInterpInput" rows="1" placeholder="Pregunta sobre tu día..." style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.2);border-radius:10px;color:white;padding:10px 12px;font-size:0.85em;resize:none;outline:none;font-family:inherit;" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHoyInterpMessage();}"></textarea>
-        <button onclick="sendHoyInterpMessage()" style="background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.4);border-radius:10px;color:#ffd54f;padding:8px 14px;font-size:1em;cursor:pointer;">➤</button>
+        <button onclick="sendHoyInterpMessage()" style="background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.4);border-radius:10px;color:#ffd54f;padding:8px 14px;font-size:1em;cursor:pointer;flex-shrink:0;">➤</button>
     </div>
 </div>
 
@@ -24737,6 +24742,131 @@ let aiIsTyping = false;
 let aiTTSEnabled = false;
 let aiVoiceRecognition = null;
 let aiVoiceIsListening = false;
+
+// ===== GENERIC VOICE INPUT FOR ANY CHAT =====
+// Reusable voice-to-text for any input/textarea element
+var _genericVoiceRecognitions = {};
+window.startGenericVoice = function(inputId, sendFnStr, btnId) {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert(currentLang === 'es' ? 'Tu navegador no soporta reconocimiento de voz. Usa Chrome o Safari.' : 'Your browser does not support speech recognition. Use Chrome or Safari.');
+        return;
+    }
+    var btn = document.getElementById(btnId);
+    // If already listening on this input, stop
+    if (_genericVoiceRecognitions[inputId]) {
+        stopGenericVoice(inputId, btnId);
+        return;
+    }
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = currentLang === 'es' ? 'es-ES' : 'en-US';
+    var input = document.getElementById(inputId);
+    if (!input) return;
+
+    recognition.onstart = function() {
+        _genericVoiceRecognitions[inputId] = recognition;
+        input.value = '';
+        if (btn) {
+            btn.style.background = 'rgba(255,59,48,0.3)';
+            btn.style.borderColor = '#ff3b30';
+            btn.innerHTML = '⏹️';
+        }
+    };
+    recognition.onresult = function(event) {
+        for (var i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+                var transcript = event.results[i][0].transcript;
+                var cursorPos = input.selectionStart || input.value.length;
+                var before = input.value.substring(0, cursorPos);
+                var after = input.value.substring(cursorPos);
+                input.value = before + transcript + ' ' + after;
+                if (input.tagName === 'TEXTAREA') {
+                    input.style.height = 'auto';
+                    input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+                }
+            }
+        }
+    };
+    recognition.onerror = function() {
+        stopGenericVoice(inputId, btnId);
+    };
+    recognition.onend = function() {
+        if (_genericVoiceRecognitions[inputId]) {
+            stopGenericVoice(inputId, btnId);
+            // Auto-send if we have content
+            if (input.value.trim() && sendFnStr) {
+                try { eval(sendFnStr); } catch(e) {}
+            }
+        }
+    };
+    recognition.start();
+};
+window.stopGenericVoice = function(inputId, btnId) {
+    var recognition = _genericVoiceRecognitions[inputId];
+    if (recognition) { try { recognition.stop(); } catch(e) {} }
+    delete _genericVoiceRecognitions[inputId];
+    var btn = document.getElementById(btnId);
+    if (btn) {
+        btn.style.background = 'rgba(255,255,255,0.08)';
+        btn.style.borderColor = 'rgba(255,255,255,0.15)';
+        btn.innerHTML = '🎙️';
+    }
+};
+
+// ===== GENERIC READ-ALOUD FOR ANY AI RESPONSE =====
+window.readAloud = function(elementId) {
+    if (!window.speechSynthesis) {
+        alert(currentLang === 'es' ? 'Tu navegador no soporta síntesis de voz.' : 'Your browser does not support speech synthesis.');
+        return;
+    }
+    // If currently speaking, stop
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        var btn = document.querySelector('[data-readaloud="' + elementId + '"]');
+        if (btn) { btn.innerHTML = '🔊'; btn.title = currentLang === 'es' ? 'Leer en voz alta' : 'Read aloud'; }
+        return;
+    }
+    var el = document.getElementById(elementId);
+    if (!el) return;
+    var text = el.innerText || el.textContent || '';
+    if (!text.trim()) return;
+
+    var btn = document.querySelector('[data-readaloud="' + elementId + '"]');
+    if (btn) { btn.innerHTML = '⏹️'; btn.title = currentLang === 'es' ? 'Detener lectura' : 'Stop reading'; }
+
+    var clean = text.replace(/\*\*?/g, '').replace(/---/g, '').replace(/✅/g, '').trim();
+    var sentences = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
+    var chunks = [];
+    var current = '';
+    sentences.forEach(function(s) {
+        if ((current + s).length > 200) {
+            if (current) chunks.push(current.trim());
+            current = s;
+        } else { current += s; }
+    });
+    if (current.trim()) chunks.push(current.trim());
+
+    chunks.forEach(function(chunk, i) {
+        var utter = new SpeechSynthesisUtterance(chunk);
+        utter.lang = currentLang === 'es' ? 'es-ES' : 'en-US';
+        utter.rate = 1.0;
+        utter.pitch = 1.0;
+        var voices = window.speechSynthesis.getVoices();
+        var langCode = currentLang === 'es' ? 'es' : 'en';
+        var preferred = voices.find(function(v) { return v.lang.startsWith(langCode) && v.name.includes('Google'); })
+                     || voices.find(function(v) { return v.lang.startsWith(langCode) && !v.localService; })
+                     || voices.find(function(v) { return v.lang.startsWith(langCode); });
+        if (preferred) utter.voice = preferred;
+        if (i === chunks.length - 1) {
+            utter.onend = function() {
+                if (btn) { btn.innerHTML = '🔊'; btn.title = currentLang === 'es' ? 'Leer en voz alta' : 'Read aloud'; }
+            };
+        }
+        window.speechSynthesis.speak(utter);
+    });
+};
 
 // ===== AI CHAT VOICE INPUT (Speech-to-Text) =====
 function toggleAIChatVoice() {
@@ -25106,7 +25236,13 @@ function addHoyInterpMessage(role, html, scrollToBottom) {
     var container = document.getElementById('hoyInterpMessages');
     var div = document.createElement('div');
     div.className = 'ai-msg ' + role;
-    div.innerHTML = typeof marked !== 'undefined' ? marked.parse(html) : html.replace(/\n/g, '<br>');
+    var parsedHtml = typeof marked !== 'undefined' ? marked.parse(html) : html.replace(/\n/g, '<br>');
+    if (role === 'assistant') {
+        var _hoyRespId = 'hoyResp_' + Date.now();
+        div.innerHTML = '<div id="' + _hoyRespId + '">' + parsedHtml + '</div><button data-readaloud="' + _hoyRespId + '" onclick="readAloud(\'' + _hoyRespId + '\')" style="margin-top:8px;padding:4px 10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.25);border-radius:12px;color:#667eea;font-size:0.75em;cursor:pointer;">🔊 ' + (currentLang === 'es' ? 'Escuchar' : 'Listen') + '</button>';
+    } else {
+        div.innerHTML = parsedHtml;
+    }
     container.appendChild(div);
     if (scrollToBottom) {
         container.scrollTop = container.scrollHeight;
@@ -26305,11 +26441,19 @@ function addAIMessage(role, text, forceScrollBottom) {
             .replace(/\*(.+?)\*/g, '<em>$1</em>')
             .replace(/\n\n/g, '</p><p>')
             .replace(/\n/g, '<br>');
-        div.innerHTML = '<p>' + html + '</p>';
-        // Share/copy/save button bar
+        var _aiMsgId = 'aiMsg_' + Date.now();
+        div.innerHTML = '<div id="' + _aiMsgId + '"><p>' + html + '</p></div>';
+        // Share/copy/save/listen button bar
         const btnBar = document.createElement('div');
-        btnBar.style.cssText = 'display:flex;gap:6px;margin-top:8px;justify-content:flex-end;';
+        btnBar.style.cssText = 'display:flex;gap:6px;margin-top:8px;justify-content:flex-end;flex-wrap:wrap;';
         const rawText = text;
+        // Listen button
+        const listenBtn = document.createElement('button');
+        listenBtn.innerHTML = '🔊 ' + (currentLang === 'es' ? 'Escuchar' : 'Listen');
+        listenBtn.setAttribute('data-readaloud', _aiMsgId);
+        listenBtn.style.cssText = 'padding:4px 10px;font-size:0.72em;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.25);border-radius:6px;color:#667eea;cursor:pointer;font-weight:600;';
+        listenBtn.onclick = function() { readAloud(_aiMsgId); };
+        btnBar.appendChild(listenBtn);
         // Copy button
         const copyBtn = document.createElement('button');
         copyBtn.innerHTML = '📋 ' + (currentLang === 'es' ? 'Copiar' : 'Copy');
