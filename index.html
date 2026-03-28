@@ -22901,8 +22901,10 @@ function openPreferencesModal() {
     var savedVoiceEn = localStorage.getItem('ttsVoice_en') || '';
     var savedRate = parseFloat(localStorage.getItem('ttsRate') || '1.0');
     var voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
-    var esVoices = voices.filter(function(v) { return v.lang.startsWith('es'); });
+    var esVoices = voices.filter(function(v) { return v.lang.startsWith('es') && v.lang !== 'es-ES' && v.lang !== 'es_ES'; });
     var enVoices = voices.filter(function(v) { return v.lang.startsWith('en'); });
+    // If no non-Spain voices found, show all Spanish voices as fallback
+    if (esVoices.length === 0) esVoices = voices.filter(function(v) { return v.lang.startsWith('es'); });
 
     var voiceContent = '';
     // Spanish voice selector
@@ -24932,23 +24934,46 @@ window._getTTSVoice = function(langCode) {
         var saved = voices.find(function(v) { return v.name === savedName; });
         if (saved) return saved;
     }
+    // For Spanish: prefer Latin American voices (es-MX, es-US, es-419, etc.) over es-ES
+    if (langCode === 'es') {
+        var latam = voices.filter(function(v) { return v.lang.startsWith('es') && v.lang !== 'es-ES' && v.lang !== 'es_ES'; });
+        if (latam.length > 0) {
+            return latam.find(function(v) { return v.name.includes('Google'); })
+                || latam.find(function(v) { return !v.localService; })
+                || latam[0];
+        }
+    }
     // Fallback: prefer Google voices, then remote, then any
     return voices.find(function(v) { return v.lang.startsWith(langCode) && v.name.includes('Google'); })
         || voices.find(function(v) { return v.lang.startsWith(langCode) && !v.localService; })
         || voices.find(function(v) { return v.lang.startsWith(langCode); });
 };
 
-// Test voice from preferences
+// Test voice from preferences — reads directly from the select element
 window.testTTSVoice = function(lang) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
+    // Read the CURRENT select value (not just localStorage, which may be stale)
+    var selectId = lang === 'es' ? 'ttsVoiceEs' : 'ttsVoiceEn';
+    var selectEl = document.getElementById(selectId);
+    var selectedName = selectEl ? selectEl.value : '';
+    // Save it now to ensure localStorage is in sync
+    localStorage.setItem('ttsVoice_' + lang, selectedName);
+
     var testText = lang === 'es' ? 'Esta es una prueba de la voz seleccionada para Moon Sync.' : 'This is a test of the selected voice for Moon Sync.';
     var utter = new SpeechSynthesisUtterance(testText);
-    utter.lang = lang === 'es' ? 'es-ES' : 'en-US';
+    utter.lang = lang === 'es' ? 'es-MX' : 'en-US';
     utter.rate = parseFloat(localStorage.getItem('ttsRate') || '1.0');
     utter.pitch = 1.0;
-    var voice = window._getTTSVoice(lang);
-    if (voice) utter.voice = voice;
+    // Find the exact voice by name
+    var voices = window.speechSynthesis.getVoices();
+    if (selectedName) {
+        var found = voices.find(function(v) { return v.name === selectedName; });
+        if (found) utter.voice = found;
+    } else {
+        var voice = window._getTTSVoice(lang);
+        if (voice) utter.voice = voice;
+    }
     window.speechSynthesis.speak(utter);
 };
 
