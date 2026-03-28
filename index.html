@@ -21613,6 +21613,12 @@ if (typeof google !== 'undefined' && google.accounts) {
     });
 }
 
+// Preload TTS voices (needed for voice selector in preferences)
+if (window.speechSynthesis) {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); };
+}
+
 // Initialize language
 updateLanguageButtons();
 updateUILanguage();
@@ -22889,6 +22895,53 @@ function openPreferencesModal() {
             '<div style="font-size:0.65em;color:rgba(255,255,255,0.25);margin-top:6px;text-align:center;">' + (currentLang==='es'?'Se conecta con tu cuenta de Google para ver y crear eventos':'Connects with your Google account to view and create events') + '</div>';
     }
     sectionsHtml += _s('📅', t('googleCalendar'), '#7ec8ff', gcalContent);
+
+    // ── Voz (TTS) ──
+    var savedVoiceEs = localStorage.getItem('ttsVoice_es') || '';
+    var savedVoiceEn = localStorage.getItem('ttsVoice_en') || '';
+    var savedRate = parseFloat(localStorage.getItem('ttsRate') || '1.0');
+    var voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    var esVoices = voices.filter(function(v) { return v.lang.startsWith('es'); });
+    var enVoices = voices.filter(function(v) { return v.lang.startsWith('en'); });
+
+    var voiceContent = '';
+    // Spanish voice selector
+    voiceContent += '<div style="margin-bottom:12px;">';
+    voiceContent += '<div style="font-size:0.78em;color:rgba(255,255,255,0.5);margin-bottom:6px;font-weight:600;">🇪🇸 ' + (currentLang==='es'?'Voz en Español':'Spanish Voice') + '</div>';
+    voiceContent += '<select id="ttsVoiceEs" onchange="localStorage.setItem(\'ttsVoice_es\',this.value);" style="width:100%;padding:10px 12px;background:rgba(20,10,40,0.8);border:1px solid rgba(102,126,234,0.35);border-radius:8px;color:#667eea;font-size:0.82em;cursor:pointer;">';
+    voiceContent += '<option value="">' + (currentLang==='es'?'Automática (predeterminada)':'Automatic (default)') + '</option>';
+    esVoices.forEach(function(v) {
+        var label = v.name + ' (' + v.lang + ')' + (v.localService ? '' : ' ☁️');
+        voiceContent += '<option value="' + v.name + '"' + (savedVoiceEs === v.name ? ' selected' : '') + '>' + label + '</option>';
+    });
+    voiceContent += '</select>';
+    if (esVoices.length === 0) voiceContent += '<div style="font-size:0.68em;color:rgba(255,255,255,0.3);margin-top:4px;">' + (currentLang==='es'?'No se encontraron voces en español. Intenta recargar.':'No Spanish voices found. Try reloading.') + '</div>';
+    voiceContent += '<button onclick="testTTSVoice(\'es\')" style="margin-top:6px;padding:5px 14px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:16px;color:#667eea;font-size:0.75em;cursor:pointer;">▶ ' + (currentLang==='es'?'Probar voz':'Test voice') + '</button>';
+    voiceContent += '</div>';
+
+    // English voice selector
+    voiceContent += '<div style="margin-bottom:12px;">';
+    voiceContent += '<div style="font-size:0.78em;color:rgba(255,255,255,0.5);margin-bottom:6px;font-weight:600;">🇺🇸 ' + (currentLang==='es'?'Voz en Inglés':'English Voice') + '</div>';
+    voiceContent += '<select id="ttsVoiceEn" onchange="localStorage.setItem(\'ttsVoice_en\',this.value);" style="width:100%;padding:10px 12px;background:rgba(20,10,40,0.8);border:1px solid rgba(102,126,234,0.35);border-radius:8px;color:#667eea;font-size:0.82em;cursor:pointer;">';
+    voiceContent += '<option value="">' + (currentLang==='es'?'Automática (predeterminada)':'Automatic (default)') + '</option>';
+    enVoices.forEach(function(v) {
+        var label = v.name + ' (' + v.lang + ')' + (v.localService ? '' : ' ☁️');
+        voiceContent += '<option value="' + v.name + '"' + (savedVoiceEn === v.name ? ' selected' : '') + '>' + label + '</option>';
+    });
+    voiceContent += '</select>';
+    if (enVoices.length === 0) voiceContent += '<div style="font-size:0.68em;color:rgba(255,255,255,0.3);margin-top:4px;">' + (currentLang==='es'?'No se encontraron voces en inglés. Intenta recargar.':'No English voices found. Try reloading.') + '</div>';
+    voiceContent += '<button onclick="testTTSVoice(\'en\')" style="margin-top:6px;padding:5px 14px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:16px;color:#667eea;font-size:0.75em;cursor:pointer;">▶ ' + (currentLang==='es'?'Probar voz':'Test voice') + '</button>';
+    voiceContent += '</div>';
+
+    // Speed control
+    voiceContent += '<div style="margin-bottom:8px;">';
+    voiceContent += '<div style="font-size:0.78em;color:rgba(255,255,255,0.5);margin-bottom:6px;font-weight:600;">⚡ ' + (currentLang==='es'?'Velocidad':'Speed') + ' <span id="ttsRateLabel" style="color:#667eea;">' + savedRate.toFixed(1) + 'x</span></div>';
+    voiceContent += '<input type="range" id="ttsRateSlider" min="0.5" max="2.0" step="0.1" value="' + savedRate + '" oninput="localStorage.setItem(\'ttsRate\',this.value);document.getElementById(\'ttsRateLabel\').textContent=parseFloat(this.value).toFixed(1)+\'x\';" style="width:100%;accent-color:#667eea;">';
+    voiceContent += '</div>';
+
+    var currentVoiceName = currentLang === 'es' ? (savedVoiceEs || (currentLang==='es'?'Auto':'Auto')) : (savedVoiceEn || 'Auto');
+    if (currentVoiceName.length > 20) currentVoiceName = currentVoiceName.substring(0, 18) + '...';
+    sectionsHtml += _s('🔊', (currentLang==='es'?'Voz':'Voice') + ' <span style="font-size:0.75em;opacity:0.6;font-weight:400;">(' + currentVoiceName + ')</span>', '#7ec8ff', voiceContent);
 
     // ── Tamaño de Celdas ──
     var cs = localStorage.getItem('dayCellSize') || 'medium';
@@ -24871,6 +24924,34 @@ window.stopGenericVoice = function(inputId, btnId) {
 };
 
 // ===== GENERIC READ-ALOUD FOR ANY AI RESPONSE =====
+// Get the user's preferred TTS voice for a language
+window._getTTSVoice = function(langCode) {
+    var voices = window.speechSynthesis.getVoices();
+    var savedName = localStorage.getItem('ttsVoice_' + langCode) || '';
+    if (savedName) {
+        var saved = voices.find(function(v) { return v.name === savedName; });
+        if (saved) return saved;
+    }
+    // Fallback: prefer Google voices, then remote, then any
+    return voices.find(function(v) { return v.lang.startsWith(langCode) && v.name.includes('Google'); })
+        || voices.find(function(v) { return v.lang.startsWith(langCode) && !v.localService; })
+        || voices.find(function(v) { return v.lang.startsWith(langCode); });
+};
+
+// Test voice from preferences
+window.testTTSVoice = function(lang) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var testText = lang === 'es' ? 'Esta es una prueba de la voz seleccionada para Moon Sync.' : 'This is a test of the selected voice for Moon Sync.';
+    var utter = new SpeechSynthesisUtterance(testText);
+    utter.lang = lang === 'es' ? 'es-ES' : 'en-US';
+    utter.rate = parseFloat(localStorage.getItem('ttsRate') || '1.0');
+    utter.pitch = 1.0;
+    var voice = window._getTTSVoice(lang);
+    if (voice) utter.voice = voice;
+    window.speechSynthesis.speak(utter);
+};
+
 window.readAloud = function(elementId) {
     if (!window.speechSynthesis) {
         alert(currentLang === 'es' ? 'Tu navegador no soporta síntesis de voz.' : 'Your browser does not support speech synthesis.');
@@ -24880,7 +24961,7 @@ window.readAloud = function(elementId) {
     if (window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
         var btn = document.querySelector('[data-readaloud="' + elementId + '"]');
-        if (btn) { btn.innerHTML = '🔊'; btn.title = currentLang === 'es' ? 'Leer en voz alta' : 'Read aloud'; }
+        if (btn) { btn.innerHTML = '🔊 ' + (currentLang === 'es' ? 'Escuchar' : 'Listen'); btn.title = currentLang === 'es' ? 'Leer en voz alta' : 'Read aloud'; }
         return;
     }
     var el = document.getElementById(elementId);
@@ -24889,7 +24970,7 @@ window.readAloud = function(elementId) {
     if (!text.trim()) return;
 
     var btn = document.querySelector('[data-readaloud="' + elementId + '"]');
-    if (btn) { btn.innerHTML = '⏹️'; btn.title = currentLang === 'es' ? 'Detener lectura' : 'Stop reading'; }
+    if (btn) { btn.innerHTML = '⏹️ ' + (currentLang === 'es' ? 'Detener' : 'Stop'); btn.title = currentLang === 'es' ? 'Detener lectura' : 'Stop reading'; }
 
     var clean = text.replace(/\*\*?/g, '').replace(/---/g, '').replace(/✅/g, '').trim();
     var sentences = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
@@ -24903,20 +24984,19 @@ window.readAloud = function(elementId) {
     });
     if (current.trim()) chunks.push(current.trim());
 
+    var langCode = currentLang === 'es' ? 'es' : 'en';
+    var preferred = window._getTTSVoice(langCode);
+    var rate = parseFloat(localStorage.getItem('ttsRate') || '1.0');
+
     chunks.forEach(function(chunk, i) {
         var utter = new SpeechSynthesisUtterance(chunk);
         utter.lang = currentLang === 'es' ? 'es-ES' : 'en-US';
-        utter.rate = 1.0;
+        utter.rate = rate;
         utter.pitch = 1.0;
-        var voices = window.speechSynthesis.getVoices();
-        var langCode = currentLang === 'es' ? 'es' : 'en';
-        var preferred = voices.find(function(v) { return v.lang.startsWith(langCode) && v.name.includes('Google'); })
-                     || voices.find(function(v) { return v.lang.startsWith(langCode) && !v.localService; })
-                     || voices.find(function(v) { return v.lang.startsWith(langCode); });
         if (preferred) utter.voice = preferred;
         if (i === chunks.length - 1) {
             utter.onend = function() {
-                if (btn) { btn.innerHTML = '🔊'; btn.title = currentLang === 'es' ? 'Leer en voz alta' : 'Read aloud'; }
+                if (btn) { btn.innerHTML = '🔊 ' + (currentLang === 'es' ? 'Escuchar' : 'Listen'); btn.title = currentLang === 'es' ? 'Leer en voz alta' : 'Read aloud'; }
             };
         }
         window.speechSynthesis.speak(utter);
