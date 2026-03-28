@@ -6570,7 +6570,7 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
             // Scrollable messages area
             chatHtml += '<div id="interpChatMessages_' + chatId + '" style="flex:1;overflow-y:auto;min-height:80px;max-height:45vh;padding-bottom:8px;">';
             // Initial AI response as chat bubble with read-aloud button
-            chatHtml += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:92%;padding:10px 14px;border-radius:12px;font-size:0.85em;line-height:1.6;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.88);"><div id="interpResp_' + chatId + '"><p>' + formattedHtml + '</p></div><button data-readaloud="interpResp_' + chatId + '" onclick="readAloud(\'interpResp_' + chatId + '\')" style="margin-top:6px;padding:3px 8px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.25);border-radius:12px;color:#667eea;font-size:0.75em;cursor:pointer;" title="' + (L ? 'Leer en voz alta' : 'Read aloud') + '">🔊 ' + (L ? 'Escuchar' : 'Listen') + '</button></div></div>';
+            chatHtml += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:92%;padding:10px 14px;border-radius:12px;font-size:0.85em;line-height:1.6;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.88);"><button data-readaloud="interpResp_' + chatId + '" onclick="readAloud(\'interpResp_' + chatId + '\')" style="margin-bottom:10px;padding:6px 16px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.35);border-radius:20px;color:#667eea;font-size:0.88em;cursor:pointer;font-weight:600;display:block;" title="' + (L ? 'Leer en voz alta' : 'Read aloud') + '">🔊 ' + (L ? 'Escuchar' : 'Listen') + '</button><div id="interpResp_' + chatId + '"><p>' + formattedHtml + '</p></div></div></div>';
             // Existing chat messages (if reopening)
             if (_existChat && _existChat.messages) {
                 _existChat.messages.forEach(function(msg) {
@@ -6841,7 +6841,7 @@ async function sendInterpChatMessage(chatId, readingKey) {
         if (aiText) {
             var _respId = 'interpFollowUp_' + chatId + '_' + Date.now();
             var formatted = aiText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
-            msgsDiv.innerHTML += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:85%;padding:8px 12px;border-radius:12px;font-size:0.85em;line-height:1.5;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85);"><div id="' + _respId + '">' + formatted + '</div><button data-readaloud="' + _respId + '" onclick="readAloud(\'' + _respId + '\')" style="margin-top:4px;padding:2px 6px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.25);border-radius:10px;color:#667eea;font-size:0.7em;cursor:pointer;">🔊 ' + (L ? 'Escuchar' : 'Listen') + '</button></div></div>';
+            msgsDiv.innerHTML += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:85%;padding:8px 12px;border-radius:12px;font-size:0.85em;line-height:1.5;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85);"><button data-readaloud="' + _respId + '" onclick="readAloud(\'' + _respId + '\')" style="margin-bottom:8px;padding:5px 14px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.35);border-radius:20px;color:#667eea;font-size:0.85em;cursor:pointer;font-weight:600;display:block;">🔊 ' + (L ? 'Escuchar' : 'Listen') + '</button><div id="' + _respId + '">' + formatted + '</div></div></div>';
 
             // Save AI response
             chat.messages.push({ role: 'model', text: aiText, timestamp: new Date().toISOString() });
@@ -25294,7 +25294,7 @@ function addHoyInterpMessage(role, html, scrollToBottom) {
     var parsedHtml = typeof marked !== 'undefined' ? marked.parse(html) : html.replace(/\n/g, '<br>');
     if (role === 'assistant') {
         var _hoyRespId = 'hoyResp_' + Date.now();
-        div.innerHTML = '<div id="' + _hoyRespId + '">' + parsedHtml + '</div><button data-readaloud="' + _hoyRespId + '" onclick="readAloud(\'' + _hoyRespId + '\')" style="margin-top:8px;padding:4px 10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.25);border-radius:12px;color:#667eea;font-size:0.75em;cursor:pointer;">🔊 ' + (currentLang === 'es' ? 'Escuchar' : 'Listen') + '</button>';
+        div.innerHTML = '<button data-readaloud="' + _hoyRespId + '" onclick="readAloud(\'' + _hoyRespId + '\')" style="margin-bottom:10px;padding:6px 16px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.35);border-radius:20px;color:#667eea;font-size:0.88em;cursor:pointer;font-weight:600;display:block;">🔊 ' + (currentLang === 'es' ? 'Escuchar' : 'Listen') + '</button><div id="' + _hoyRespId + '">' + parsedHtml + '</div>';
     } else {
         div.innerHTML = parsedHtml;
     }
@@ -26497,18 +26497,13 @@ function addAIMessage(role, text, forceScrollBottom) {
             .replace(/\n\n/g, '</p><p>')
             .replace(/\n/g, '<br>');
         var _aiMsgId = 'aiMsg_' + Date.now();
-        div.innerHTML = '<div id="' + _aiMsgId + '"><p>' + html + '</p></div>';
-        // Share/copy/save/listen button bar
+        // Listen button at the TOP — prominent
+        var listenBtnHtml = '<button data-readaloud="' + _aiMsgId + '" onclick="readAloud(\'' + _aiMsgId + '\')" style="margin-bottom:10px;padding:6px 16px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.35);border-radius:20px;color:#667eea;font-size:0.88em;cursor:pointer;font-weight:600;display:block;">🔊 ' + (currentLang === 'es' ? 'Escuchar' : 'Listen') + '</button>';
+        div.innerHTML = listenBtnHtml + '<div id="' + _aiMsgId + '"><p>' + html + '</p></div>';
+        // Share/copy/save button bar
         const btnBar = document.createElement('div');
         btnBar.style.cssText = 'display:flex;gap:6px;margin-top:8px;justify-content:flex-end;flex-wrap:wrap;';
         const rawText = text;
-        // Listen button
-        const listenBtn = document.createElement('button');
-        listenBtn.innerHTML = '🔊 ' + (currentLang === 'es' ? 'Escuchar' : 'Listen');
-        listenBtn.setAttribute('data-readaloud', _aiMsgId);
-        listenBtn.style.cssText = 'padding:4px 10px;font-size:0.72em;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.25);border-radius:6px;color:#667eea;cursor:pointer;font-weight:600;';
-        listenBtn.onclick = function() { readAloud(_aiMsgId); };
-        btnBar.appendChild(listenBtn);
         // Copy button
         const copyBtn = document.createElement('button');
         copyBtn.innerHTML = '📋 ' + (currentLang === 'es' ? 'Copiar' : 'Copy');
