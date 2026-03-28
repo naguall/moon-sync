@@ -11633,6 +11633,8 @@ function switchToAspects2026Mode() {
 
 function renderAspects2026Panel() {
     const es = currentLang === 'es';
+    // Reset global aspect data array on each render
+    window._asp2026Data = [];
 
     let panel = document.getElementById('aspects2026Panel');
     if (!panel) {
@@ -11741,7 +11743,8 @@ function renderAspects2026Panel() {
             + '</div>'
             + '</div>';
 
-        // All aspects list
+        // All aspects list — store data in global array, reference by index (avoids broken onclick from special chars)
+        if (!window._asp2026Data) window._asp2026Data = [];
         if (aspects.length > 0) {
             html += '<div style="display:flex;flex-direction:column;gap:6px;">';
             aspects.forEach(asp => {
@@ -11753,22 +11756,28 @@ function renderAspects2026Panel() {
                 const meaning = translateMeaning(asp.meaning) || '';
                 const dateStr = formatShortDate(asp.date);
                 const isPast = new Date(asp.date) < now;
-                const safePlanet = (es ? tp(pName) : pName).replace(/'/g, "\\'");
-                const safeType = translatedType.replace(/'/g, "\\'");
-                const safeSymbol = (asp.symbol || '').replace(/'/g, "\\'");
-                const safeWith = translatedWith.replace(/'/g, "\\'");
-                const safeDate = dateStr.replace(/'/g, "\\'");
-                const safeMeaning = meaning.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                const safeLastTime = (asp.lastTime || '').replace(/'/g, "\\'");
+                const planetLabel = es ? tp(pName) : pName;
+
+                // Store aspect data in global array and reference by index
+                const aspDataIdx = window._asp2026Data.length;
+                window._asp2026Data.push({
+                    planet: planetLabel,
+                    type: translatedType,
+                    symbol: asp.symbol || '',
+                    with: translatedWith,
+                    date: dateStr,
+                    meaning: meaning,
+                    lastTime: asp.lastTime || ''
+                });
 
                 const aspBadge = asp.isGenerational ? '<span onclick="event.stopPropagation();showCategoryPanel(\'generational\')" style="background:rgba(155,89,182,0.25);color:#d4a5f5;padding:1px 5px;border-radius:3px;font-size:0.7em;margin-left:5px;cursor:pointer;border:1px solid rgba(155,89,182,0.4);">' + (es?'GENERACIONAL':'GENERATIONAL') + '</span>' :
                     asp.isMajor ? '<span onclick="event.stopPropagation();showCategoryPanel(\'major\')" style="background:rgba(231,76,60,0.2);color:#ff8a80;padding:1px 5px;border-radius:3px;font-size:0.7em;margin-left:5px;cursor:pointer;border:1px solid rgba(231,76,60,0.35);">' + (es?'MAYOR':'MAJOR') + '</span>' :
                     (asp.isImportant || asp.isCritical) ? '<span onclick="event.stopPropagation();showCategoryPanel(\'notable\')" style="background:rgba(78,205,196,0.15);color:#80cbc4;padding:1px 5px;border-radius:3px;font-size:0.7em;margin-left:5px;cursor:pointer;border:1px solid rgba(78,205,196,0.35);">' + (es?'NOTABLE':'NOTABLE') + '</span>' : '';
 
-                html += '<div onclick="showAspect2026Detail(\'' + safePlanet + '\',\'' + safeType + '\',\'' + safeSymbol + '\',\'' + safeWith + '\',\'' + safeDate + '\',\'' + safeMeaning + '\',\'' + safeLastTime + '\')" style="background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;border-left:3px solid ' + aspectColor + ';cursor:pointer;' + (isPast ? 'opacity:0.55;' : '') + '">'
+                html += '<div onclick="showAspect2026ByIndex(' + aspDataIdx + ')" style="background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;border-left:3px solid ' + aspectColor + ';cursor:pointer;' + (isPast ? 'opacity:0.55;' : '') + '">'
                     + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
                     + '<div style="font-size:0.9em;flex:1;">'
-                    + timeStr + '<strong style="color:' + p.color + ';">' + (es ? tp(pName) : pName) + '</strong> '
+                    + timeStr + '<strong style="color:' + p.color + ';">' + planetLabel + '</strong> '
                     + '<strong style="color:' + aspectColor + ';">' + symbolStr + translatedType + '</strong> '
                     + '<strong style="color:#a8b2d1;">' + translatedWith + '</strong>'
                     + aspBadge
@@ -11798,25 +11807,40 @@ function renderAspects2026Panel() {
 function renderAspects2026InSubtab() {
     var container = document.getElementById('natalTabAspects2026');
     if (!container) return;
-    // Reuse the existing renderAspects2026Panel logic:
-    // temporarily swap the target panel, render, then restore
-    var existingPanel = document.getElementById('aspects2026Panel');
-    // Create a temp panel inside the subtab
+    // Render directly into subtab with unique IDs (suffix '_st') to avoid duplicate-ID issues
+    // that break getElementById when both main panel and subtab exist simultaneously
     var tempPanel = document.getElementById('aspects2026PanelSubtab');
     if (!tempPanel) {
         tempPanel = document.createElement('div');
         tempPanel.id = 'aspects2026PanelSubtab';
         container.appendChild(tempPanel);
     }
-    // Copy logic from renderAspects2026Panel but target our subtab panel
-    // We'll just call it and then move the content
+    // First render the main panel to generate the HTML
     renderAspects2026Panel();
     var srcPanel = document.getElementById('aspects2026Panel');
     if (srcPanel) {
-        tempPanel.innerHTML = srcPanel.innerHTML;
+        // Copy HTML but replace element IDs and function references to use subtab variants
+        var html = srcPanel.innerHTML;
+        html = html.replace(/id="asp2026Details/g, 'id="asp2026Details_st');
+        html = html.replace(/id="asp2026Arrow/g, 'id="asp2026Arrow_st');
+        html = html.replace(/toggleAspect2026Details\(/g, 'toggleAspect2026Details_st(');
+        tempPanel.innerHTML = html;
         srcPanel.style.display = 'none';
     }
 }
+// Subtab variant of toggle that uses _st suffix IDs
+window.toggleAspect2026Details_st = function(idx) {
+    var el = document.getElementById('asp2026Details_st' + idx);
+    var arrow = document.getElementById('asp2026Arrow_st' + idx);
+    if (!el) return;
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+        if (arrow) arrow.textContent = '▲';
+    } else {
+        el.style.display = 'none';
+        if (arrow) arrow.textContent = '▼';
+    }
+};
 
 function toggleAspect2026Details(idx) {
     const el = document.getElementById('asp2026Details' + idx);
@@ -11830,6 +11854,13 @@ function toggleAspect2026Details(idx) {
         if (arrow) arrow.textContent = '▼';
     }
 }
+
+// Wrapper that reads aspect data from global array by index — avoids broken onclick from special chars in strings
+window.showAspect2026ByIndex = function(idx) {
+    var d = window._asp2026Data && window._asp2026Data[idx];
+    if (!d) return;
+    showAspect2026Detail(d.planet, d.type, d.symbol, d.with, d.date, d.meaning, d.lastTime);
+};
 
 function showAspect2026Detail(planetName, aspectType, aspectSymbol, withPlanet, dateStr, meaning, lastTime) {
     const modal = document.getElementById('natalDetailModal');
