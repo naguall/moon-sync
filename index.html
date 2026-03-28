@@ -6490,7 +6490,7 @@ let globalNatalChart = null;
 let globalTodayTransits = [];
 
 // AI interpretation for modals — sends specific prompt + full chart context
-async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) {
+async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle, storageKey) {
     var div = document.getElementById(targetDivId);
     if (!div) return;
     var L = currentLang === 'es';
@@ -6570,7 +6570,7 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
             // Scrollable messages area
             chatHtml += '<div id="interpChatMessages_' + chatId + '" style="flex:1;overflow-y:auto;min-height:80px;max-height:45vh;padding-bottom:8px;">';
             // Initial AI response as chat bubble with read-aloud button
-            chatHtml += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:92%;padding:10px 14px;border-radius:12px;font-size:0.85em;line-height:1.6;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.88);"><button data-readaloud="interpResp_' + chatId + '" onclick="readAloud(\'interpResp_' + chatId + '\')" style="margin-bottom:10px;padding:6px 16px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.35);border-radius:20px;color:#667eea;font-size:0.88em;cursor:pointer;font-weight:600;display:block;" title="' + (L ? 'Leer en voz alta' : 'Read aloud') + '">🔊 ' + (L ? 'Escuchar' : 'Listen') + '</button><div id="interpResp_' + chatId + '"><p>' + formattedHtml + '</p></div></div></div>';
+            chatHtml += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:92%;padding:10px 14px;border-radius:12px;font-size:0.85em;line-height:1.6;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.88);"><div id="interpResp_' + chatId + '"><p>' + formattedHtml + '</p></div></div></div>';
             // Existing chat messages (if reopening)
             if (_existChat && _existChat.messages) {
                 _existChat.messages.forEach(function(msg) {
@@ -6586,7 +6586,8 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
             var _sendFn = "sendInterpChatMessage('" + chatId + "','" + readingKey + "')";
             chatHtml += '<div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">';
             chatHtml += '<button id="' + _voiceBtnId + '" onclick="startGenericVoice(\'interpChatInput_' + chatId + '\',\'' + _sendFn.replace(/'/g, "\\'") + '\',\'' + _voiceBtnId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1em;cursor:pointer;flex-shrink:0;" title="' + (L ? 'Voz' : 'Voice') + '">🎙️</button>';
-            chatHtml += '<input type="text" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\')sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;">';
+            chatHtml += '<button onclick="readAloudLastMsg(\'interpChatMessages_' + chatId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1em;cursor:pointer;flex-shrink:0;line-height:1;" title="' + (L ? 'Leer en voz alta' : 'Read aloud') + '">🔊</button>';
+            chatHtml += '<textarea rows="1" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\');}" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,80)+\'px\';" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;resize:none;overflow-y:auto;max-height:80px;font-family:inherit;"></textarea>';
             chatHtml += '<button onclick="sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="padding:8px 14px;background:rgba(201,168,64,0.2);border:1px solid rgba(201,168,64,0.4);border-radius:20px;color:#c9a840;font-size:0.85em;cursor:pointer;font-weight:600;">\u2192</button>';
             chatHtml += '</div>';
             // Action buttons row
@@ -6598,6 +6599,14 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle) 
             chatHtml += '</div>';
             chatHtml += '</div>';
             div.innerHTML = chatHtml;
+            // Save interpretation to localStorage if storageKey provided (for composite/davison charts)
+            if (storageKey) {
+                try {
+                    localStorage.setItem(storageKey, '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:92%;padding:10px 14px;border-radius:12px;font-size:0.85em;line-height:1.6;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.88);"><div style="position:relative;"><p>' + formattedHtml + '</p></div></div></div>');
+                } catch(storageErr) {
+                    console.warn('Could not save interpretation to localStorage:', storageErr);
+                }
+            }
             // Scroll messages to bottom
             var msgsEl = document.getElementById('interpChatMessages_' + chatId);
             if (msgsEl) msgsEl.scrollTop = 0;
@@ -6749,8 +6758,9 @@ function openInterpretationChat(readingKey, chatId, btn) {
     html += '</div>';
 
     // Input area
-    html += '<div style="display:flex;gap:6px;">';
-    html += '<input type="text" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\')sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;">';
+    html += '<div style="display:flex;gap:6px;align-items:center;">';
+    html += '<button onclick="readAloudLastMsg(\'interpChatMsgs_' + chatId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1em;cursor:pointer;flex-shrink:0;line-height:1;" title="' + (L ? 'Leer en voz alta' : 'Read aloud') + '">🔊</button>';
+    html += '<textarea rows="1" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\');}" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,80)+\'px\';" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;resize:none;overflow-y:auto;max-height:80px;font-family:inherit;"></textarea>';
     html += '<button onclick="sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="padding:8px 14px;background:rgba(201,168,64,0.2);border:1px solid rgba(201,168,64,0.4);border-radius:20px;color:#c9a840;font-size:0.85em;cursor:pointer;font-weight:600;">→</button>';
     html += '</div>';
 
@@ -6841,7 +6851,7 @@ async function sendInterpChatMessage(chatId, readingKey) {
         if (aiText) {
             var _respId = 'interpFollowUp_' + chatId + '_' + Date.now();
             var formatted = aiText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
-            msgsDiv.innerHTML += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:85%;padding:8px 12px;border-radius:12px;font-size:0.85em;line-height:1.5;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85);"><button data-readaloud="' + _respId + '" onclick="readAloud(\'' + _respId + '\')" style="margin-bottom:8px;padding:5px 14px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.35);border-radius:20px;color:#667eea;font-size:0.85em;cursor:pointer;font-weight:600;display:block;">🔊 ' + (L ? 'Escuchar' : 'Listen') + '</button><div id="' + _respId + '">' + formatted + '</div></div></div>';
+            msgsDiv.innerHTML += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:85%;padding:8px 12px;border-radius:12px;font-size:0.85em;line-height:1.5;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85);"><div id="' + _respId + '">' + formatted + '</div></div></div>';
 
             // Save AI response
             chat.messages.push({ role: 'model', text: aiText, timestamp: new Date().toISOString() });
@@ -11959,8 +11969,9 @@ function showBannerAspectDetail(text) {
         }
         chatHtml += '</div>';
         chatHtml += '<div style="position:sticky;bottom:0;background:rgba(5,7,30,0.98);padding-top:8px;border-top:1px solid rgba(201,168,64,0.15);flex-shrink:0;">';
-        chatHtml += '<div style="display:flex;gap:6px;margin-bottom:8px;">';
-        chatHtml += '<input type="text" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\')sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;">';
+        chatHtml += '<div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">';
+        chatHtml += '<button onclick="readAloudLastMsg(\'interpChatMessages_' + chatId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1em;cursor:pointer;flex-shrink:0;line-height:1;" title="' + (L ? 'Leer en voz alta' : 'Read aloud') + '">🔊</button>';
+        chatHtml += '<textarea rows="1" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\');}" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,80)+\'px\';" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;resize:none;overflow-y:auto;max-height:80px;font-family:inherit;"></textarea>';
         chatHtml += '<button onclick="sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="padding:8px 14px;background:rgba(201,168,64,0.2);border:1px solid rgba(201,168,64,0.4);border-radius:20px;color:#c9a840;font-size:0.85em;cursor:pointer;font-weight:600;">\u2192</button>';
         chatHtml += '</div>';
         chatHtml += '<div style="display:flex;gap:6px;justify-content:center;">';
@@ -13906,8 +13917,18 @@ window.triggerCompositeInterpretation = function(dataKey) {
     bodyEl.innerHTML = html;
     detailModal.classList.add('show');
 
+    // Check if we have a saved interpretation
+    var storageKey = data.storageKey;
+    if (storageKey) {
+        var saved = localStorage.getItem(storageKey);
+        if (saved) {
+            document.getElementById('compFullInterpDiv').innerHTML = saved;
+            return;
+        }
+    }
+
     setTimeout(function() {
-        fetchAIInterpretation(data.prompt, 'compFullInterpDiv', data.title);
+        fetchAIInterpretation(data.prompt, 'compFullInterpDiv', data.title, storageKey);
     }, 200);
 };
 
@@ -13972,11 +13993,13 @@ window.openCompositeView = function(profileId) {
 
     if (!window._compositeInterpData) window._compositeInterpData = {};
     var _compInterpKey = 'comp_' + Date.now();
+    var _storageKey = 'compositeInterp_' + profileId + '_' + (getNatalData().id || 'self');
     window._compositeInterpData[_compInterpKey] = {
         title: (L?'Interpretación Carta Compuesta':'Composite Chart Interpretation') + ': ' + name1 + ' + ' + name2,
         icon: '⊕',
         subtitle: L?'Análisis completo de la carta compuesta':'Complete composite chart analysis',
-        prompt: interpPrompt
+        prompt: interpPrompt,
+        storageKey: _storageKey
     };
 
     html += '<div style="margin-top:10px;">';
@@ -14094,11 +14117,13 @@ window.openDavisonView = function(profileId) {
 
     if (!window._compositeInterpData) window._compositeInterpData = {};
     var _davInterpKey = 'dav_' + Date.now();
+    var _storageKey = 'davisonInterp_' + profileId + '_' + (getNatalData().id || 'self');
     window._compositeInterpData[_davInterpKey] = {
         title: (L?'Interpretación Carta Davison':'Davison Chart Interpretation') + ': ' + name1 + ' + ' + name2,
         icon: '✦',
         subtitle: L?'Análisis completo de la carta de Davison':'Complete Davison chart analysis',
-        prompt: interpPrompt
+        prompt: interpPrompt,
+        storageKey: _storageKey
     };
 
     html += '<div style="margin-top:10px;">';
@@ -14749,8 +14774,9 @@ function sendReturnInterpRequest(history, container, cacheKey) {
         chatHtml += '<div style="margin-bottom:8px;text-align:left;"><div style="display:inline-block;max-width:92%;padding:10px 14px;border-radius:12px;font-size:0.82em;line-height:1.6;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85);">' + text + '</div></div>';
         chatHtml += '</div>';
         chatHtml += '<div style="position:sticky;bottom:0;background:rgba(5,7,30,0.98);padding-top:8px;border-top:1px solid rgba(201,168,64,0.15);flex-shrink:0;">';
-        chatHtml += '<div style="display:flex;gap:6px;margin-bottom:8px;">';
-        chatHtml += '<input type="text" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\')sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;">';
+        chatHtml += '<div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">';
+        chatHtml += '<button onclick="readAloudLastMsg(\'interpChatMessages_' + chatId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1em;cursor:pointer;flex-shrink:0;line-height:1;" title="' + (L ? 'Leer en voz alta' : 'Read aloud') + '">🔊</button>';
+        chatHtml += '<textarea rows="1" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\');}" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,80)+\'px\';" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;resize:none;overflow-y:auto;max-height:80px;font-family:inherit;"></textarea>';
         chatHtml += '<button onclick="sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="padding:8px 14px;background:rgba(201,168,64,0.2);border:1px solid rgba(201,168,64,0.4);border-radius:20px;color:#c9a840;font-size:0.85em;cursor:pointer;font-weight:600;">\u2192</button>';
         chatHtml += '</div>';
         chatHtml += '<div style="display:flex;gap:6px;justify-content:center;">';
@@ -24801,6 +24827,7 @@ DOMTokenList.prototype.add = function() {
     <div class="hoy-interp-messages" id="hoyInterpMessages"></div>
     <div style="padding:10px 16px;border-top:1px solid rgba(201,168,64,0.15);background:rgba(5,5,25,0.95);display:flex;gap:6px;align-items:flex-end;">
         <button id="hoyVoiceBtn" onclick="startGenericVoice('hoyInterpInput','sendHoyInterpMessage()','hoyVoiceBtn')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;flex-shrink:0;" title="Voz">🎙️</button>
+        <button onclick="readAloudLastMsg('hoyInterpMessages')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1.1em;cursor:pointer;flex-shrink:0;line-height:1;" title="Leer en voz alta">🔊</button>
         <textarea id="hoyInterpInput" rows="1" placeholder="Pregunta sobre tu día..." style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.2);border-radius:10px;color:white;padding:10px 12px;font-size:0.85em;resize:none;outline:none;font-family:inherit;" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHoyInterpMessage();}"></textarea>
         <button onclick="sendHoyInterpMessage()" style="background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.4);border-radius:10px;color:#ffd54f;padding:8px 14px;font-size:1em;cursor:pointer;flex-shrink:0;">➤</button>
     </div>
@@ -24825,6 +24852,7 @@ DOMTokenList.prototype.add = function() {
     <div id="aiQuickActions" style="display:none;padding:8px 16px;background:rgba(5,7,30,0.98);border-top:1px solid rgba(102,126,234,0.15);flex-shrink:0;"></div>
     <div class="ai-chat-input-bar">
         <button id="aiVoiceBtn" onclick="toggleAIChatVoice()" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.2em;cursor:pointer;flex-shrink:0;" title="Voice input">🎙️</button>
+        <button onclick="readAloudLastMsg('aiChatMessages')" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1.2em;cursor:pointer;flex-shrink:0;line-height:1;" title="Leer en voz alta">🔊</button>
         <textarea id="aiChatInput" rows="1" placeholder="Escribe aquí..." style="text-align:center;" oninput="this.style.textAlign=this.value?'left':'center';this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';" onfocus="if(!this.value)this.style.textAlign='left';" onblur="if(!this.value)this.style.textAlign='center';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}"></textarea>
         <button id="aiTTSToggle" onclick="toggleTTS()" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;flex-shrink:0;" title="Voice responses">🔇</button>
         <button onclick="sendAIMessage()">➤</button>
@@ -24983,6 +25011,7 @@ window._ttsPlayer = { chunks: [], currentIdx: 0, elementId: null, playing: false
 window._ttsStop = function() {
     window.speechSynthesis.cancel();
     window._ttsPlayer.playing = false;
+    // Note: _ttsUpdatePlayerUI will handle hiding when finished; _ttsStop allows resuming without hiding
     window._ttsUpdatePlayerUI();
 };
 
@@ -25020,12 +25049,18 @@ window._ttsPlayChunk = function(idx) {
 
 window._ttsUpdatePlayerUI = function() {
     var p = window._ttsPlayer;
-    var playerEl = document.getElementById('ttsPlayerBar_' + p.elementId);
+    var playerEl = document.getElementById('ttsPlayerBar');
     if (!playerEl) return;
     var L = currentLang === 'es';
     var total = p.chunks.length;
     var cur = p.currentIdx;
     var pct = total > 0 ? Math.round(((cur + (p.playing ? 0.5 : 0)) / total) * 100) : 0;
+
+    // Hide player when finished (playing=false and currentIdx=0)
+    if (!p.playing && p.currentIdx === 0) {
+        playerEl.style.display = 'none';
+        return;
+    }
 
     playerEl.innerHTML =
         '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
@@ -25044,7 +25079,39 @@ window._ttsUpdatePlayerUI = function() {
                 '<option value="1.5"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===1.5?' selected':'') + '>1.5x</option>' +
                 '<option value="2.0"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===2.0?' selected':'') + '>2.0x</option>' +
             '</select>' +
+            '<button onclick="document.getElementById(\'ttsPlayerBar\').style.display=\'none\';" style="padding:4px 8px;background:rgba(255,59,48,0.15);border:1px solid rgba(255,59,48,0.3);border-radius:6px;color:#ff3b30;font-size:0.8em;cursor:pointer;font-weight:600;" title="' + (L?'Cerrar':'Close') + '">✕</button>' +
         '</div>';
+};
+
+// Read aloud the last AI message in a chat container
+window.readAloudLastMsg = function(containerId) {
+    if (!window.speechSynthesis) {
+        alert(currentLang === 'es' ? 'Tu navegador no soporta síntesis de voz.' : 'Your browser does not support speech synthesis.');
+        return;
+    }
+    // If already playing, toggle stop
+    if (window._ttsPlayer.playing) {
+        window._ttsStop();
+        return;
+    }
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    // Find the last AI response element (has an id starting with interpResp_, interpFollowUp_, hoyResp_, aiMsg_)
+    var allMsgs = container.querySelectorAll('[id^="interpResp_"],[id^="interpFollowUp_"],[id^="hoyResp_"],[id^="aiMsg_"]');
+    if (allMsgs.length === 0) {
+        // Try getting last .assistant or text-align:left bubble
+        var bubbles = container.querySelectorAll('.assistant, [class*="ai-msg"]');
+        if (bubbles.length > 0) {
+            var lastBubble = bubbles[bubbles.length - 1];
+            // Give it a temp id
+            lastBubble.id = 'ttsTemp_' + Date.now();
+            window.readAloud(lastBubble.id);
+            return;
+        }
+        return;
+    }
+    var lastMsg = allMsgs[allMsgs.length - 1];
+    window.readAloud(lastMsg.id);
 };
 
 window.readAloud = function(elementId) {
@@ -25085,18 +25152,15 @@ window.readAloud = function(elementId) {
     // Setup player state
     window._ttsPlayer = { chunks: chunks, currentIdx: 0, elementId: elementId, playing: false };
 
-    // Create or show player bar below the button
-    var btn = document.querySelector('[data-readaloud="' + elementId + '"]');
-    var playerId = 'ttsPlayerBar_' + elementId;
+    // Create or show fixed player bar at bottom of viewport
+    var playerId = 'ttsPlayerBar';
     var playerEl = document.getElementById(playerId);
     if (!playerEl) {
         playerEl = document.createElement('div');
         playerEl.id = playerId;
-        playerEl.style.cssText = 'margin-top:8px;margin-bottom:8px;padding:8px 10px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:12px;';
-        if (btn && btn.parentElement) {
-            btn.parentElement.insertBefore(playerEl, btn.nextSibling);
-        }
+        document.body.appendChild(playerEl);
     }
+    playerEl.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:90%;max-width:500px;padding:10px 14px;background:rgba(15,10,35,0.95);border:1px solid rgba(102,126,234,0.4);border-radius:16px;backdrop-filter:blur(10px);z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.5);display:block;';
 
     // Start playing
     window._ttsPlayChunk(0);
@@ -25488,7 +25552,7 @@ function addHoyInterpMessage(role, html, scrollToBottom) {
     var parsedHtml = typeof marked !== 'undefined' ? marked.parse(html) : html.replace(/\n/g, '<br>');
     if (role === 'assistant') {
         var _hoyRespId = 'hoyResp_' + Date.now();
-        div.innerHTML = '<button data-readaloud="' + _hoyRespId + '" onclick="readAloud(\'' + _hoyRespId + '\')" style="margin-bottom:10px;padding:6px 16px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.35);border-radius:20px;color:#667eea;font-size:0.88em;cursor:pointer;font-weight:600;display:block;">🔊 ' + (currentLang === 'es' ? 'Escuchar' : 'Listen') + '</button><div id="' + _hoyRespId + '">' + parsedHtml + '</div>';
+        div.innerHTML = '<div id="' + _hoyRespId + '">' + parsedHtml + '</div>';
     } else {
         div.innerHTML = parsedHtml;
     }
@@ -26692,8 +26756,7 @@ function addAIMessage(role, text, forceScrollBottom) {
             .replace(/\n/g, '<br>');
         var _aiMsgId = 'aiMsg_' + Date.now();
         // Listen button at the TOP — prominent
-        var listenBtnHtml = '<button data-readaloud="' + _aiMsgId + '" onclick="readAloud(\'' + _aiMsgId + '\')" style="margin-bottom:10px;padding:6px 16px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.35);border-radius:20px;color:#667eea;font-size:0.88em;cursor:pointer;font-weight:600;display:block;">🔊 ' + (currentLang === 'es' ? 'Escuchar' : 'Listen') + '</button>';
-        div.innerHTML = listenBtnHtml + '<div id="' + _aiMsgId + '"><p>' + html + '</p></div>';
+        div.innerHTML = '<div id="' + _aiMsgId + '"><p>' + html + '</p></div>';
         // Share/copy/save button bar
         const btnBar = document.createElement('div');
         btnBar.style.cssText = 'display:flex;gap:6px;margin-top:8px;justify-content:flex-end;flex-wrap:wrap;';
