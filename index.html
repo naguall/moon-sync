@@ -5478,6 +5478,10 @@ function updateJournalWordCount() {
 
 function closeAspectsModal() {
     document.getElementById('aspectsModal').classList.remove('show');
+    // Stop TTS if playing and hide player bar
+    if (window._ttsStop) window._ttsStop();
+    var ttsBar = document.getElementById('ttsPlayerBar');
+    if (ttsBar) ttsBar.style.display = 'none';
     // Also close day options modal if open
     const dayModal = document.getElementById('dayOptionsModal');
     if (dayModal) {
@@ -5869,6 +5873,9 @@ function closeAstroModal() {
 
 function closeNatalDetailModal() {
     document.getElementById('natalDetailModal').classList.remove('show');
+    if (window._ttsStop) window._ttsStop();
+    var ttsBar = document.getElementById('ttsPlayerBar');
+    if (ttsBar) ttsBar.style.display = 'none';
 }
 
 // ============================================
@@ -6430,6 +6437,9 @@ function exportAllDiaryEntries() {
 }
 function closeSavedReadingsModal() {
     document.getElementById('savedReadingsModal').classList.remove('show');
+    if (window._ttsStop) window._ttsStop();
+    var ttsBar = document.getElementById('ttsPlayerBar');
+    if (ttsBar) ttsBar.style.display = 'none';
 }
 function shareReadingById(id) {
     var readings = getSavedReadings();
@@ -7411,6 +7421,9 @@ function openDiarioModal(date, lunarDay) {
 function closeDiarioModal() {
     if (isRecording) stopVoiceInput();
     document.getElementById('diarioModal').classList.remove('show');
+    if (window._ttsStop) window._ttsStop();
+    var ttsBar = document.getElementById('ttsPlayerBar');
+    if (ttsBar) ttsBar.style.display = 'none';
 }
 
 // ── Diary Tab Switching ──
@@ -22767,6 +22780,9 @@ function openMoonVerMas(timestamp) {
 function closeMoonModal() {
     document.getElementById('moonDetailModal').classList.remove('show');
     document.getElementById('moonModalBody').innerHTML = '';
+    if (window._ttsStop) window._ttsStop();
+    var ttsBar = document.getElementById('ttsPlayerBar');
+    if (ttsBar) ttsBar.style.display = 'none';
 }
 window.openMoonVerMas   = openMoonVerMas;
 window.closeMoonModal   = closeMoonModal;
@@ -25151,7 +25167,7 @@ window._ttsUpdatePlayerUI = function() {
                 '<option value="1.5"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===1.5?' selected':'') + '>1.5x</option>' +
                 '<option value="2.0"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===2.0?' selected':'') + '>2.0x</option>' +
             '</select>' +
-            '<button onclick="_ttsStop();_ttsPlayer.currentIdx=0;_ttsUpdatePlayerUI();document.getElementById(\'ttsPlayerBar\').style.display=\'none\';" style="padding:4px 8px;background:rgba(255,59,48,0.15);border:1px solid rgba(255,59,48,0.3);border-radius:6px;color:#ff3b30;font-size:0.8em;cursor:pointer;font-weight:600;" title="' + (L?'Cerrar':'Close') + '">✕</button>' +
+            '<button onclick="window._ttsPlayer.playing=false;window._ttsPlayer.currentIdx=0;window._ttsPlayer._navigating=false;window.speechSynthesis.cancel();document.getElementById(\'ttsPlayerBar\').style.display=\'none\';" style="padding:4px 8px;background:rgba(255,59,48,0.15);border:1px solid rgba(255,59,48,0.3);border-radius:6px;color:#ff3b30;font-size:0.8em;cursor:pointer;font-weight:600;" title="' + (L?'Cerrar':'Close') + '">✕</button>' +
         '</div>';
 };
 
