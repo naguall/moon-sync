@@ -6496,6 +6496,23 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle, 
     var L = currentLang === 'es';
     var _readingTitle = readingTitle || (L ? 'Lectura' : 'Reading');
 
+    // Check if we already have a saved chat for this exact prompt (deterministic chatId)
+    if (!cachedHtml) {
+        var _checkHash = 0;
+        var _checkSrc = (getActiveProfileId() || 'default') + '|' + specificPrompt;
+        for (var _ci = 0; _ci < _checkSrc.length; _ci++) { _checkHash = ((_checkHash << 5) - _checkHash) + _checkSrc.charCodeAt(_ci); _checkHash |= 0; }
+        var _checkChatId = 'ic_' + Math.abs(_checkHash).toString(36);
+        var _existingChat = getInterpChat(_checkChatId);
+        if (_existingChat && _existingChat.initialResponse) {
+            cachedHtml = _existingChat.initialResponse;
+        }
+    }
+    // Also check composite/davison localStorage cache
+    if (!cachedHtml && storageKey) {
+        var _lsCache = localStorage.getItem(storageKey);
+        if (_lsCache) cachedHtml = _lsCache;
+    }
+
     // If we have cached text, skip the API call and build the chat UI directly
     var text = '';
     var formattedHtml = '';
