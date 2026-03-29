@@ -23275,7 +23275,7 @@ function openPreferencesModal() {
     });
     voiceContent += '</select>';
     if (esVoices.length === 0) voiceContent += '<div style="font-size:0.68em;color:rgba(255,255,255,0.3);margin-top:4px;">' + (currentLang==='es'?'No se encontraron voces. Intenta recargar la página.':'No voices found. Try reloading the page.') + '</div>';
-    if (esVoices.length > 0 && esVoices.length <= 2) voiceContent += '<div style="font-size:0.68em;color:rgba(255,255,255,0.3);margin-top:4px;">' + (currentLang==='es'?'iOS limita las voces disponibles en el navegador. Para más voces, ve a Ajustes → Accesibilidad → Contenido leído → Voces.':'iOS limits available voices in browser. For more voices, go to Settings → Accessibility → Spoken Content → Voices.') + '</div>';
+    if (esVoices.length > 0 && esVoices.length <= 2) voiceContent += '<div style="font-size:0.68em;color:rgba(255,255,255,0.3);margin-top:4px;">' + (currentLang==='es'?'Tu dispositivo tiene pocas voces disponibles. Para más voces, ve a Ajustes → Sistema → Idioma → Texto a voz e instala paquetes de voz adicionales.':'Your device has few available voices. For more voices, go to Settings → System → Language → Text-to-Speech and install additional voice packs.') + '</div>';
     voiceContent += '<button onclick="testTTSVoice(\'es\')" style="margin-top:6px;padding:5px 14px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:16px;color:#667eea;font-size:0.75em;cursor:pointer;">▶ ' + (currentLang==='es'?'Probar voz':'Test voice') + '</button>';
     voiceContent += '</div>';
 
