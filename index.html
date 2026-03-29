@@ -23226,16 +23226,22 @@ function openPreferencesModal() {
         };
     }
 
-    // Spanish voices: Only Latin American (no Spain), filter out Apple novelty voices that all sound the same
+    // Spanish voices: prefer Latin American, filter out Apple novelty voices
     var _appleNoveltyEs = ['Eddy','Flo','Grandma','Grandpa','Reed','Rocko','Sandy','Shelley'];
-    var esVoices = voices.filter(function(v) {
+    var _allEsVoices = voices.filter(function(v) {
         if (!v.lang.startsWith('es')) return false;
-        if (v.lang === 'es-ES' || v.lang === 'es_ES') return false; // No Spain voices
-        // Filter Apple novelty voices (they all sound identical)
         var baseName = v.name.split(' (')[0];
         if (_appleNoveltyEs.indexOf(baseName) !== -1) return false;
         return true;
     });
+    // Try to prefer Latin American voices (no Spain)
+    var esVoices = _allEsVoices.filter(function(v) {
+        return v.lang !== 'es-ES' && v.lang !== 'es_ES';
+    });
+    // If filtering removed too many, show ALL Spanish voices (iOS 18 may only have es-ES Eloquence voices)
+    if (esVoices.length <= 1 && _allEsVoices.length > esVoices.length) {
+        esVoices = _allEsVoices;
+    }
 
     // English voices: filter out novelty/joke voices AND Apple novelty that sound similar
     var _noveltyNames = ['Bad News','Bahh','Bells','Boing','Bubbles','Cellos','Good News','Jester','Organ','Superstar','Trinoids','Whisper','Wobble','Zarvox','Ralph','Fred','Junior','Kathy','Vicki','Victoria','Princess'];
@@ -23268,7 +23274,8 @@ function openPreferencesModal() {
         voiceContent += '<option value="' + v.name + '"' + (savedVoiceEs === v.name ? ' selected' : '') + '>' + label + '</option>';
     });
     voiceContent += '</select>';
-    if (esVoices.length === 0) voiceContent += '<div style="font-size:0.68em;color:rgba(255,255,255,0.3);margin-top:4px;">' + (currentLang==='es'?'No se encontraron voces. Intenta recargar.':'No voices found. Try reloading.') + '</div>';
+    if (esVoices.length === 0) voiceContent += '<div style="font-size:0.68em;color:rgba(255,255,255,0.3);margin-top:4px;">' + (currentLang==='es'?'No se encontraron voces. Intenta recargar la página.':'No voices found. Try reloading the page.') + '</div>';
+    if (esVoices.length > 0 && esVoices.length <= 2) voiceContent += '<div style="font-size:0.68em;color:rgba(255,255,255,0.3);margin-top:4px;">' + (currentLang==='es'?'iOS limita las voces disponibles en el navegador. Para más voces, ve a Ajustes → Accesibilidad → Contenido leído → Voces.':'iOS limits available voices in browser. For more voices, go to Settings → Accessibility → Spoken Content → Voices.') + '</div>';
     voiceContent += '<button onclick="testTTSVoice(\'es\')" style="margin-top:6px;padding:5px 14px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:16px;color:#667eea;font-size:0.75em;cursor:pointer;">▶ ' + (currentLang==='es'?'Probar voz':'Test voice') + '</button>';
     voiceContent += '</div>';
 
@@ -25300,13 +25307,15 @@ window._refreshVoiceDropdowns = function() {
     var selEs = document.getElementById('ttsVoiceEs');
     if (selEs && selEs.options.length <= 1) {
         var savedEs = localStorage.getItem('ttsVoice_es') || '';
-        var esVoices = voices.filter(function(v) {
+        var allEsV = voices.filter(function(v) {
             if (!v.lang.startsWith('es')) return false;
-            if (v.lang === 'es-ES' || v.lang === 'es_ES') return false;
             var baseName = v.name.split(' (')[0];
             if (_appleNovelty.indexOf(baseName) !== -1) return false;
             return true;
         });
+        // Prefer Latin American, but fall back to all if too few
+        var esVoices = allEsV.filter(function(v) { return v.lang !== 'es-ES' && v.lang !== 'es_ES'; });
+        if (esVoices.length <= 1 && allEsV.length > esVoices.length) esVoices = allEsV;
         esVoices.forEach(function(v) {
             var opt = document.createElement('option');
             opt.value = v.name;
