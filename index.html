@@ -6991,6 +6991,7 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle, 
             chatHtml += '<div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">';
             chatHtml += '<button id="' + _voiceBtnId + '" onclick="startGenericVoice(\'interpChatInput_' + chatId + '\',\'' + _sendFn.replace(/'/g, "\\'") + '\',\'' + _voiceBtnId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1em;cursor:pointer;flex-shrink:0;" title="' + (L ? 'Voz' : 'Voice') + '">🎙️</button>';
             chatHtml += '<button onclick="readAloudLastMsg(\'interpChatMessages_' + chatId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1em;cursor:pointer;flex-shrink:0;line-height:1;" title="' + (L ? 'Leer en voz alta' : 'Read aloud') + '">🔊</button>';
+            chatHtml += '<button id="voiceConvoBtn_' + chatId + '" onclick="_toggleVoiceConvo(\'' + chatId + '\',\'' + readingKey + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:0.85em;cursor:pointer;flex-shrink:0;line-height:1;" title="' + (L ? 'Modo conversación por voz' : 'Voice conversation mode') + '">🗣️</button>';
             chatHtml += '<textarea rows="1" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\');}" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,80)+\'px\';" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;resize:none;overflow-y:auto;max-height:80px;font-family:inherit;"></textarea>';
             chatHtml += '<button onclick="sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="padding:8px 14px;background:rgba(201,168,64,0.2);border:1px solid rgba(201,168,64,0.4);border-radius:20px;color:#c9a840;font-size:0.85em;cursor:pointer;font-weight:600;">\u2192</button>';
             chatHtml += '</div>';
@@ -7311,6 +7312,8 @@ async function sendInterpChatMessage(chatId, readingKey) {
             // Save AI response
             chat.messages.push({ role: 'model', text: aiText, timestamp: new Date().toISOString() });
             saveInterpChat(chatId, chat);
+            // Voice conversation mode: auto-read response and re-activate mic
+            window._voiceConvoAfterAIResponse(_respId, chatId, readingKey);
             // Add double-click to read from point on follow-up responses
             var _fuEl = document.getElementById(_respId);
             if (_fuEl && !_fuEl._dblClickAdded) {
@@ -25532,7 +25535,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v448';
+const APP_VERSION = 'v449';
 var _pendingSW = null;
 
 // What's New removed per user request
@@ -25934,6 +25937,61 @@ window.stopGenericVoice = function(inputId, btnId) {
         btn.style.background = 'rgba(255,255,255,0.08)';
         btn.style.borderColor = 'rgba(255,255,255,0.15)';
         btn.innerHTML = '🎙️';
+    }
+};
+
+// ===== VOICE CONVERSATION MODE =====
+// When active: auto-read AI responses aloud, then auto-activate mic for next input
+window._voiceConvoMode = { active: false, chatId: null, readingKey: null };
+
+window._toggleVoiceConvo = function(chatId, readingKey) {
+    var vc = window._voiceConvoMode;
+    vc.active = !vc.active;
+    vc.chatId = chatId;
+    vc.readingKey = readingKey;
+    var btn = document.getElementById('voiceConvoBtn_' + chatId);
+    if (btn) {
+        btn.style.background = vc.active ? 'rgba(78,205,196,0.25)' : 'rgba(255,255,255,0.08)';
+        btn.style.borderColor = vc.active ? '#4ecdc4' : 'rgba(255,255,255,0.15)';
+        btn.style.color = vc.active ? '#4ecdc4' : 'rgba(255,255,255,0.7)';
+    }
+    if (vc.active) {
+        // Start listening immediately
+        var inputId = 'interpChatInput_' + chatId;
+        var sendFn = "sendInterpChatMessage('" + chatId + "','" + readingKey + "')";
+        var voiceBtnId = 'interpVoice_' + chatId;
+        window.startGenericVoice(inputId, sendFn, voiceBtnId);
+    } else {
+        // Stop everything
+        var inputId2 = 'interpChatInput_' + chatId;
+        var voiceBtnId2 = 'interpVoice_' + chatId;
+        window.stopGenericVoice(inputId2, voiceBtnId2);
+        if (window._ttsPlayer.playing) window._ttsStop();
+    }
+};
+
+// Called after AI response finishes in voice convo mode: read aloud, then re-activate mic
+window._voiceConvoAfterAIResponse = function(respElId, chatId, readingKey) {
+    var vc = window._voiceConvoMode;
+    if (!vc.active || vc.chatId !== chatId) return;
+    // Read the AI response aloud
+    if (respElId) {
+        window.readAloud(respElId);
+        // When TTS finishes, auto-activate mic
+        var _checkTTSDone = setInterval(function() {
+            if (!window._ttsPlayer.playing && !window._ttsPlayer.paused) {
+                clearInterval(_checkTTSDone);
+                if (!vc.active) return; // user may have toggled off
+                // Small delay then activate mic
+                setTimeout(function() {
+                    if (!vc.active) return;
+                    var inputId = 'interpChatInput_' + chatId;
+                    var sendFn = "sendInterpChatMessage('" + chatId + "','" + readingKey + "')";
+                    var voiceBtnId = 'interpVoice_' + chatId;
+                    window.startGenericVoice(inputId, sendFn, voiceBtnId);
+                }, 500);
+            }
+        }, 300);
     }
 };
 
