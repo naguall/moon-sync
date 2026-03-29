@@ -699,6 +699,7 @@
             <!-- Header row: title left, utility buttons right — always same line -->
             <div id="headerTitleRow" style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:6px;padding:0 4px;flex-wrap:nowrap;">
                 <h1 id="calendarTitle" style="margin:0;font-size:clamp(1em,3.5vw,1.5em);flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🌙 Lunar</h1>
+                <span id="versionBadge" style="position:absolute;top:2px;left:50%;transform:translateX(-50%);font-size:0.6em;color:rgba(102,126,234,0.7);font-weight:600;pointer-events:none;opacity:1;transition:opacity 2s ease;"></span>
                 <div id="headerUtilBtns" style="display:flex;align-items:center;gap:5px;flex-shrink:0;margin-left:8px;">
                     <button id="savedReadingsBtn" onclick="openSavedReadingsModal()" style="background:transparent;border:1px solid rgba(255,255,255,0.25);border-radius:6px;padding:4px 6px;cursor:pointer;font-size:0.85em;color:rgba(255,255,255,0.7);line-height:1;">📚</button>
                     <button id="notifHistoryBtn" onclick="openNotifHistoryModal()" style="position:relative;background:transparent;border:1px solid rgba(255,255,255,0.25);border-radius:6px;padding:4px 6px;cursor:pointer;font-size:0.85em;color:rgba(255,255,255,0.8);line-height:1;">🔔<span id="notifBadge" style="display:none;position:absolute;top:-8px;right:-8px;background:#FF3B30;color:#fff;font-size:0.65em;font-weight:800;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;padding:0 3px;box-sizing:border-box;box-shadow:0 2px 6px rgba(255,59,48,0.6);border:2px solid #0a0a2e;">0</span></button>
@@ -1080,8 +1081,8 @@
                         <button id="dreamInterpBtn" onclick="interpretDream()" style="flex:1;padding:12px;background:linear-gradient(135deg,rgba(138,43,226,0.3),rgba(75,0,130,0.2));border:1px solid rgba(138,43,226,0.5);border-radius:10px;color:#ce93d8;font-size:0.9em;font-weight:700;cursor:pointer;">
                             ✨ <span data-i18n="dreamInterpret">Interpretar Sueño</span>
                         </button>
-                        <button id="newDreamBtn" onclick="addNewDreamFromModal()" style="padding:12px 16px;background:rgba(93,173,226,0.15);border:1px solid rgba(93,173,226,0.4);border-radius:10px;color:#5dade2;font-size:0.9em;font-weight:700;cursor:pointer;white-space:nowrap;">
-                            + 🌙
+                        <button id="newDreamBtn" onclick="addNewDreamFromModal()" style="padding:12px 16px;background:rgba(93,173,226,0.15);border:1px solid rgba(93,173,226,0.4);border-radius:10px;color:#5dade2;font-size:0.85em;font-weight:700;cursor:pointer;white-space:nowrap;">
+                            🌙 Nuevo Sueño
                         </button>
                     </div>
                     <div id="dreamInterpContainer" style="margin-top:12px;"></div>
@@ -25467,6 +25468,21 @@ var _pendingSW = null;
         overlay.addEventListener('click', function(ev) { if (ev.target === overlay) overlay.remove(); });
         document.body.appendChild(overlay);
     }, 1500);
+})();
+
+// Show version badge on load — fades after 10 seconds
+(function showVersionOnLoad() {
+    setTimeout(function() {
+        var badge = document.getElementById('versionBadge');
+        if (badge) {
+            badge.textContent = APP_VERSION;
+            // Fade out after 10 seconds
+            setTimeout(function() {
+                badge.style.opacity = '0';
+                setTimeout(function() { badge.textContent = ''; }, 2000);
+            }, 10000);
+        }
+    }, 500);
 })();
 
 function showUpdateBanner() {
