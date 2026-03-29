@@ -7017,6 +7017,26 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle, 
             // Scroll parent modal to top so user sees interpretation from beginning
             var parentModal = div.closest('.modal-content') || div.closest('.modal');
             if (parentModal) parentModal.scrollTop = 0;
+            // Add double-click to read from point on ALL interpretation responses
+            var _interpRespEl = document.getElementById('interpResp_' + chatId);
+            if (_interpRespEl && !_interpRespEl._dblClickAdded) {
+                _interpRespEl._dblClickAdded = true;
+                _interpRespEl.addEventListener('dblclick', function(e) {
+                    e.stopPropagation();
+                    var sel = window.getSelection();
+                    var clickedText = '';
+                    if (sel && sel.anchorNode) {
+                        var node = sel.anchorNode;
+                        while (node && node !== _interpRespEl && node.nodeType !== 1) node = node.parentNode;
+                        if (node && node !== _interpRespEl) clickedText = (node.textContent || '').trim();
+                        else clickedText = (sel.anchorNode.textContent || '').trim();
+                    }
+                    if (clickedText && clickedText.length > 3) {
+                        window.readAloud(_interpRespEl.id, clickedText);
+                    }
+                });
+                _interpRespEl.title = L ? 'Doble click para leer desde aquí' : 'Double click to read from here';
+            }
         } else {
             div.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.85em;">' + (L ? 'No se pudo generar interpretación.' : 'Could not generate interpretation.') + '</p>';
         }
@@ -7291,6 +7311,26 @@ async function sendInterpChatMessage(chatId, readingKey) {
             // Save AI response
             chat.messages.push({ role: 'model', text: aiText, timestamp: new Date().toISOString() });
             saveInterpChat(chatId, chat);
+            // Add double-click to read from point on follow-up responses
+            var _fuEl = document.getElementById(_respId);
+            if (_fuEl && !_fuEl._dblClickAdded) {
+                _fuEl._dblClickAdded = true;
+                _fuEl.addEventListener('dblclick', function(e) {
+                    e.stopPropagation();
+                    var sel = window.getSelection();
+                    var clickedText = '';
+                    if (sel && sel.anchorNode) {
+                        var node = sel.anchorNode;
+                        while (node && node !== _fuEl && node.nodeType !== 1) node = node.parentNode;
+                        if (node && node !== _fuEl) clickedText = (node.textContent || '').trim();
+                        else clickedText = (sel.anchorNode.textContent || '').trim();
+                    }
+                    if (clickedText && clickedText.length > 3) {
+                        window.readAloud(_fuEl.id, clickedText);
+                    }
+                });
+                _fuEl.title = L ? 'Doble click para leer desde aquí' : 'Double click to read from here';
+            }
         }
 
         msgsDiv.scrollTop = msgsDiv.scrollHeight;
@@ -23371,8 +23411,8 @@ window.handleDayClick = handleDayClick;
     // When user touches the screen and NO modal should be visible,
     // force-close any that are still marked .show (stuck overlays)
     document.addEventListener('click', function(e) {
-        // Only run if the click target is NOT inside a modal
-        if (e.target.closest && e.target.closest('.modal')) return;
+        // Only run if the click target is NOT inside a modal or TTS player
+        if (e.target.closest && (e.target.closest('.modal') || e.target.closest('#ttsPlayerBar') || e.target.closest('#ttsSelBtn'))) return;
         // Check for stuck modals that might be blocking
         var stuckModals = document.querySelectorAll('.modal.show');
         stuckModals.forEach(function(m) {
@@ -25492,7 +25532,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v445';
+const APP_VERSION = 'v446';
 var _pendingSW = null;
 
 // What's New removed per user request
@@ -27994,6 +28034,11 @@ function buildSystemPrompt(contextLevel) {
         ? '\n\n═══ DOBLE PERSPECTIVA OBLIGATORIA ═══\nSIEMPRE que analices o interpretes, muestra DOS perspectivas:\n• PERSPECTIVA CONSCIENTE: Lo que el ego reconoce, la expresión visible del signo/planeta/aspecto.\n• PERSPECTIVA INCONSCIENTE (SOMBRA): Lo que el ego rechaza o no ve — el material reprimido, proyectado o negado.\n\nBusca traer COMPRENSIÓN y TRANSMUTACIÓN a la sombra, no juicio. Analiza los EJES de los signos (Aries-Libra, Tauro-Escorpio, Géminis-Sagitario, Cáncer-Capricornio, Leo-Acuario, Virgo-Piscis). Muestra el REFLEJO DEL OPUESTO: lo que un signo/planeta niega es lo que su opuesto encarna. Si aplica, muestra cómo la polaridad complementaria revela lo que falta integrar. El objetivo es consciencia total del eje, no preferir un polo sobre otro.'
         : '\n\n═══ MANDATORY DUAL PERSPECTIVE ═══\nWHENEVER you analyze or interpret, show TWO perspectives:\n• CONSCIOUS PERSPECTIVE: What the ego recognizes, the visible expression of the sign/planet/aspect.\n• UNCONSCIOUS PERSPECTIVE (SHADOW): What the ego rejects or cannot see — repressed, projected, or denied material.\n\nSeek to bring UNDERSTANDING and TRANSMUTATION to the shadow, not judgment. Analyze the SIGN AXES (Aries-Libra, Taurus-Scorpio, Gemini-Sagittarius, Cancer-Capricorn, Leo-Aquarius, Virgo-Pisces). Show the REFLECTION OF THE OPPOSITE: what a sign/planet denies is what its opposite embodies. If applicable, show how the complementary polarity reveals what needs integration. The goal is full axis awareness, not preferring one pole over the other.';
 
+    // ── Formatting instructions for ALL interpretations ──
+    base += isEs
+        ? '\n\n═══ FORMATO DE RESPUESTA OBLIGATORIO ═══\nTodas tus interpretaciones DEBEN seguir este formato:\n1. Organiza por SECCIONES TEMÁTICAS claras usando encabezados con **negrita** (ej: **Capa Simbólica**, **Capa Astrológica**, **Capa Psicológica**, **Síntesis**).\n2. Deja UNA LÍNEA EN BLANCO entre cada sección/tema.\n3. Usa **negrita** para conceptos clave, nombres de planetas, signos, aspectos y términos importantes.\n4. Cada sección debe ser un párrafo coherente, NO listas con viñetas.\n5. La última sección siempre debe ser una **Síntesis** o **Mensaje Final** que integre todo.\nEsto es OBLIGATORIO en TODAS las respuestas.'
+        : '\n\n═══ MANDATORY RESPONSE FORMAT ═══\nAll your interpretations MUST follow this format:\n1. Organize by clear THEMATIC SECTIONS using **bold** headers (e.g.: **Symbolic Layer**, **Astrological Layer**, **Psychological Layer**, **Synthesis**).\n2. Leave ONE BLANK LINE between each section/theme.\n3. Use **bold** for key concepts, planet names, signs, aspects, and important terms.\n4. Each section should be a coherent paragraph, NOT bullet lists.\n5. The last section should always be a **Synthesis** or **Final Message** that integrates everything.\nThis is MANDATORY in ALL responses.';
+
     return base;
 }
 
@@ -28012,6 +28057,25 @@ function addAIMessage(role, text, forceScrollBottom) {
         var _aiMsgId = 'aiMsg_' + Date.now();
         // Listen button at the TOP — prominent
         div.innerHTML = '<div id="' + _aiMsgId + '"><p>' + html + '</p></div>';
+        // Double-click to read from point
+        var _aiMsgDiv = div.querySelector('#' + _aiMsgId);
+        if (_aiMsgDiv) {
+            _aiMsgDiv.addEventListener('dblclick', function(e) {
+                e.stopPropagation();
+                var sel = window.getSelection();
+                var clickedText = '';
+                if (sel && sel.anchorNode) {
+                    var node = sel.anchorNode;
+                    while (node && node !== _aiMsgDiv && node.nodeType !== 1) node = node.parentNode;
+                    if (node && node !== _aiMsgDiv) clickedText = (node.textContent || '').trim();
+                    else clickedText = (sel.anchorNode.textContent || '').trim();
+                }
+                if (clickedText && clickedText.length > 3) {
+                    window.readAloud(_aiMsgDiv.id, clickedText);
+                }
+            });
+            _aiMsgDiv.title = currentLang === 'es' ? 'Doble click para leer desde aquí' : 'Double click to read from here';
+        }
         // Share/copy/save button bar
         const btnBar = document.createElement('div');
         btnBar.style.cssText = 'display:flex;gap:6px;margin-top:8px;justify-content:flex-end;flex-wrap:wrap;';
