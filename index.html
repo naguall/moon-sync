@@ -25532,7 +25532,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v447';
+const APP_VERSION = 'v448';
 var _pendingSW = null;
 
 // What's New removed per user request
@@ -26195,6 +26195,27 @@ window._ttsPlayChunk = function(idx) {
     window.speechSynthesis.speak(utter);
 };
 
+// Navigate forward/backward without destroying karaoke HTML
+// direction: -1 = prev, 1 = next, 0 = jump to specific idx
+window._ttsNav = function(direction, targetIdx) {
+    var p = window._ttsPlayer;
+    var newIdx;
+    if (direction === 0 && typeof targetIdx === 'number') {
+        newIdx = Math.max(0, Math.min(targetIdx, p.chunks.length - 1));
+    } else {
+        newIdx = p.currentIdx + direction;
+    }
+    if (newIdx < 0 || newIdx >= p.chunks.length) return;
+    // Cancel current speech without restoring HTML (keep karaoke spans)
+    p._navigating = true;
+    window.speechSynthesis.cancel();
+    p._navigating = false;
+    p.paused = false;
+    p._pausedAtIdx = null;
+    // Play from new index (karaoke spans are preserved)
+    window._ttsPlayChunk(newIdx);
+};
+
 window._ttsUpdatePlayerUI = function() {
     var p = window._ttsPlayer;
     var playerEl = document.getElementById('ttsPlayerBar');
@@ -26211,24 +26232,23 @@ window._ttsUpdatePlayerUI = function() {
     }
 
     playerEl.innerHTML =
-        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
-            '<button onclick="' + (p.playing && !p.paused ? '_ttsPause()' : p.paused ? '_ttsResume()' : '_ttsPlayChunk(_ttsPlayer.currentIdx)') + '" style="padding:5px 12px;background:rgba(102,126,234,0.2);border:1px solid rgba(102,126,234,0.4);border-radius:16px;color:#667eea;font-size:0.82em;cursor:pointer;font-weight:700;">' + (p.playing && !p.paused ? '⏸' : p.paused ? '▶' : '▶') + '</button>' +
-            '<button onclick="_ttsStop()" style="padding:4px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:rgba(255,255,255,0.6);font-size:0.78em;cursor:pointer;">⏹</button>' +
-            '<button onclick="_ttsStop();_ttsPlayChunk(Math.max(0,_ttsPlayer.currentIdx-1))" style="padding:4px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:rgba(255,255,255,0.6);font-size:0.78em;cursor:pointer;" title="' + (L?'Anterior':'Previous') + '">⏮</button>' +
-            '<button onclick="_ttsStop();_ttsPlayChunk(Math.min(_ttsPlayer.chunks.length-1,_ttsPlayer.currentIdx+1))" style="padding:4px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:rgba(255,255,255,0.6);font-size:0.78em;cursor:pointer;" title="' + (L?'Siguiente':'Next') + '">⏭</button>' +
-            '<span style="font-size:0.7em;color:rgba(255,255,255,0.4);min-width:50px;text-align:center;">' + (cur+1) + '/' + total + '</span>' +
-            '<div style="flex:1;min-width:60px;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;cursor:pointer;" onclick="var rect=this.getBoundingClientRect();var x=event.clientX-rect.left;var pct=x/rect.width;var idx=Math.floor(pct*_ttsPlayer.chunks.length);_ttsStop();_ttsPlayChunk(Math.max(0,Math.min(idx,_ttsPlayer.chunks.length-1)));">' +
+        '<div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;">' +
+            '<button onclick="' + (p.playing && !p.paused ? '_ttsPause()' : p.paused ? '_ttsResume()' : '_ttsPlayChunk(_ttsPlayer.currentIdx)') + '" style="padding:4px 10px;background:rgba(102,126,234,0.2);border:1px solid rgba(102,126,234,0.4);border-radius:14px;color:#667eea;font-size:0.78em;cursor:pointer;font-weight:700;flex-shrink:0;">' + (p.playing && !p.paused ? '⏸' : '▶') + '</button>' +
+            '<button onclick="_ttsStop()" style="padding:3px 6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:rgba(255,255,255,0.6);font-size:0.72em;cursor:pointer;flex-shrink:0;">⏹</button>' +
+            '<button onclick="_ttsNav(-1)" style="padding:3px 6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:rgba(255,255,255,0.6);font-size:0.72em;cursor:pointer;flex-shrink:0;">⏮</button>' +
+            '<button onclick="_ttsNav(1)" style="padding:3px 6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:rgba(255,255,255,0.6);font-size:0.72em;cursor:pointer;flex-shrink:0;">⏭</button>' +
+            '<span style="font-size:0.62em;color:rgba(255,255,255,0.35);flex-shrink:0;white-space:nowrap;">' + (cur+1) + '/' + total + '</span>' +
+            '<div style="flex:1;min-width:30px;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;cursor:pointer;" onclick="var rect=this.getBoundingClientRect();var x=event.clientX-rect.left;var pct=x/rect.width;var idx=Math.floor(pct*_ttsPlayer.chunks.length);_ttsNav(0,idx);">' +
                 '<div style="width:' + pct + '%;height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:3px;transition:width 0.3s;"></div>' +
             '</div>' +
-            '<select onchange="localStorage.setItem(\'ttsRate\',this.value);if(_ttsPlayer.playing){var i=_ttsPlayer.currentIdx;_ttsStop();_ttsPlayChunk(i);}" style="padding:3px 4px;background:rgba(20,10,40,0.8);border:1px solid rgba(102,126,234,0.3);border-radius:8px;color:#667eea;font-size:0.7em;cursor:pointer;width:55px;">' +
-                '<option value="0.5"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===0.5?' selected':'') + '>0.5x</option>' +
-                '<option value="0.7"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===0.7?' selected':'') + '>0.7x</option>' +
-                '<option value="1.0"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===1.0?' selected':'') + '>1.0x</option>' +
-                '<option value="1.2"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===1.2?' selected':'') + '>1.2x</option>' +
-                '<option value="1.5"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===1.5?' selected':'') + '>1.5x</option>' +
-                '<option value="2.0"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===2.0?' selected':'') + '>2.0x</option>' +
+            '<select onchange="localStorage.setItem(\'ttsRate\',this.value);if(_ttsPlayer.playing&&!_ttsPlayer.paused){var i=_ttsPlayer.currentIdx;_ttsPlayer._navigating=true;speechSynthesis.cancel();_ttsPlayer._navigating=false;_ttsPlayChunk(i);}" style="padding:2px 2px;background:rgba(20,10,40,0.8);border:1px solid rgba(102,126,234,0.3);border-radius:6px;color:#667eea;font-size:0.62em;cursor:pointer;width:40px;flex-shrink:0;">' +
+                '<option value="0.7"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===0.7?' selected':'') + '>.7x</option>' +
+                '<option value="1.0"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===1.0?' selected':'') + '>1x</option>' +
+                '<option value="1.2"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===1.2?' selected':'') + '>1.2</option>' +
+                '<option value="1.5"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===1.5?' selected':'') + '>1.5</option>' +
+                '<option value="2.0"' + (parseFloat(localStorage.getItem('ttsRate')||'1.0')===2.0?' selected':'') + '>2x</option>' +
             '</select>' +
-            '<button onclick="window._ttsRestoreHTML();window._ttsPlayer.playing=false;window._ttsPlayer.currentIdx=0;window._ttsPlayer._navigating=false;window.speechSynthesis.cancel();document.getElementById(\'ttsPlayerBar\').style.display=\'none\';" style="padding:4px 8px;background:rgba(255,59,48,0.15);border:1px solid rgba(255,59,48,0.3);border-radius:6px;color:#ff3b30;font-size:0.8em;cursor:pointer;font-weight:600;" title="' + (L?'Cerrar':'Close') + '">✕</button>' +
+            '<button onclick="window._ttsRestoreHTML();window._ttsPlayer.playing=false;window._ttsPlayer.currentIdx=0;window._ttsPlayer._pausedAtIdx=null;window._ttsPlayer._navigating=false;window.speechSynthesis.cancel();document.getElementById(\'ttsPlayerBar\').style.display=\'none\';" style="padding:3px 6px;background:rgba(255,59,48,0.15);border:1px solid rgba(255,59,48,0.3);border-radius:6px;color:#ff3b30;font-size:0.72em;cursor:pointer;font-weight:600;flex-shrink:0;">✕</button>' +
         '</div>';
 };
 
@@ -26347,15 +26367,26 @@ window.readAloud = function(elementId, startFromText) {
         }
     }
 
-    // Create or show fixed player bar at bottom of viewport
+    // Create or show player bar — try to insert above chat input inside modal, fallback to fixed
     var playerId = 'ttsPlayerBar';
     var playerEl = document.getElementById(playerId);
     if (!playerEl) {
         playerEl = document.createElement('div');
         playerEl.id = playerId;
-        document.body.appendChild(playerEl);
     }
-    playerEl.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:90%;max-width:500px;padding:10px 14px;background:rgba(15,10,35,0.95);border:1px solid rgba(102,126,234,0.4);border-radius:16px;backdrop-filter:blur(10px);z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.5);display:block;';
+    // Try to place inside the reading element's parent sticky input area
+    var _ttsSourceEl = document.getElementById(elementId);
+    var _ttsStickyParent = _ttsSourceEl ? _ttsSourceEl.closest('.modal-content') || _ttsSourceEl.closest('.modal') : null;
+    var _ttsStickyInput = _ttsStickyParent ? _ttsStickyParent.querySelector('[style*="position:sticky"]') : null;
+    if (_ttsStickyInput && _ttsStickyInput.parentNode) {
+        // Insert player right before the sticky input area
+        _ttsStickyInput.parentNode.insertBefore(playerEl, _ttsStickyInput);
+        playerEl.style.cssText = 'width:100%;padding:6px 8px;background:rgba(15,10,35,0.95);border:1px solid rgba(102,126,234,0.4);border-radius:12px;z-index:100;margin-bottom:6px;display:block;';
+    } else {
+        // Fallback: fixed at bottom for non-modal contexts
+        if (playerEl.parentNode !== document.body) document.body.appendChild(playerEl);
+        playerEl.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:92%;max-width:500px;padding:6px 8px;background:rgba(15,10,35,0.95);border:1px solid rgba(102,126,234,0.4);border-radius:12px;backdrop-filter:blur(10px);z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.5);display:block;';
+    }
 
     // Start playing from the determined index
     window._ttsPlayChunk(startIdx);
