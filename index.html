@@ -23214,7 +23214,17 @@ function openPreferencesModal() {
     var savedVoiceEs = localStorage.getItem('ttsVoice_es') || '';
     var savedVoiceEn = localStorage.getItem('ttsVoice_en') || '';
     var savedRate = parseFloat(localStorage.getItem('ttsRate') || '1.0');
+
+    // getVoices() may return empty on first call (async in iOS/Safari/some Chrome)
+    // We try to get them, and if empty, register a listener to rebuild dropdowns
     var voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    if (voices.length === 0 && window.speechSynthesis) {
+        // Voices not loaded yet — wait for them and refresh the voice section
+        window.speechSynthesis.onvoiceschanged = function() {
+            // Re-populate the dropdowns if they exist and are empty
+            window._refreshVoiceDropdowns();
+        };
+    }
 
     // Spanish voices: Only Latin American (no Spain), filter out Apple novelty voices that all sound the same
     var _appleNoveltyEs = ['Eddy','Flo','Grandma','Grandpa','Reed','Rocko','Sandy','Shelley'];
@@ -23239,8 +23249,8 @@ function openPreferencesModal() {
     });
 
     // Helper to guess gender from voice name
-    var _femaleNames = ['Mónica','Paulina','Catherine','Karen','Samantha','Tessa','Moira','Fiona','Allison','Ava','Susan','Zoe','Nicky','Alice','Joana','Luciana','Mariska','Meijia','Melina','Milena','Sara','Tünde','Yelda'];
-    var _maleNames = ['Carlos','Aaron','Albert','Arthur','Daniel','Alex','Tom','Oliver','Rishi','Lee','Gordon','Otoya','Luca','Thomas','Jacques','Henrik','Javier','Jorge','Magnus','Xander'];
+    var _femaleNames = ['Mónica','Paulina','Catherine','Karen','Samantha','Tessa','Moira','Fiona','Allison','Ava','Susan','Zoe','Nicky','Alice','Joana','Luciana','Mariska','Meijia','Melina','Milena','Sara','Tünde','Yelda','Martha','Angelica','Jimena','Francisca'];
+    var _maleNames = ['Carlos','Aaron','Albert','Arthur','Daniel','Alex','Tom','Oliver','Rishi','Lee','Gordon','Otoya','Luca','Thomas','Jacques','Henrik','Javier','Jorge','Magnus','Xander','Juan','Diego','Andrés'];
     function _genderTag(name) {
         if (_femaleNames.some(function(f) { return name.indexOf(f) !== -1; })) return ' 👩';
         if (_maleNames.some(function(m) { return name.indexOf(m) !== -1; })) return ' 👨';
@@ -25270,6 +25280,75 @@ window.stopGenericVoice = function(inputId, btnId) {
 
 // ===== GENERIC READ-ALOUD FOR ANY AI RESPONSE =====
 // Get the user's preferred TTS voice for a language
+// Dynamically refresh voice dropdowns when voices load asynchronously (iOS Safari)
+window._refreshVoiceDropdowns = function() {
+    var voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    if (voices.length === 0) return;
+
+    var _appleNovelty = ['Eddy','Flo','Grandma','Grandpa','Reed','Rocko','Sandy','Shelley'];
+    var _noveltyNames = ['Bad News','Bahh','Bells','Boing','Bubbles','Cellos','Good News','Jester','Organ','Superstar','Trinoids','Whisper','Wobble','Zarvox','Ralph','Fred','Junior','Kathy','Vicki','Victoria','Princess'];
+    var _femaleNames = ['Mónica','Paulina','Catherine','Karen','Samantha','Tessa','Moira','Fiona','Allison','Ava','Susan','Zoe','Nicky','Alice','Joana','Luciana','Mariska','Meijia','Melina','Milena','Sara','Tünde','Yelda','Martha','Angelica','Jimena','Francisca'];
+    var _maleNames = ['Carlos','Aaron','Albert','Arthur','Daniel','Alex','Tom','Oliver','Rishi','Lee','Gordon','Otoya','Luca','Thomas','Jacques','Henrik','Javier','Jorge','Magnus','Xander','Juan','Diego','Andrés'];
+
+    function genderTag(name) {
+        if (_femaleNames.some(function(f) { return name.indexOf(f) !== -1; })) return ' 👩';
+        if (_maleNames.some(function(m) { return name.indexOf(m) !== -1; })) return ' 👨';
+        return '';
+    }
+
+    // Refresh Spanish dropdown
+    var selEs = document.getElementById('ttsVoiceEs');
+    if (selEs && selEs.options.length <= 1) {
+        var savedEs = localStorage.getItem('ttsVoice_es') || '';
+        var esVoices = voices.filter(function(v) {
+            if (!v.lang.startsWith('es')) return false;
+            if (v.lang === 'es-ES' || v.lang === 'es_ES') return false;
+            var baseName = v.name.split(' (')[0];
+            if (_appleNovelty.indexOf(baseName) !== -1) return false;
+            return true;
+        });
+        esVoices.forEach(function(v) {
+            var opt = document.createElement('option');
+            opt.value = v.name;
+            opt.textContent = v.name + ' (' + v.lang + ')' + genderTag(v.name) + (v.localService ? '' : ' ☁️');
+            if (savedEs === v.name) opt.selected = true;
+            selEs.appendChild(opt);
+        });
+        console.log('🔊 Voice dropdowns refreshed: ' + esVoices.length + ' es voices');
+    }
+
+    // Refresh English dropdown
+    var selEn = document.getElementById('ttsVoiceEn');
+    if (selEn && selEn.options.length <= 1) {
+        var savedEn = localStorage.getItem('ttsVoice_en') || '';
+        var enVoices = voices.filter(function(v) {
+            if (!v.lang.startsWith('en')) return false;
+            if (_noveltyNames.indexOf(v.name) !== -1) return false;
+            var baseName = v.name.split(' (')[0];
+            if (_appleNovelty.indexOf(baseName) !== -1) return false;
+            return true;
+        });
+        enVoices.forEach(function(v) {
+            var opt = document.createElement('option');
+            opt.value = v.name;
+            opt.textContent = v.name + ' (' + v.lang + ')' + genderTag(v.name) + (v.localService ? '' : ' ☁️');
+            if (savedEn === v.name) opt.selected = true;
+            selEn.appendChild(opt);
+        });
+        console.log('🔊 Voice dropdowns refreshed: ' + enVoices.length + ' en voices');
+    }
+};
+
+// Also preload voices on app startup
+if (window.speechSynthesis) {
+    window.speechSynthesis.getVoices(); // Trigger initial load
+    if (!window.speechSynthesis.onvoiceschanged) {
+        window.speechSynthesis.onvoiceschanged = function() {
+            window._refreshVoiceDropdowns();
+        };
+    }
+}
+
 window._getTTSVoice = function(langCode) {
     var voices = window.speechSynthesis.getVoices();
     var savedName = localStorage.getItem('ttsVoice_' + langCode) || '';
