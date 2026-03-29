@@ -25441,54 +25441,10 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v441';
+const APP_VERSION = 'v442';
 var _pendingSW = null;
 
-// ── What's New notification on version change ──
-(function checkWhatsNew() {
-    var lastSeen = localStorage.getItem('lastSeenVersion');
-    if (lastSeen === APP_VERSION) return; // Already seen
-    localStorage.setItem('lastSeenVersion', APP_VERSION);
-    // Show after a short delay so the app finishes loading
-    setTimeout(function() {
-        var L = (typeof currentLang !== 'undefined' && currentLang === 'es');
-        var overlay = document.createElement('div');
-        overlay.id = 'whatsNewOverlay';
-        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:100000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.3s ease;';
-        var modal = document.createElement('div');
-        modal.style.cssText = 'background:linear-gradient(160deg,#1a1145 0%,#0f0a23 100%);border:1px solid rgba(102,126,234,0.4);border-radius:20px;padding:24px;max-width:420px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.6);';
-        modal.innerHTML = ''
-            + '<div style="text-align:center;margin-bottom:16px;">'
-            + '<div style="font-size:2.2em;margin-bottom:6px;">🌙</div>'
-            + '<div style="font-size:1.3em;font-weight:800;background:linear-gradient(135deg,#667eea,#ce93d8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Moon Sync ' + APP_VERSION + '</div>'
-            + '<div style="font-size:0.8em;color:rgba(255,255,255,0.4);margin-top:4px;">' + (L ? 'Novedades' : 'What\'s New') + '</div>'
-            + '</div>'
-            + '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">'
-            + '<div style="background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.2);border-radius:12px;padding:12px;">'
-            + '<div style="font-weight:700;color:#667eea;font-size:0.9em;margin-bottom:4px;">📅 ' + (L ? 'Fechas DD-MM-YYYY' : 'Dates DD-MM-YYYY') + '</div>'
-            + '<div style="font-size:0.82em;color:rgba(255,255,255,0.6);line-height:1.5;">' + (L ? 'Todas las fechas ahora muestran día-mes-año en diarios, sueños y exportaciones.' : 'All dates now show day-month-year in diaries, dreams and exports.') + '</div>'
-            + '</div>'
-            + '<div style="background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.2);border-radius:12px;padding:12px;">'
-            + '<div style="font-weight:700;color:#4ecdc4;font-size:0.9em;margin-bottom:4px;">🕐 ' + (L ? 'Hora en notas' : 'Timestamps on notes') + '</div>'
-            + '<div style="font-size:0.82em;color:rgba(255,255,255,0.6);line-height:1.5;">' + (L ? 'Cada sueño y reflexión registra la hora (HH:MM) en que se guardó.' : 'Each dream and reflection records the time (HH:MM) when saved.') + '</div>'
-            + '</div>'
-            + '<div style="background:rgba(93,173,226,0.1);border:1px solid rgba(93,173,226,0.2);border-radius:12px;padding:12px;">'
-            + '<div style="font-weight:700;color:#5dade2;font-size:0.9em;margin-bottom:4px;">🌙 ' + (L ? 'Múltiples sueños por fecha' : 'Multiple dreams per date') + '</div>'
-            + '<div style="font-size:0.82em;color:rgba(255,255,255,0.6);line-height:1.5;">' + (L ? 'Agrega varios sueños en un mismo día con el botón + 🌙. Cada uno con su interpretación.' : 'Add multiple dreams on the same day with the + 🌙 button. Each with its own interpretation.') + '</div>'
-            + '</div>'
-            + '<div style="background:rgba(201,168,64,0.1);border:1px solid rgba(201,168,64,0.2);border-radius:12px;padding:12px;">'
-            + '<div style="font-weight:700;color:#c9a840;font-size:0.9em;margin-bottom:4px;">⏰ ' + (L ? 'Alarma de sueños mejorada' : 'Improved dream alarm') + '</div>'
-            + '<div style="font-size:0.82em;color:rgba(255,255,255,0.6);line-height:1.5;">' + (L ? 'La alarma dura 60 segundos y se detiene al detectar tu voz.' : 'Alarm lasts 60 seconds and stops when it detects your voice.') + '</div>'
-            + '</div>'
-            + '</div>'
-            + '<div style="text-align:center;">'
-            + '<button onclick="document.getElementById(\'whatsNewOverlay\').remove()" style="padding:10px 32px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:25px;color:white;font-weight:700;font-size:0.95em;cursor:pointer;box-shadow:0 4px 15px rgba(102,126,234,0.4);">✨ ' + (L ? 'Entendido' : 'Got it') + '</button>'
-            + '</div>';
-        overlay.appendChild(modal);
-        overlay.addEventListener('click', function(ev) { if (ev.target === overlay) overlay.remove(); });
-        document.body.appendChild(overlay);
-    }, 1500);
-})();
+// What's New removed per user request
 
 // Show version badge on load — fades after 10 seconds
 (function showVersionOnLoad() {
