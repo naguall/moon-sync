@@ -13908,7 +13908,7 @@ function getTimezoneFromCoords(lat, lon, countryCode) {
         'do': 'America/Santo_Domingo', 'hn': 'America/Tegucigalpa', 'ni': 'America/Managua',
         'sv': 'America/El_Salvador', 'ca': lon < -100 ? 'America/Vancouver' : 'America/Toronto',
     };
-    return countryTimezones[countryCode] || null;
+    return countryTimezones[(countryCode || '').toLowerCase()] || null;
 }
 
 function getBirthUTCTime(dateStr, timeStr, lat, lon, countryCode) {
@@ -14009,7 +14009,9 @@ function calculateNatalChart(birthDate) {
     }
 
     // Calculate houses
-    const houses = calculateHouses(birthDate, parseFloat(localStorage.getItem('natalLat') || '0'));
+    var _nLat = parseFloat(localStorage.getItem('natalLat') || '0');
+    var _nLon = parseFloat(localStorage.getItem('natalLon') || '0');
+    const houses = calculateHouses(birthDate, _nLat, _nLon);
 
     // Calculate Part of Fortune: ASC + Moon - Sun (day chart), ASC + Sun - Moon (night chart)
     if (houses && natalPositions.sun && natalPositions.moon) {
@@ -14043,10 +14045,11 @@ function calculateNatalChart(birthDate) {
 
         // Vertex: the point where the prime vertical intersects the ecliptic in the west
         // Simplified: Vertex ≈ ASC of the "anti-vertex" chart (co-latitude)
-        var userLat = parseFloat(localStorage.getItem('natalLat') || '0');
+        var userLat = _nLat;
+        var userLon = _nLon;
         var coLat = 90 - Math.abs(userLat);
         // Vertex is approximately the descendant calculated for co-latitude
-        var vtxHouses = calculateHouses(birthDate, coLat * (userLat >= 0 ? 1 : -1));
+        var vtxHouses = calculateHouses(birthDate, coLat * (userLat >= 0 ? 1 : -1), userLon);
         if (vtxHouses) {
             var vtxLon = (vtxHouses.ascendant + 180) % 360; // descendant at co-latitude
             var vtxSign = getZodiacSignWithDegree(vtxLon);
@@ -14245,14 +14248,14 @@ function calculateElementsQualities(planets, houses) {
     };
 }
 
-function calculateHouses(date, latitude) {
+function calculateHouses(date, latitude, longitude) {
     // ═══════════════════════════════════════════════════
     // PLACIDUS house system — professional-grade
     // Uses iterative method to trisect diurnal/nocturnal semi-arcs
     // ═══════════════════════════════════════════════════
     var jd = getJulianDay(date);
     var T = (jd - 2451545.0) / 36525;
-    var lon = parseFloat(localStorage.getItem('natalLon') || '0');
+    var lon = (longitude !== undefined) ? longitude : parseFloat(localStorage.getItem('natalLon') || '0');
     var dr = Math.PI / 180;
 
     // GMST in degrees
@@ -14289,11 +14292,9 @@ function calculateHouses(date, latitude) {
         return lam % 360;
     }
 
-    // Placidus cusp iteration
-    // H11: RA(λ) = RAMC + 30 + AD(λ)/3
-    // H12: RA(λ) = RAMC + 60 + 2·AD(λ)/3
-    // H2:  RA(λ) = RAMC + 210 - AD(λ)/3   (below horizon)
-    // H3:  RA(λ) = RAMC + 240 - 2·AD(λ)/3 (below horizon)
+    // Placidus cusp iteration (semi-arc trisection)
+    // Above horizon (diurnal): H11 = RAMC + 30 + AD/3, H12 = RAMC + 60 + 2·AD/3
+    // Below horizon (nocturnal): H2 = RAMC + 120 + 2·AD/3, H3 = RAMC + 150 + AD/3
     function placidusCusp(baseOffset, adFrac) {
         var AD = 0;
         var lambda;
@@ -14321,8 +14322,8 @@ function calculateHouses(date, latitude) {
     cusps[11] = placidusCusp(60, 2/3);           // House 12
 
     // Below horizon cusps
-    cusps[1] = placidusCusp(210, -1/3);          // House 2
-    cusps[2] = placidusCusp(240, -2/3);          // House 3
+    cusps[1] = placidusCusp(120, 2/3);           // House 2 (nocturnal: offset=120, +2/3 AD)
+    cusps[2] = placidusCusp(150, 1/3);           // House 3 (nocturnal: offset=150, +1/3 AD)
 
     // Opposite cusps (180° from their counterparts)
     cusps[3] = (mc + 180) % 360;                 // House 4 = IC
@@ -26075,7 +26076,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v462';
+const APP_VERSION = 'v463';
 var _pendingSW = null;
 
 // What's New removed per user request
