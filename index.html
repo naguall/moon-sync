@@ -25759,17 +25759,31 @@ function requestGPS() {
                 if (!name) name = fallbackCityName();
                 setUserLocation(lat, lon, name);
                 updateLocationTimeBanner();
+                if (btn) btn.textContent = '📍 ' + name.split(',')[0];
             })
             .catch(() => {
                 // Offline or API error — use local database
-                setUserLocation(lat, lon, fallbackCityName());
+                var fname = fallbackCityName();
+                setUserLocation(lat, lon, fname);
                 updateLocationTimeBanner();
+                if (btn) btn.textContent = '📍 ' + fname.split(',')[0];
             });
         },
         err => {
-            btn.textContent = currentLang==='es'?`Error: ${err.message}`:`Error: ${err.message}`;
+            var L = currentLang === 'es';
+            if (err.code === 1) {
+                btn.textContent = L ? '⚠️ Permiso denegado' : '⚠️ Permission denied';
+            } else if (err.code === 3) {
+                btn.textContent = L ? '⚠️ Tiempo agotado' : '⚠️ Timed out';
+            } else {
+                btn.textContent = L ? '⚠️ Error GPS' : '⚠️ GPS Error';
+            }
+            // Reset button after 3 seconds
+            setTimeout(function() {
+                if (btn) btn.textContent = L ? '📍 Obtener ubicación GPS' : '📍 Get GPS Location';
+            }, 3000);
         },
-        { timeout: 10000 }
+        { timeout: 15000, enableHighAccuracy: false, maximumAge: 60000 }
     );
 }
 
@@ -26111,7 +26125,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v464';
+const APP_VERSION = 'v465';
 var _pendingSW = null;
 
 // What's New removed per user request
