@@ -13177,6 +13177,14 @@ function renderAspects2026InSubtab() {
         html = html.replace(/renderAspects2026Panel\(\)/g, 'renderAspects2026InSubtab()');
         // Also replace signs2026 IDs to avoid duplicates (in onclick handlers and id attrs)
         html = html.replace(/signs2026Det/g, 'signs2026Det_st');
+        // Replace Major 2026 expandable IDs
+        html = html.replace(/maj2026Det/g, 'maj2026Det_st');
+        html = html.replace(/maj2026Arrow/g, 'maj2026Arrow_st');
+        // Replace Events 2026 expandable IDs
+        html = html.replace(/evt2026Det/g, 'evt2026Det_st');
+        html = html.replace(/evt2026Arrow/g, 'evt2026Arrow_st');
+        // Replace inline getElementById references for evHist_ random IDs
+        html = html.replace(/evHist_/g, 'evHist_st_');
         tempPanel.innerHTML = html;
         srcPanel.style.display = 'none';
     }
@@ -25998,7 +26006,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v457';
+const APP_VERSION = 'v458';
 var _pendingSW = null;
 
 // What's New removed per user request
