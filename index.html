@@ -20205,7 +20205,10 @@ function renderPersonalCalendar() {
         calendarHTML += `
             <div class="${classes}" onclick="showPersonalDayDetail(${year},${month},${day})" title="${seasonTitle || (isBirthday ? '🎂 ' : '')}${date.toLocaleDateString(L?'es':'en')}" style="${seasonBorder || cycleBorder}">
                 <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-                    <div class="personal-day-num" style="font-size:1.3em;font-weight:800;color:#e8c84a;">${isBirthday ? '🎂 ' : ''}${personalDay}</div>
+                    <div style="display:flex;align-items:baseline;gap:3px;">
+                        <div class="personal-day-num" style="font-size:1.3em;font-weight:800;color:#e8c84a;">${isBirthday ? '🎂 ' : ''}${personalDay}</div>
+                        <div style="font-size:0.65em;font-weight:700;color:#b39ddb;opacity:0.8;" title="${L?'Numerología del día':'Day numerology'}">${(() => { let n = personalDay; while (n > 9 && n !== 11 && n !== 22 && n !== 33) { n = String(n).split('').reduce((s,d) => s + parseInt(d), 0); } return n; })()}</div>
+                    </div>
                     <div style="display:flex;gap:1px;align-items:center;flex-wrap:wrap;">
                         ${seasonIcon ? `<span style="font-size:0.75em;" title="${seasonTitle}">${seasonIcon}</span>` : ''}
                         ${moonIcon ? `<span style="font-size:1em;">${moonIcon}</span>` : ''}
@@ -27121,7 +27124,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v477';
+const APP_VERSION = 'v478';
 var _pendingSW = null;
 
 // What's New removed per user request
