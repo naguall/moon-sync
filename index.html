@@ -15260,6 +15260,21 @@ window.openSynastryView = function(profileId) {
     if (!natal) return;
     var nc1 = JSON.parse(localStorage.getItem('natalChart_' + natal.id) || localStorage.getItem('natalChart'));
     var nc2 = JSON.parse(localStorage.getItem('natalChart_' + profileId));
+    // Auto-calculate natal chart for second profile if missing
+    if (!nc2) {
+        var p2 = getNatalProfiles().find(function(p) { return p.id === profileId; });
+        if (p2 && p2.date && p2.time && typeof calculateNatalChart === 'function') {
+            try {
+                var d2 = new Date(p2.date + 'T' + p2.time + ':00');
+                var chart2 = calculateNatalChart(d2, p2.lat, p2.lon);
+                if (chart2) {
+                    localStorage.setItem('natalChart_' + profileId, JSON.stringify(chart2));
+                    nc2 = chart2;
+                    console.log('[AutoCalc] Generated natal chart for profile:', p2.name || profileId);
+                }
+            } catch(e) { console.warn('[AutoCalc] Failed for profile:', profileId, e); }
+        }
+    }
     if (!nc1 || !nc2) return;
 
     var profile = getNatalProfiles().find(function(p) { return p.id === profileId; });
@@ -15845,6 +15860,21 @@ window.openCompositeView = function(profileId) {
     if (!natal) return;
     var nc1 = JSON.parse(localStorage.getItem('natalChart_' + natal.id) || localStorage.getItem('natalChart'));
     var nc2 = JSON.parse(localStorage.getItem('natalChart_' + profileId));
+    // Auto-calculate natal chart for second profile if missing
+    if (!nc2) {
+        var p2 = getNatalProfiles().find(function(p) { return p.id === profileId; });
+        if (p2 && p2.date && p2.time && typeof calculateNatalChart === 'function') {
+            try {
+                var d2 = new Date(p2.date + 'T' + p2.time + ':00');
+                var chart2 = calculateNatalChart(d2, p2.lat, p2.lon);
+                if (chart2) {
+                    localStorage.setItem('natalChart_' + profileId, JSON.stringify(chart2));
+                    nc2 = chart2;
+                    console.log('[AutoCalc] Generated natal chart for profile:', p2.name || profileId);
+                }
+            } catch(e) { console.warn('[AutoCalc] Failed for profile:', profileId, e); }
+        }
+    }
     if (!nc1 || !nc2) return;
 
     var profile = getNatalProfiles().find(function(p) { return p.id === profileId; });
@@ -15950,6 +15980,21 @@ window.openDavisonView = function(profileId) {
     if (!natal) return;
     var nc1 = JSON.parse(localStorage.getItem('natalChart_' + natal.id) || localStorage.getItem('natalChart'));
     var nc2 = JSON.parse(localStorage.getItem('natalChart_' + profileId));
+    // Auto-calculate natal chart for second profile if missing
+    if (!nc2) {
+        var p2 = getNatalProfiles().find(function(p) { return p.id === profileId; });
+        if (p2 && p2.date && p2.time && typeof calculateNatalChart === 'function') {
+            try {
+                var d2 = new Date(p2.date + 'T' + p2.time + ':00');
+                var chart2 = calculateNatalChart(d2, p2.lat, p2.lon);
+                if (chart2) {
+                    localStorage.setItem('natalChart_' + profileId, JSON.stringify(chart2));
+                    nc2 = chart2;
+                    console.log('[AutoCalc] Generated natal chart for profile:', p2.name || profileId);
+                }
+            } catch(e) { console.warn('[AutoCalc] Failed for profile:', profileId, e); }
+        }
+    }
     if (!nc1 || !nc2) return;
 
     var profiles = getNatalProfiles();
@@ -26722,7 +26767,7 @@ function forceAppUpdate() {
 window.forceAppUpdate = forceAppUpdate;
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v474';
+const APP_VERSION = 'v475';
 var _pendingSW = null;
 
 // What's New removed per user request
