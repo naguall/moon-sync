@@ -9688,6 +9688,44 @@ function _renderCompass() {
             }
             // Equator
             mapSvg += '<line x1="0" y1="' + (mH/2) + '" x2="' + mW + '" y2="' + (mH/2) + '" stroke="rgba(255,255,255,0.12)" stroke-width="0.5" stroke-dasharray="4,4"/>';
+            // ── Day/Night terminator shadow ──
+            try {
+                var _tSunDecl = getSunDeclination(now);
+                var _tSubSolarLon = getSubsolarLonDeg(now);
+                var _tDR = Math.PI / 180;
+                var _tPts = [];
+                for (var _tLon = -180; _tLon <= 180; _tLon += 4) {
+                    var _tHa = (_tLon - _tSubSolarLon) * _tDR;
+                    var _tTanLat;
+                    var _tLatT;
+                    if (Math.abs(_tSunDecl) < 0.001) {
+                        _tLatT = (Math.cos(_tHa) >= 0) ? 90 : -90;
+                    } else {
+                        _tTanLat = -Math.cos(_tHa) * Math.cos(_tSunDecl * _tDR) / Math.sin(_tSunDecl * _tDR);
+                        _tLatT = Math.atan(_tTanLat) / _tDR;
+                    }
+                    _tPts.push({ lon: _tLon, lat: _tLatT });
+                }
+                // Determine night side
+                var _tNightCenterLon = _tSubSolarLon > 0 ? _tSubSolarLon - 180 : _tSubSolarLon + 180;
+                var _tTestAlt = getSunAltitude(now, 0, _tNightCenterLon);
+                var _tNightPath = '';
+                var _tmx = function(ln) { return (ln + 180) / 360 * mW; };
+                var _tmy = function(lt) { return (90 - lt) / 180 * mH; };
+                _tNightPath = 'M' + _tmx(-180).toFixed(1) + ',' + _tmy(_tPts[0].lat).toFixed(1);
+                for (var _ti = 1; _ti < _tPts.length; _ti++) {
+                    _tNightPath += ' L' + _tmx(_tPts[_ti].lon).toFixed(1) + ',' + _tmy(_tPts[_ti].lat).toFixed(1);
+                }
+                if (_tTestAlt < 0) {
+                    _tNightPath += ' L' + mW + ',' + mH + ' L0,' + mH + ' Z';
+                } else {
+                    _tNightPath += ' L' + mW + ',0 L0,0 Z';
+                }
+                mapSvg += '<path d="' + _tNightPath + '" fill="rgba(0,0,20,0.45)" stroke="none"/>';
+                // Terminator line (dawn/dusk boundary)
+                var _tLinePath = _tPts.map(function(p, i) { return (i === 0 ? 'M' : 'L') + _tmx(p.lon).toFixed(1) + ',' + _tmy(p.lat).toFixed(1); }).join(' ');
+                mapSvg += '<path d="' + _tLinePath + '" fill="none" stroke="rgba(255,200,50,0.35)" stroke-width="0.8" stroke-dasharray="3,2"/>';
+            } catch(e) {}
             // User position
             var uX = (lon + 180) / 360 * mW;
             var uY = (90 - lat) / 180 * mH;
@@ -9704,6 +9742,19 @@ function _renderCompass() {
             mapSvg += '<line x1="' + uX + '" y1="' + uY + '" x2="' + slX + '" y2="' + slY + '" stroke="rgba(' + _spColorRgb + ',0.2)" stroke-width="0.5" stroke-dasharray="3,3"/>';
             mapSvg += '</svg>';
             info += mapSvg;
+            // ── Sunrise / Sunset times ──
+            try {
+                var _srss = getSunRiseSet(now, lat, lon);
+                var _srFmt = function(d) { return d ? d.toLocaleTimeString(L?'es':'en', {hour:'2-digit',minute:'2-digit',hour12:false}) : '--:--'; };
+                info += '<div style="display:flex;gap:6px;margin-top:6px;justify-content:center;">';
+                info += '<div style="background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.2);border-radius:8px;padding:4px 10px;flex:1;max-width:120px;text-align:center;">';
+                info += '<div style="font-size:0.6em;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.5px;">🌅 ' + (L ? 'Amanecer' : 'Sunrise') + '</div>';
+                info += '<div style="font-weight:700;color:#ff9800;font-size:0.88em;">' + _srFmt(_srss.rise) + '</div></div>';
+                info += '<div style="background:rgba(156,39,176,0.08);border:1px solid rgba(156,39,176,0.2);border-radius:8px;padding:4px 10px;flex:1;max-width:120px;text-align:center;">';
+                info += '<div style="font-size:0.6em;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.5px;">🌇 ' + (L ? 'Atardecer' : 'Sunset') + '</div>';
+                info += '<div style="font-weight:700;color:#9c27b0;font-size:0.88em;">' + _srFmt(_srss.set) + '</div></div>';
+                info += '</div>';
+            } catch(e) {}
         } else {
             // 3D globe view
             var gSize = 220, gCx = gSize/2, gCy = gSize/2, gR = 90;
@@ -24352,15 +24403,15 @@ function renderCalendar() {
         }).join('');
         
         weekDiv.innerHTML = `
-            <div class="week-header" style="display:grid;grid-template-columns:repeat(${week.days.length},1fr);gap:var(--day-cell-gap,3px);align-items:center;padding:4px 0;" ${isClickableWeek ? `onclick="navigateToLunar2026Moon(${week.startDate.getTime()}, '${index === 0 ? 'new' : 'full'}')"` : ''}>
+            <div class="week-header" style="display:grid;grid-template-columns:repeat(8,1fr);gap:var(--day-cell-gap,3px);align-items:center;padding:4px 0;" ${isClickableWeek ? `onclick="navigateToLunar2026Moon(${week.startDate.getTime()}, '${index === 0 ? 'new' : 'full'}')"` : ''}>
                 <div style="grid-column:1/4;font-size:0.6em;color:#8899cc;white-space:nowrap;padding-left:4px;">${week.days.length}d • ${formatDate(week.startDate)} - ${formatDate(week.endDate)}</div>
                 <div style="grid-column:4/5;display:flex;align-items:center;justify-content:center;gap:3px;">
                     <div class="moon-icon" style="margin:0;">${week.emoji}</div>
                     <span style="font-weight:bold;white-space:nowrap;color:#e8c84a;font-size:0.65em;">${week.name}</span>
                 </div>
-                <div style="grid-column:5/${week.days.length + 1};font-size:0.65em;color:#c9a840;white-space:nowrap;text-align:right;padding-right:4px;">${week.zodiacSign}</div>
+                <div style="grid-column:5/9;font-size:0.65em;color:#c9a840;white-space:nowrap;text-align:right;padding-right:4px;">${week.zodiacSign}</div>
             </div>
-            <div class="days-container">${daysHTML}${(() => {
+            <div class="days-container" style="grid-template-columns:repeat(8,1fr);">${daysHTML}${(() => {
                 // Fill empty cells at the END to complete 8 columns (lunar week = 8 days)
                 const emptyCellsNeeded = 8 - week.days.length;
                 let emptyCells = '';
@@ -30309,7 +30360,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v500';
+const APP_VERSION = 'v503';
 var _pendingSW = null;
 
 // What's New removed per user request
