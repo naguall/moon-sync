@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v508';
+        var REQUIRED_VER = 'v509';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -22967,19 +22967,7 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
     const nightSVG = '<path d="' + nightPath + '" fill="rgba(0,0,15,0.45)" stroke="none"/>'
         + '<path d="' + terminatorPts.map((p,i) => (i===0?'M':'L') + mx(p.lon).toFixed(1) + ',' + my(p.lat).toFixed(1)).join(' ') + '" fill="none" stroke="rgba(255,200,50,0.3)" stroke-width="1.2" stroke-dasharray="4,3"/>';
 
-    // Sun marker on map
-    const sunX = mx(subSolarLon), sunY = my(sunDecl);
-    const sunMarkerSVG = '<circle cx="'+sunX.toFixed(1)+'" cy="'+sunY.toFixed(1)+'" r="14" fill="url(#sg4)"/>'
-        + '<circle cx="'+sunX.toFixed(1)+'" cy="'+sunY.toFixed(1)+'" r="6" fill="#ff9500" opacity="0.85"/>'
-        + '<circle cx="'+sunX.toFixed(1)+'" cy="'+sunY.toFixed(1)+'" r="2.5" fill="#ffe066"/>'
-        + '<text x="'+(sunX+10).toFixed(0)+'" y="'+(sunY-8).toFixed(0)+'" fill="#ff9500" font-size="9" font-family="monospace" font-weight="bold">☉ '+sunDecl.toFixed(1)+'°'+(sunDecl>=0?'N':'S')+'</text>';
-
-    // Sunrise/sunset for user location
-    const sunRiseSet = getSunRiseSet(now, uLat, uLon);
-    const fmtTime = (d) => d ? d.toLocaleTimeString(currentLang==='es'?'es':'en', {hour:'2-digit',minute:'2-digit',hour12:false}) : '--:--';
-    const sunriseStr = fmtTime(sunRiseSet.rise);
-    const sunsetStr = fmtTime(sunRiseSet.set);
-    const sunInfoSVG = '<text x="'+(ux+10).toFixed(0)+'" y="'+(uy+16).toFixed(0)+'" fill="#ff9500" font-size="8.5" font-family="monospace">☀↑'+sunriseStr+' ☀↓'+sunsetStr+'</text>';
+    // Sun marker and sunrise/sunset info removed from 2D map (user requested Moon only)
 
     // Natural Earth continent paths - high detail v2
     const landSVG = `<path d="M28.7,43.0 L35.8,45.4 L43.0,47.8 L52.6,45.4 L59.7,45.4 L71.7,47.8 L83.6,50.2 L93.2,47.8 L100.3,50.2 L105.1,52.6 L107.5,57.3 L112.3,71.7 L117.1,81.2 L119.4,83.6 L124.2,90.8 L129.0,95.6 L131.4,97.9 L133.8,105.1 L133.8,112.3 L138.6,119.4 L143.3,129.0 L148.1,133.8 L150.5,136.2 L150.5,138.6 L155.3,140.9 L160.1,145.7 L167.2,150.5 L172.0,155.3 L176.8,160.1 L179.2,164.8 L183.9,169.6 L191.1,172.0 L198.3,174.4 L200.7,176.8 L205.4,176.8 L210.2,179.2 L215.0,176.8 L219.8,174.4 L224.6,176.8 L229.3,181.6 L231.7,186.3 L234.1,191.1 L238.9,193.5 L241.3,193.5 L243.7,193.5 L238.9,186.3 L236.5,179.2 L234.1,172.0 L236.5,162.4 L236.5,155.3 L238.9,152.9 L238.9,148.1 L236.5,143.3 L234.1,140.9 L238.9,138.6 L243.7,133.8 L248.4,131.4 L250.8,126.6 L255.6,121.8 L258.0,117.1 L262.8,114.7 L265.2,112.3 L267.6,109.9 L269.9,107.5 L272.3,102.7 L274.7,100.3 L277.1,102.7 L281.9,105.1 L286.7,102.7 L289.1,100.3 L293.8,95.6 L298.6,102.7 L303.4,102.7 L298.6,95.6 L293.8,90.8 L289.1,88.4 L281.9,83.6 L277.1,78.8 L272.3,76.4 L267.6,71.7 L258.0,69.3 L250.8,66.9 L243.7,64.5 L234.1,62.1 L224.6,59.7 L215.0,54.9 L203.1,50.2 L191.1,45.4 L179.2,43.0 L167.2,40.6 L155.3,40.6 L143.3,40.6 L119.4,43.0 L95.6,43.0 L71.7,43.0 L47.8,43.0 L28.7,43.0 Z" fill="#1e3d5c" stroke="#2d5a82" stroke-width="0.6" stroke-linejoin="round"/>
@@ -23021,8 +23009,7 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
         + landSVG
         // Day/Night shadow (terminator)
         + nightSVG
-        // Sun marker
-        + sunMarkerSVG
+        // Sun marker removed - only Moon shown
         // Labels
         + '<text x="5" y="'+(my(0)-4)+'" fill="rgba(74,158,255,0.5)" font-size="9" font-family="monospace">0°</text>'
         + '<text x="5" y="'+(my(23.5)-4)+'" fill="rgba(201,168,64,0.45)" font-size="8" font-family="monospace">23.5°N</text>'
@@ -23034,8 +23021,7 @@ function renderSublunaryMap(latStr, lonDeg, userLat, userLon) {
         + '<circle cx="'+ux.toFixed(1)+'" cy="'+uy.toFixed(1)+'" r="3.5" fill="#4ecdc4"/>'
         + '<circle cx="'+ux.toFixed(1)+'" cy="'+uy.toFixed(1)+'" r="1.5" fill="white"/>'
         + '<text x="'+(ux+10).toFixed(0)+'" y="'+(uy+4).toFixed(0)+'" fill="#4ecdc4" font-size="10" font-family="monospace" font-weight="bold">'+cityLabel+'</text>'
-        // Sunrise/sunset info near user
-        + sunInfoSVG
+        // Sunrise/sunset info removed
         // Moon
         + '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="26" fill="url(#mg4)"/>'
         + '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="9" fill="#e0e0e0" filter="url(#gf4)" opacity="0.95"/>'
@@ -24543,12 +24529,13 @@ function renderCalendar() {
         
         weekDiv.innerHTML = `
             <div class="week-header" style="display:grid;grid-template-columns:repeat(8,1fr);gap:var(--day-cell-gap,3px);align-items:center;padding:4px 0;" ${isClickableWeek ? `onclick="navigateToLunar2026Moon(${week.startDate.getTime()}, '${index === 0 ? 'new' : 'full'}')"` : ''}>
-                <div style="grid-column:1/4;font-size:0.6em;color:#8899cc;white-space:nowrap;padding-left:4px;">${week.days.length}d • ${formatDate(week.startDate)} - ${formatDate(week.endDate)}</div>
-                <div style="grid-column:4/5;display:flex;align-items:center;justify-content:center;">
-                    <div class="moon-icon" style="margin:0;">${week.emoji}</div>
+                <div style="grid-column:1/3;font-size:0.6em;color:#8899cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;">${week.days.length}d • ${formatDate(week.startDate)} - ${formatDate(week.endDate)}</div>
+                <div style="grid-column:3/4;font-size:0.65em;font-weight:bold;color:#e8c84a;white-space:nowrap;text-align:right;overflow:hidden;text-overflow:ellipsis;">${week.name}</div>
+                <div style="grid-column:4/5;display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;">
+                    <div class="moon-icon" style="margin:0;display:flex;align-items:center;justify-content:center;">${week.emoji}</div>
                 </div>
-                <div style="grid-column:5/6;font-size:0.65em;font-weight:bold;color:#e8c84a;white-space:nowrap;text-align:left;">${week.name}</div>
-                <div style="grid-column:7/9;font-size:0.65em;color:#c9a840;white-space:nowrap;text-align:right;padding-right:4px;">${week.zodiacSign}</div>
+                <div style="grid-column:5/6;font-size:0.65em;color:#c9a840;white-space:nowrap;text-align:left;overflow:hidden;text-overflow:ellipsis;">${week.zodiacSign}</div>
+                <div style="grid-column:6/9;"></div>
             </div>
             <div class="days-container" style="grid-template-columns:repeat(8,1fr);">${daysHTML}${(() => {
                 // Fill empty cells at the END to complete 8 columns (lunar week = 8 days)
@@ -30736,7 +30723,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v508';
+const APP_VERSION = 'v509';
 var _pendingSW = null;
 
 // What's New removed per user request
