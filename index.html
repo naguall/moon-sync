@@ -8402,6 +8402,24 @@ function interpretDream() {
         ? '\n\n═══ DOBLE PERSPECTIVA OBLIGATORIA ═══\nSIEMPRE muestra DOS perspectivas: CONSCIENTE (lo visible) e INCONSCIENTE/SOMBRA (lo reprimido/proyectado). Analiza ejes zodiacales y el reflejo del opuesto si aplica. Busca comprensión y transmutación de la sombra.'
         : '\n\n═══ MANDATORY DUAL PERSPECTIVE ═══\nALWAYS show TWO perspectives: CONSCIOUS (visible) and UNCONSCIOUS/SHADOW (repressed/projected). Analyze zodiacal axes and the opposite reflection if applicable. Seek understanding and shadow transmutation.';
 
+    // ── Anti-hallucination rule for dreams ──
+    systemPrompt += L
+        ? '\n\n═══ REGLA CRÍTICA: NUNCA INVENTAR INFORMACIÓN ═══\nSi NO tienes un dato astrológico específico (grado, casa, aspecto), NO LO INVENTES. Es mejor decir "No tengo ese dato disponible" que dar información incorrecta. Si los datos de la carta natal no están cargados, avisa al usuario. La credibilidad de esta app depende de la precisión.'
+        : '\n\n═══ CRITICAL RULE: NEVER MAKE UP INFORMATION ═══\nIf you do NOT have a specific astrological data point (degree, house, aspect), DO NOT INVENT IT. It is better to say "I don\'t have that data available" than to give incorrect information. If natal chart data is not loaded, tell the user. This app\'s credibility depends on accuracy.';
+
+    // ── Multi-profile awareness for dreams ──
+    try {
+        var _dreamProfiles = JSON.parse(localStorage.getItem('natalProfiles') || '[]');
+        if (_dreamProfiles.length > 1) {
+            var _dreamProfileList = _dreamProfiles.map(function(p, i) {
+                return (i+1) + '. ' + (p.name || 'Sin nombre') + ' (' + (p.date || '?') + ')' + (p.id === localStorage.getItem('activeProfileId') ? ' [ACTIVO]' : '');
+            }).join(', ');
+            systemPrompt += L
+                ? '\n\n═══ MÚLTIPLES PERFILES ═══\nHay ' + _dreamProfiles.length + ' perfiles guardados: ' + _dreamProfileList + '. Los datos que ves son del perfil ACTIVO. Si necesitas analizar datos de otro perfil, pregunta cuál usar.'
+                : '\n\n═══ MULTIPLE PROFILES ═══\nThere are ' + _dreamProfiles.length + ' profiles saved: ' + _dreamProfileList + '. Data shown is from the ACTIVE profile. If you need to analyze a different profile, ask which one to use.';
+        }
+    } catch(e) {}
+
     // Dream-specific instructions (with formatting guidelines)
     systemPrompt += L
         ? '\n\n═══ INTERPRETACIÓN DE SUEÑOS ═══\nInterpreta desde múltiples capas: simbólica (arquetipos universales), astrológica (conecta con carta natal y tránsitos actuales), psicológica (mensaje del inconsciente, Jung). Identifica: símbolos principales, emociones dominantes, figuras arquetípicas (anima/animus, sombra, self), conexión con tránsitos planetarios activos. No des interpretaciones literales — profundiza en el lenguaje simbólico del inconsciente.\n\n═══ FORMATO OBLIGATORIO ═══\nUSA ESTE FORMATO para que sea fácil de leer:\n- Separa cada tema/sección con una línea en blanco\n- Usa **negritas** para conceptos clave, símbolos y nombres de arquetipos\n- Cada capa de análisis (simbólica, astrológica, psicológica) debe empezar en párrafo nuevo\n- NO escribas todo seguido — organiza por temas con saltos de línea\n- Usa encabezados con ** como: **Capa Simbólica**, **Capa Astrológica**, **Capa Psicológica**, **Síntesis**'
