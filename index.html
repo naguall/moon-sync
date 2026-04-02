@@ -9996,6 +9996,17 @@ function _renderCompass() {
         info += '</div>';
     }
 
+    // Compass calibration tip (always visible)
+    info += '<div style="margin-top:8px;padding:6px 10px;background:rgba(126,200,255,0.04);border:1px solid rgba(126,200,255,0.1);border-radius:8px;font-size:0.68em;color:rgba(200,220,255,0.55);line-height:1.4;">';
+    if (L) {
+        info += '<b style="color:rgba(200,220,255,0.7);">💡 Calibración:</b> La brújula usa el magnetómetro de tu teléfono. Puede desviarse cerca de objetos metálicos, imanes o dispositivos electrónicos. ';
+        info += 'Para calibrar: mueve el teléfono lentamente en forma de 8 (∞) en el aire 3-4 veces. Aléjate de objetos metálicos para mejor precisión.';
+    } else {
+        info += '<b style="color:rgba(200,220,255,0.7);">💡 Calibration:</b> The compass uses your phone\'s magnetometer. It can drift near metal objects, magnets or electronics. ';
+        info += 'To calibrate: slowly move your phone in a figure-8 (∞) motion 3-4 times. Move away from metal objects for best accuracy.';
+    }
+    info += '</div>';
+
     info += '</div>';
     bodyEl.innerHTML = svg + info;
 }
@@ -18502,13 +18513,16 @@ function renderNatalLunarCal() {
         }).join('');
 
         var _nDays = week.days.length || 7;
+        var _iconCol = Math.min(4, _nDays); // icon above 4th day column
         weekDiv.innerHTML = '<div class="week-header" style="display:grid;grid-template-columns:repeat(' + _nDays + ',1fr);gap:var(--day-cell-gap,3px);align-items:center;padding:4px 0;">'
-            + '<div style="grid-column:1/3;font-size:0.6em;color:#8899cc;white-space:nowrap;padding-left:4px;overflow:hidden;">' + week.days.length + 'd <span style="opacity:0.5;">•</span> ' + formatDate(week.startDate) + ' - ' + formatDate(week.endDate) + '</div>'
-            + '<div style="grid-column:3/' + Math.min(Math.ceil(_nDays/2)+2, _nDays) + ';display:flex;align-items:center;justify-content:center;gap:3px;">'
+            + '<div style="grid-column:1/' + Math.min(4, _nDays) + ';font-size:0.6em;color:#8899cc;white-space:nowrap;padding-left:4px;overflow:hidden;">' + week.days.length + 'd <span style="opacity:0.5;">•</span> ' + formatDate(week.startDate) + ' - ' + formatDate(week.endDate) + '</div>'
+            + '<div style="grid-column:' + _iconCol + '/' + (_iconCol+1) + ';display:flex;align-items:center;justify-content:center;">'
             + '<div class="moon-icon" style="margin:0;">' + week.emoji + '</div>'
+            + '</div>'
+            + '<div style="grid-column:' + (_iconCol+1) + '/' + Math.min(_iconCol+3, _nDays) + ';display:flex;align-items:center;justify-content:flex-start;gap:0;">'
             + '<span style="font-weight:bold;white-space:nowrap;color:#e8c84a;font-size:0.65em;">' + week.name + '</span>'
             + '</div>'
-            + '<div style="grid-column:' + Math.min(Math.ceil(_nDays/2)+2, _nDays) + '/' + (_nDays+1) + ';font-size:0.65em;color:#c9a840;white-space:nowrap;text-align:right;padding-right:4px;overflow:hidden;">' + week.zodiacSign + '</div>'
+            + '<div style="grid-column:' + Math.max(_iconCol+3, _nDays) + '/' + (_nDays+1) + ';font-size:0.65em;color:#c9a840;white-space:nowrap;text-align:right;padding-right:4px;overflow:hidden;">' + week.zodiacSign + '</div>'
             + '</div>'
             + '<div class="days-container" style="grid-template-columns:repeat(' + _nDays + ',1fr);">' + daysHTML + '</div>';
 
@@ -21932,6 +21946,17 @@ function generateGregorianMonth() {
         html += '</div></div></div>';
     }
     
+    // Planet & Constellation Rise/Set Panel (expanded in Gregorian)
+    if (typeof Astronomy !== 'undefined' && typeof ASTRO_USER_LAT !== 'undefined' && ASTRO_USER_LAT !== null) {
+        html += '<div style="margin-top:10px;">';
+        html += '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(5,10,30,0.7);border:1px solid rgba(74,158,255,0.18);border-radius:8px 8px 0 0;">';
+        html += '<span style="color:#7ec8ff;font-size:0.9em;">🔭</span>';
+        html += '<span style="font-family:\'Cinzel\',serif;color:#7ec8ff;font-size:0.72em;font-weight:600;letter-spacing:1px;text-transform:uppercase;">' + (currentLang==='es'?'Planetas y Constelaciones':'Planets & Constellations') + '</span>';
+        html += '</div>';
+        html += '<div style="margin-top:0;">' + renderCelestialRiseSetPanel(ASTRO_USER_LAT, ASTRO_USER_LON) + '</div>';
+        html += '</div>';
+    }
+
     html += '</div></div>';
     return html;
 }
@@ -23947,9 +23972,16 @@ function renderLunarInfoBanner(today, currentDayInCycle, todayWeeks, currentWeek
             <div id="sublunaryInfoBox" style="margin-top:8px;">
                 ${renderSublunaryInfoBox(astro.sublunarLat, getSublunaryLonDeg(nowRealTime), ASTRO_USER_LAT, ASTRO_USER_LON)}
             </div>
-            <!-- Planet & Constellation Rise/Set Panel -->
-            <div id="celestialRiseSetPanel" style="margin-top:4px;">
-                ${typeof Astronomy !== 'undefined' ? renderCelestialRiseSetPanel(ASTRO_USER_LAT, ASTRO_USER_LON) : ''}
+            <!-- Planet & Constellation Rise/Set Panel (collapsible) -->
+            <div style="margin-top:6px;">
+                <div onclick="var p=this.nextElementSibling;var a=this.querySelector('.celestial-arrow');if(p.style.display==='none'){p.style.display='block';a.textContent='▾'}else{p.style.display='none';a.textContent='▸'}" style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(5,10,30,0.7);border:1px solid rgba(74,158,255,0.18);border-radius:8px;cursor:pointer;">
+                    <span class="celestial-arrow" style="color:#7ec8ff;font-size:0.9em;">▸</span>
+                    <span style="font-family:'Cinzel',serif;color:#7ec8ff;font-size:0.72em;font-weight:600;letter-spacing:1px;text-transform:uppercase;">${currentLang==='es'?'Planetas y Constelaciones':'Planets & Constellations'}</span>
+                    <span style="font-size:0.65em;color:rgba(255,255,255,0.3);margin-left:auto;">${currentLang==='es'?'toca para ver':'tap to view'}</span>
+                </div>
+                <div id="celestialRiseSetPanel" style="display:none;margin-top:2px;">
+                    ${typeof Astronomy !== 'undefined' ? renderCelestialRiseSetPanel(ASTRO_USER_LAT, ASTRO_USER_LON) : ''}
+                </div>
             </div>
         </div>
 
@@ -30540,7 +30572,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v506';
+const APP_VERSION = 'v507';
 var _pendingSW = null;
 
 // What's New removed per user request
