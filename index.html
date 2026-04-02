@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v512';
+        var REQUIRED_VER = 'v513';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -24976,6 +24976,18 @@ function goToCurrentCycle() {
             historyHTML += '</div>';
         }
 
+        // Build AI persona selector for tutor
+        var _tutorPersonaHTML = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">' +
+            '<span style="font-size:0.7em;color:rgba(255,255,255,0.4);">' + (isES ? '🧠 Personalidad:' : '🧠 Persona:') + '</span>' +
+            '<select id="tutorPersonaSelect" onchange="window._tutorSetPersona(this.value)" style="flex:1;padding:5px 8px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;color:#667eea;font-size:0.72em;cursor:pointer;outline:none;">';
+        if (typeof _aiPersonas !== 'undefined') {
+            _aiPersonas.forEach(function(p) {
+                var isActive = p.id === _activePersonaId;
+                _tutorPersonaHTML += '<option value="' + p.id + '"' + (isActive ? ' selected' : '') + '>' + p.icon + ' ' + (isES ? p.name_es : p.name_en) + '</option>';
+            });
+        }
+        _tutorPersonaHTML += '</select></div>';
+
         tab.innerHTML = '<div style="padding:16px;">' +
             '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:1.5em;">🤖</span><div style="flex:1;"><div style="font-weight:700;color:#667eea;font-size:1em;">' + (isES ? 'Tutor de Astrología' : 'Astrology Tutor') + '</div>' +
             '<div style="font-size:0.7em;color:rgba(255,255,255,0.4);">' + (isES ? 'Tu conversación se guarda para continuar donde la dejaste' : 'Your conversation is saved to continue where you left off') + '</div></div>' +
@@ -24984,6 +24996,8 @@ function goToCurrentCycle() {
             (prevSessions.length > 0 ? '<button onclick="_tutorToggleHistory()" id="tutorHistBtn" style="padding:4px 8px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.25);border-radius:8px;color:#667eea;font-size:0.65em;cursor:pointer;" title="' + (isES?'Ver historial':'View history') + '">' + (isES?'Historial':'History') + '</button>' : '') +
             '<button onclick="_tutorNewSession()" style="padding:4px 8px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.25);border-radius:8px;color:#667eea;font-size:0.65em;cursor:pointer;" title="' + (isES?'Nueva conversación':'New conversation') + '">+ ' + (isES?'Nuevo':'New') + '</button>' +
             '</div></div>' +
+            // AI persona selector
+            _tutorPersonaHTML +
             // Restored session indicator
             (restoredHistory.length > 0 ? '<div style="font-size:0.65em;color:rgba(102,126,234,0.6);margin-bottom:6px;text-align:center;">' + (isES ? 'Conversación anterior restaurada (' + restoredHistory.length + ' mensajes)' : 'Previous conversation restored (' + restoredHistory.length + ' messages)') + '</div>' : '') +
             // Quick topic buttons
@@ -25038,6 +25052,48 @@ function goToCurrentCycle() {
         if (restoredHTML) {
             var area = document.getElementById('tutorAIChatArea');
             if (area) setTimeout(function(){ area.scrollTop = area.scrollHeight; }, 100);
+        }
+
+        // Event delegation for double-click karaoke on ALL tutor AI replies
+        var _tutorArea = document.getElementById('tutorAIChatArea');
+        if (_tutorArea && !_tutorArea._dblDelegated) {
+            _tutorArea._dblDelegated = true;
+            _tutorArea.addEventListener('dblclick', function(e) {
+                // Find closest tutor AI bubble
+                var bubble = e.target.closest('.tutor-ai-bubble, [id^="aiMsg_tutor_"]');
+                if (!bubble || !bubble.id) return;
+                e.stopPropagation();
+                var sel = window.getSelection();
+                var clickedText = '';
+                if (sel && sel.anchorNode) {
+                    var node = sel.anchorNode;
+                    while (node && node !== bubble && node.nodeType !== 1) node = node.parentNode;
+                    if (node && node !== bubble) clickedText = (node.textContent || '').trim();
+                    else clickedText = (sel.anchorNode.textContent || '').trim();
+                }
+                if (clickedText && clickedText.length > 3) {
+                    window.readAloud(bubble.id, clickedText);
+                } else {
+                    window.readAloud(bubble.id);
+                }
+            });
+        }
+    };
+
+    // Switch AI persona for tutor
+    window._tutorSetPersona = function(personaId) {
+        if (typeof setActivePersona === 'function') setActivePersona(personaId);
+        else { _activePersonaId = personaId; localStorage.setItem('activePersonaId', personaId); }
+        // Rebuild system prompt with new persona context
+        var tab = document.getElementById('natalTabTutor');
+        if (tab && tab._tutorSysPrompt) {
+            // Notify user
+            var isES = L();
+            var persona = (typeof getActivePersona === 'function') ? getActivePersona() : null;
+            if (persona) {
+                var area = document.getElementById('tutorAIChatArea');
+                if (area) area.insertAdjacentHTML('beforeend', '<div style="text-align:center;padding:6px;font-size:0.7em;color:rgba(102,126,234,0.6);">' + (isES ? 'Personalidad cambiada a ' : 'Persona changed to ') + persona.icon + ' ' + (isES ? persona.name_es : persona.name_en) + '</div>');
+            }
         }
     };
 
@@ -25172,21 +25228,21 @@ function goToCurrentCycle() {
         var placeholder = area.querySelector('div[style*="text-align:center"]');
         if (placeholder && area.children.length === 1) area.innerHTML = '';
 
-        // Add user message
-        area.innerHTML += '<div style="margin-bottom:8px;text-align:right;"><div style="display:inline-block;max-width:85%;padding:8px 12px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.3);border-radius:12px 12px 4px 12px;font-size:0.82em;color:rgba(255,255,255,0.85);text-align:left;">' + text.replace(/</g,'&lt;') + '</div></div>';
+        // Add user message (use insertAdjacentHTML to preserve existing listeners)
+        area.insertAdjacentHTML('beforeend', '<div style="margin-bottom:8px;text-align:right;"><div style="display:inline-block;max-width:85%;padding:8px 12px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.3);border-radius:12px 12px 4px 12px;font-size:0.82em;color:rgba(255,255,255,0.85);text-align:left;">' + text.replace(/</g,'&lt;') + '</div></div>');
         area.scrollTop = area.scrollHeight;
 
         tab._tutorHistory.push({role: 'user', parts: [{text: text}]});
 
         // Loading
-        area.innerHTML += '<div id="tutorAILoading" style="margin-bottom:8px;"><div style="display:inline-block;padding:8px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;font-size:0.82em;color:rgba(255,255,255,0.4);">⏳ ' + (isES ? 'Pensando...' : 'Thinking...') + '</div></div>';
+        area.insertAdjacentHTML('beforeend', '<div id="tutorAILoading" style="margin-bottom:8px;"><div style="display:inline-block;padding:8px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;font-size:0.82em;color:rgba(255,255,255,0.4);">⏳ ' + (isES ? 'Pensando...' : 'Thinking...') + '</div></div>');
         area.scrollTop = area.scrollHeight;
 
         tab._tutorTyping = true;
         try {
             if (typeof aiIsConfigured !== 'function' || !aiIsConfigured()) {
                 var ld = document.getElementById('tutorAILoading'); if (ld) ld.remove();
-                area.innerHTML += '<div style="margin-bottom:8px;"><div style="display:inline-block;max-width:85%;padding:8px 12px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);border-radius:12px;font-size:0.82em;color:#ff6b6b;">' + (isES ? 'Configura tu API key de Gemini en ⚙️ Preferencias.' : 'Set up your Gemini API key in ⚙️ Preferences.') + '</div></div>';
+                area.insertAdjacentHTML('beforeend', '<div style="margin-bottom:8px;"><div style="display:inline-block;max-width:85%;padding:8px 12px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);border-radius:12px;font-size:0.82em;color:#ff6b6b;">' + (isES ? 'Configura tu API key de Gemini en ⚙️ Preferencias.' : 'Set up your Gemini API key in ⚙️ Preferences.') + '</div></div>');
                 tab._tutorTyping = false; return;
             }
             var personalKey = typeof getGeminiKey === 'function' ? getGeminiKey() : null;
@@ -25208,29 +25264,7 @@ function goToCurrentCycle() {
                 tab._tutorHistory.push({role: 'model', parts: [{text: reply}]});
                 var fmt = reply.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
                 var _tutorMsgId = 'aiMsg_tutor_' + Date.now();
-                area.innerHTML += '<div class="tutorAIReply" style="margin-bottom:8px;"><div id="' + _tutorMsgId + '" style="display:inline-block;max-width:90%;padding:10px 12px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:12px 12px 12px 4px;font-size:0.82em;color:rgba(255,255,255,0.85);line-height:1.55;cursor:pointer;" title="' + (isES ? 'Doble click para leer desde aquí' : 'Double click to read from here') + '"><p>' + fmt + '</p></div></div>';
-                // Add double-click to read from that point (karaoke)
-                var _tutorEl = document.getElementById(_tutorMsgId);
-                if (_tutorEl && !_tutorEl._dblClickAdded) {
-                    _tutorEl._dblClickAdded = true;
-                    _tutorEl.addEventListener('dblclick', function(e) {
-                        e.stopPropagation();
-                        var elId = this.id;
-                        var sel = window.getSelection();
-                        var clickedText = '';
-                        if (sel && sel.anchorNode) {
-                            var node = sel.anchorNode;
-                            while (node && node !== this && node.nodeType !== 1) node = node.parentNode;
-                            if (node && node !== this) clickedText = (node.textContent || '').trim();
-                            else clickedText = (sel.anchorNode.textContent || '').trim();
-                        }
-                        if (clickedText && clickedText.length > 3) {
-                            window.readAloud(elId, clickedText);
-                        } else {
-                            window.readAloud(elId);
-                        }
-                    });
-                }
+                area.insertAdjacentHTML('beforeend', '<div class="tutorAIReply" style="margin-bottom:8px;"><div id="' + _tutorMsgId + '" class="tutor-ai-bubble" style="display:inline-block;max-width:90%;padding:10px 12px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:12px 12px 12px 4px;font-size:0.82em;color:rgba(255,255,255,0.85);line-height:1.55;cursor:pointer;" title="' + (isES ? 'Doble click para leer desde aquí' : 'Double click to read from here') + '"><p>' + fmt + '</p></div></div>');
                 // Scroll last reply into view smoothly (karaoke-style follow)
                 setTimeout(function() {
                     var lastReply = area.querySelector('.tutorAIReply:last-child');
@@ -25252,11 +25286,11 @@ function goToCurrentCycle() {
                     window.speechSynthesis.speak(utt);
                 }
             } else {
-                area.innerHTML += '<div style="margin-bottom:8px;"><div style="display:inline-block;padding:8px 12px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);border-radius:12px;font-size:0.82em;color:#ff6b6b;">❌ Error</div></div>';
+                area.insertAdjacentHTML('beforeend', '<div style="margin-bottom:8px;"><div style="display:inline-block;padding:8px 12px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);border-radius:12px;font-size:0.82em;color:#ff6b6b;">❌ Error</div></div>');
             }
         } catch(e) {
             var ld = document.getElementById('tutorAILoading'); if (ld) ld.remove();
-            area.innerHTML += '<div style="margin-bottom:8px;"><div style="display:inline-block;padding:8px 12px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);border-radius:12px;font-size:0.82em;color:#ff6b6b;">❌ ' + (e.message || 'Error') + '</div></div>';
+            area.insertAdjacentHTML('beforeend', '<div style="margin-bottom:8px;"><div style="display:inline-block;padding:8px 12px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);border-radius:12px;font-size:0.82em;color:#ff6b6b;">❌ ' + (e.message || 'Error') + '</div></div>');
         }
         tab._tutorTyping = false;
         // Smooth scroll to bottom after response
@@ -30799,7 +30833,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v512';
+const APP_VERSION = 'v513';
 var _pendingSW = null;
 
 // What's New removed per user request
