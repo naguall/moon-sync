@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v511';
+        var REQUIRED_VER = 'v512';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -25208,7 +25208,29 @@ function goToCurrentCycle() {
                 tab._tutorHistory.push({role: 'model', parts: [{text: reply}]});
                 var fmt = reply.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
                 var _tutorMsgId = 'aiMsg_tutor_' + Date.now();
-                area.innerHTML += '<div class="tutorAIReply" style="margin-bottom:8px;"><div id="' + _tutorMsgId + '" style="display:inline-block;max-width:90%;padding:10px 12px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:12px 12px 12px 4px;font-size:0.82em;color:rgba(255,255,255,0.85);line-height:1.55;cursor:pointer;" onclick="var sel=window.getSelection();if(sel&&sel.toString().trim().length>3)return;window.readAloud(\'' + _tutorMsgId + '\')"><p>' + fmt + '</p></div></div>';
+                area.innerHTML += '<div class="tutorAIReply" style="margin-bottom:8px;"><div id="' + _tutorMsgId + '" style="display:inline-block;max-width:90%;padding:10px 12px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:12px 12px 12px 4px;font-size:0.82em;color:rgba(255,255,255,0.85);line-height:1.55;cursor:pointer;" title="' + (isES ? 'Doble click para leer desde aquí' : 'Double click to read from here') + '"><p>' + fmt + '</p></div></div>';
+                // Add double-click to read from that point (karaoke)
+                var _tutorEl = document.getElementById(_tutorMsgId);
+                if (_tutorEl && !_tutorEl._dblClickAdded) {
+                    _tutorEl._dblClickAdded = true;
+                    _tutorEl.addEventListener('dblclick', function(e) {
+                        e.stopPropagation();
+                        var elId = this.id;
+                        var sel = window.getSelection();
+                        var clickedText = '';
+                        if (sel && sel.anchorNode) {
+                            var node = sel.anchorNode;
+                            while (node && node !== this && node.nodeType !== 1) node = node.parentNode;
+                            if (node && node !== this) clickedText = (node.textContent || '').trim();
+                            else clickedText = (sel.anchorNode.textContent || '').trim();
+                        }
+                        if (clickedText && clickedText.length > 3) {
+                            window.readAloud(elId, clickedText);
+                        } else {
+                            window.readAloud(elId);
+                        }
+                    });
+                }
                 // Scroll last reply into view smoothly (karaoke-style follow)
                 setTimeout(function() {
                     var lastReply = area.querySelector('.tutorAIReply:last-child');
@@ -30777,7 +30799,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v511';
+const APP_VERSION = 'v512';
 var _pendingSW = null;
 
 // What's New removed per user request
