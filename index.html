@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v517';
+        var REQUIRED_VER = 'v518';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -24422,15 +24422,15 @@ function renderCalendar() {
                     <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;">
                         <span style="font-size:${String(displayDay).length > 4 ? '1.2em' : '1.8em'};font-weight:800;color:#e8c84a;text-shadow:0 0 18px rgba(232,200,74,0.65);">${displayDay}</span>
                     </div>
-                    <div style="margin: 3px 0; display:flex; justify-content:center; font-size: 2em;">${calendarMode === 'lunar' ? (() => {
+                    <div style="margin: 2px 0; display:flex; justify-content:center; font-size: 1em;">${calendarMode === 'lunar' ? (() => {
                         // Show % illumination instead of moon icon
                         try {
                             var _illumT = Astronomy.MakeTime(today);
                             var _illumData = Astronomy.Illumination(Astronomy.Body.Moon, _illumT);
                             var _illumPct = (_illumData.phase_fraction * 100).toFixed(1);
-                            return '<div style="display:flex;flex-direction:column;align-items:center;gap:0;">' + getMoonSVG(calculateLunarPhase(today), 28) + '<span style="font-size:0.35em;color:#c9a840;font-weight:700;margin-top:1px;">' + _illumPct + '%</span></div>';
+                            return '<div style="display:flex;flex-direction:column;align-items:center;gap:0;">' + getMoonSVG(calculateLunarPhase(today), 16) + '<span style="font-size:0.7em;color:#c9a840;font-weight:700;margin-top:1px;">' + _illumPct + '%</span></div>';
                         } catch(e) {
-                            return getMoonSVG(calculateLunarPhase(today), 30);
+                            return getMoonSVG(calculateLunarPhase(today), 16);
                         }
                     })() : (displayEmoji || '☉')}</div>
                     <div style="font-size: 0.55em; color: #ffffff; opacity: 0.85;">${formatDate(weeks[0].startDate)} - ${formatDate(cycleEnd)} · ${cycleTotalDays} ${currentLang==='es'?'días':'days'}</div>
@@ -30914,7 +30914,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v517';
+const APP_VERSION = 'v518';
 var _pendingSW = null;
 
 // What's New removed per user request
