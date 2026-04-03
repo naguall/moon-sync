@@ -1,10 +1,15 @@
-const CACHE_NAME = 'moon-sync-v507';
+const CACHE_NAME = 'moon-sync-v522';
 const ASSETS = [
   '/moon-sync/',
   '/moon-sync/index.html',
   '/moon-sync/lunar-data.js',
   '/moon-sync/custom-messages.js',
   '/moon-sync/manifest.json',
+  '/moon-sync/knowledge-graph.js',
+  '/moon-sync/knowledge-graph-part2.js',
+  '/moon-sync/knowledge-graph-part3.js',
+  '/moon-sync/ai-adapter.js',
+  '/moon-sync/learner-profile.js',
   'https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js',
   'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Blue_Marble_2002.png/1280px-Blue_Marble_2002.png'
 ];
