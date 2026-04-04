@@ -9361,6 +9361,27 @@ var _compassCelestialOpen = false; // persistent state for celestial panel in co
 var _compassCalibrationNeeded = false;
 var _compassMode = 'moon'; // 'moon', 'sun', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', or 'const_<id>'
 
+// ── Magnetic declination: difference between magnetic north and true north ──
+// Device compass gives MAGNETIC north, but Astronomy.Horizon gives azimuth from TRUE north.
+// We must correct for this difference, which varies by location (5-15° in many places).
+// Uses WMM 2025 tilted dipole + first-order corrections for improved accuracy.
+function _getMagneticDeclination(lat, lon) {
+    // Geomagnetic north pole position (WMM 2025 epoch, valid ~2020-2030)
+    var pLat = 80.65; // degrees N
+    var pLon = -72.68; // degrees (72.68°W)
+    var DR = Math.PI / 180;
+    var latR = lat * DR;
+    var lonR = lon * DR;
+    var pLatR = pLat * DR;
+    var pLonR = pLon * DR;
+    // Tilted dipole declination formula
+    var dLon = lonR - pLonR;
+    var num = Math.sin(dLon) * Math.cos(pLatR);
+    var den = Math.cos(latR) * Math.sin(pLatR) - Math.sin(latR) * Math.cos(pLatR) * Math.cos(dLon);
+    var decl = Math.atan2(num, den) / DR;
+    return decl; // degrees (positive = east, add to magnetic heading to get true heading)
+}
+
 // Constellation database with RA (hours), Dec (degrees), star indices, and connection lines
 var _constellationData = [
     // Zodiac constellations
@@ -9702,7 +9723,10 @@ function _renderCompass() {
     var lat = ASTRO_USER_LAT || 9.93;
     var lon = ASTRO_USER_LON || -84;
     var now = new Date();
-    var heading = _compassHeadingSmooth; // use smoothed heading
+    // Convert magnetic heading to TRUE heading by adding magnetic declination
+    // Device gives magnetic north, Astronomy.Horizon gives true north azimuth
+    var magDecl = _getMagneticDeclination(lat, lon);
+    var heading = (_compassHeadingSmooth + magDecl + 360) % 360; // true heading
 
     // Determine target body and get coordinates
     var targetBody = null;
@@ -10024,7 +10048,7 @@ function _renderCompass() {
         { label: L?'Azimut':'Azimuth', val: targetAz.toFixed(1) + '° ' + targetCardinal, color: targetColor },
         { label: L?'Altitud':'Altitude', val: (targetAlt >= 0 ? '+' : '') + targetAlt.toFixed(1) + '°', color: targetBelowHorizon ? '#616161' : '#b0bec5' },
         { label: isMoonMode ? (L?'Fase':'Phase') : (L?'Cuerpo':'Body'), val: isMoonMode ? targetPhaseIllum : targetName, color: '#e0b0ff' },
-        { label: L?'Brújula':'Compass', val: heading.toFixed(0) + '°', color: compassQColor }
+        { label: L?'Norte ✓':'North ✓', val: heading.toFixed(0) + '°', color: compassQColor }
     ];
     cells.forEach(function(c) {
         info += '<div style="background:rgba(255,255,255,0.03);border-radius:6px;padding:5px 3px;">';
