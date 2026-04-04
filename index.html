@@ -11,7 +11,7 @@
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
     (function(){
-        var REQUIRED_VER = 'v523';
+        var REQUIRED_VER = 'v524';
         var lastVer = localStorage.getItem('app_version');
         if (lastVer !== REQUIRED_VER) {
             // New version detected — nuke everything
@@ -6275,20 +6275,62 @@ function setSavedReadings(readings) {
     if (typeof scheduleAutoBackup === 'function') scheduleAutoBackup();
 }
 function saveReading(title, textContent, htmlContent) {
-    var readings = getSavedReadings();
-    readings.unshift({
-        id: Date.now().toString(36) + Math.random().toString(36).substr(2,4),
-        title: title,
-        text: textContent,
-        html: htmlContent,
-        date: new Date().toISOString(),
-        profileId: getActiveProfileId() || 'default',
-        starred: false
+    // Show rename dialog instead of saving immediately
+    _showSaveDialog(title, function(finalTitle) {
+        var readings = getSavedReadings();
+        readings.unshift({
+            id: Date.now().toString(36) + Math.random().toString(36).substr(2,4),
+            title: finalTitle,
+            text: textContent,
+            html: htmlContent,
+            date: new Date().toISOString(),
+            profileId: getActiveProfileId() || 'default',
+            starred: false
+        });
+        if (readings.length > 100) readings = readings.slice(0, 100);
+        setSavedReadings(readings);
+        var L = currentLang === 'es';
+        // Show confirmation
+        var toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(78,205,196,0.9);color:#000;padding:10px 20px;border-radius:20px;font-size:0.85em;font-weight:600;z-index:99999;animation:fadeIn 0.3s;';
+        toast.textContent = '💾 ' + (L ? 'Guardado: ' : 'Saved: ') + finalTitle;
+        document.body.appendChild(toast);
+        setTimeout(function() { toast.remove(); }, 2500);
     });
-    // Keep max 100 readings
-    if (readings.length > 100) readings = readings.slice(0, 100);
-    setSavedReadings(readings);
     return true;
+}
+
+// ── Universal save dialog with editable name ──
+function _showSaveDialog(defaultName, onConfirm) {
+    var L = currentLang === 'es';
+    // Remove existing dialog if any
+    var existing = document.getElementById('saveNameDialog');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'saveNameDialog';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:99998;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.2s;';
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+    var dialog = document.createElement('div');
+    dialog.style.cssText = 'background:#1a1a2e;border:1px solid rgba(201,168,64,0.3);border-radius:16px;padding:20px;max-width:340px;width:100%;';
+    dialog.innerHTML = '<div style="font-weight:700;color:#c9a840;font-size:0.95em;margin-bottom:12px;">💾 ' + (L ? 'Guardar como...' : 'Save as...') + '</div>'
+        + '<input id="saveNameInput" type="text" value="' + defaultName.replace(/"/g,'&quot;') + '" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.3);border-radius:10px;color:white;font-size:0.9em;outline:none;font-family:inherit;box-sizing:border-box;" onclick="this.select()"/>'
+        + '<div style="display:flex;gap:8px;margin-top:14px;">'
+        + '<button id="saveNameCancel" style="flex:1;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:rgba(255,255,255,0.5);font-size:0.85em;cursor:pointer;">' + (L ? 'Cancelar' : 'Cancel') + '</button>'
+        + '<button id="saveNameConfirm" style="flex:1;padding:10px;background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(201,168,64,0.1));border:1px solid rgba(201,168,64,0.5);border-radius:10px;color:#c9a840;font-size:0.85em;font-weight:700;cursor:pointer;">💾 ' + (L ? 'Guardar' : 'Save') + '</button>'
+        + '</div>';
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    var input = document.getElementById('saveNameInput');
+    input.focus();
+    input.select();
+
+    // Enter key to confirm
+    input.onkeydown = function(e) { if (e.key === 'Enter') { var name = input.value.trim() || defaultName; overlay.remove(); onConfirm(name); } };
+    document.getElementById('saveNameCancel').onclick = function() { overlay.remove(); };
+    document.getElementById('saveNameConfirm').onclick = function() { var name = input.value.trim() || defaultName; overlay.remove(); onConfirm(name); };
 }
 function deleteReading(id) {
     var readings = getSavedReadings().filter(function(r) { return r.id !== id; });
@@ -6623,6 +6665,8 @@ function viewDreamEntry(dateKey, dreamId) {
         html += '<button onclick="interpretSingleDream(\'' + dateKey.replace(/'/g,"\\'") + '\',\'' + dreamId.replace(/'/g,"\\'") + '\')" style="padding:8px 20px;background:rgba(138,43,226,0.15);border:1px solid rgba(138,43,226,0.3);border-radius:8px;color:#ce93d8;font-size:0.9em;cursor:pointer;">✨ ' + (L ? 'Interpretar' : 'Interpret') + '</button>';
     }
     html += '</div>';
+    // Inline AI chat for dream
+    html += _buildInlineChatHTML('dream_' + dateKey + '_' + dreamId, (L?'Sueño ':'Dream ') + formatDateKeyDisplay(dateKey), dream.text + (dream.interpretation ? '\n\nInterpretación: ' + dream.interpretation : ''));
     bodyEl.innerHTML = html;
 }
 
@@ -6921,6 +6965,8 @@ function viewDiaryEntry(dateKey) {
     html += '<button onclick="editDiaryEntry(\'' + dateKey.replace(/'/g,"\\'") + '\')" style="padding:8px 20px;background:rgba(78,205,196,0.15);border:1px solid rgba(78,205,196,0.3);border-radius:8px;color:#4ecdc4;font-size:0.9em;cursor:pointer;">✏️ ' + (L ? 'Editar' : 'Edit') + '</button>';
     html += '<button onclick="shareDiaryEntry(\'' + dateKey.replace(/'/g,"\\'") + '\')" style="padding:8px 20px;background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);border-radius:8px;color:#25d366;font-size:0.9em;cursor:pointer;">📤 ' + (L ? 'Compartir' : 'Share') + '</button>';
     html += '</div>';
+    // Inline AI chat for this diary entry
+    html += _buildInlineChatHTML('diary_' + dateKey, (L?'Diario ':'Diary ') + formatDateKeyDisplay(dateKey), text || '');
     // Astro context at the bottom — collapsible so it doesn't dominate on mobile
     var astroHtml = buildAstroContextHTML(dateKey);
     if (astroHtml) {
@@ -7138,11 +7184,13 @@ function viewFullReading(id) {
     html += '<h3 style="color:#c9a840;margin-bottom:5px;">' + r.title + '</h3>';
     var d = new Date(r.date);
     html += '<div style="color:rgba(255,255,255,0.35);font-size:0.8em;margin-bottom:15px;">' + d.toLocaleDateString(L?'es':'en',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}) + '</div>';
-    html += '<div style="line-height:1.7;font-size:0.92em;color:rgba(255,255,255,0.88);background:rgba(255,255,255,0.03);border-radius:10px;padding:16px;word-wrap:break-word;overflow-wrap:break-word;">' + r.html + '</div>';
+    html += '<div id="readingContent_' + r.id + '" style="line-height:1.7;font-size:0.92em;color:rgba(255,255,255,0.88);background:rgba(255,255,255,0.03);border-radius:10px;padding:16px;word-wrap:break-word;overflow-wrap:break-word;">' + r.html + '</div>';
     html += '<div style="display:flex;gap:10px;margin-top:16px;justify-content:center;">';
     html += '<button onclick="shareReadingById(\'' + r.id + '\')" style="padding:8px 20px;background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);border-radius:8px;color:#25d366;font-size:0.9em;cursor:pointer;">📤 ' + (L ? 'Compartir' : 'Share') + '</button>';
     html += '<button onclick="if(confirm(\'' + (L?'¿Eliminar?':'Delete?') + '\')){deleteReading(\'' + r.id + '\');openSavedReadingsModal();}" style="padding:8px 20px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.25);border-radius:8px;color:#ff6b6b;font-size:0.9em;cursor:pointer;">🗑️ ' + (L ? 'Eliminar' : 'Delete') + '</button>';
     html += '</div>';
+    // Inline AI chat for this reading
+    html += _buildInlineChatHTML('reading_' + r.id, r.title, r.text);
     // Astro context from reading date — collapsible
     var readingDateKey = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     var _readingAstro = buildAstroContextHTML(readingDateKey);
@@ -7154,6 +7202,125 @@ function viewFullReading(id) {
     }
     bodyEl.innerHTML = html;
 }
+
+// ── Reusable inline AI chat for readings/diary ──
+window._readingChats = {};
+
+window._buildInlineChatHTML = function(chatId, contextTitle, contextText) {
+    var L = currentLang === 'es';
+    var hasChat = window._readingChats[chatId] && window._readingChats[chatId].history.length > 0;
+    var html = '';
+    html += '<div style="margin-top:16px;border:1px solid rgba(102,126,234,0.2);border-radius:12px;overflow:hidden;background:rgba(0,0,0,0.15);">';
+    html += '<div style="padding:10px 14px;background:rgba(102,126,234,0.06);border-bottom:1px solid rgba(102,126,234,0.1);display:flex;align-items:center;gap:8px;">';
+    html += '<span style="font-size:1em;">🤖</span>';
+    html += '<span style="font-size:0.82em;color:#667eea;font-weight:600;">' + (L ? 'Preguntar sobre esta lectura' : 'Ask about this reading') + '</span>';
+    html += '</div>';
+    // Chat area
+    html += '<div id="readingChat_' + chatId + '" style="min-height:50px;max-height:40vh;overflow-y:auto;padding:8px;background:rgba(0,0,0,0.08);">';
+    if (hasChat) {
+        html += window._readingChats[chatId].html;
+    } else {
+        html += '<div style="text-align:center;padding:16px;color:rgba(255,255,255,0.2);font-size:0.72em;">' + (L ? 'Pregunta lo que quieras sobre este contenido' : 'Ask anything about this content') + '</div>';
+    }
+    html += '</div>';
+    // Input area
+    html += '<div style="padding:8px;border-top:1px solid rgba(102,126,234,0.08);">';
+    html += '<div style="display:flex;gap:4px;align-items:flex-end;">';
+    // Voice
+    html += '<button onclick="startGenericVoice(\'readingInput_' + chatId + '\',\'_readingChatSend(\\x27' + chatId + '\\x27)\',\'readingVoice_' + chatId + '\')" id="readingVoice_' + chatId + '" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);font-size:0.95em;cursor:pointer;flex-shrink:0;" title="' + (L?'Voz':'Voice') + '">🎙️</button>';
+    // TTS
+    html += '<button onclick="readAloudLastMsg(\'readingChat_' + chatId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(102,126,234,0.2);color:#667eea;font-size:0.95em;cursor:pointer;flex-shrink:0;" title="' + (L?'Leer':'Read') + '">🔊</button>';
+    // Voice convo
+    html += '<button onclick="_toggleReadingVoiceConvo(\'' + chatId + '\')" id="readingConvo_' + chatId + '" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(102,126,234,0.2);color:#667eea;font-size:0.95em;cursor:pointer;flex-shrink:0;" title="' + (L?'Conversación por voz':'Voice conversation') + '">🗣️</button>';
+    // Input
+    html += '<textarea id="readingInput_' + chatId + '" rows="1" placeholder="' + (L?'Pregunta...':'Ask...') + '" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(102,126,234,0.15);border-radius:8px;color:white;padding:7px 10px;font-size:0.8em;resize:none;outline:none;font-family:inherit;min-width:0;" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,70)+\'px\';" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();_readingChatSend(\'' + chatId + '\');}"></textarea>';
+    // Send
+    html += '<button onclick="_readingChatSend(\'' + chatId + '\')" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,rgba(102,126,234,0.25),rgba(102,126,234,0.1));border:1px solid rgba(102,126,234,0.35);color:#667eea;font-size:0.95em;cursor:pointer;flex-shrink:0;">➤</button>';
+    html += '</div>';
+    // Quick buttons
+    html += '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">';
+    var safeTitle = contextTitle.replace(/'/g, "\\'").substring(0,50);
+    html += '<button onclick="document.getElementById(\'readingInput_' + chatId + '\').value=\'' + (L?'Resúmeme los puntos clave de esta lectura':'Summarize the key points of this reading') + '\';_readingChatSend(\'' + chatId + '\')" style="padding:4px 8px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:12px;color:#667eea;font-size:0.65em;cursor:pointer;">' + (L?'📋 Resumen':'📋 Summary') + '</button>';
+    html += '<button onclick="document.getElementById(\'readingInput_' + chatId + '\').value=\'' + (L?'¿Qué significa esto para mi vida práctica?':'What does this mean for my practical life?') + '\';_readingChatSend(\'' + chatId + '\')" style="padding:4px 8px;background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.2);border-radius:12px;color:#4ecdc4;font-size:0.65em;cursor:pointer;">' + (L?'💡 Aplicar':'💡 Apply') + '</button>';
+    html += '<button onclick="document.getElementById(\'readingInput_' + chatId + '\').value=\'' + (L?'Explícame más detalladamente':'Explain in more detail') + '\';_readingChatSend(\'' + chatId + '\')" style="padding:4px 8px;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.2);border-radius:12px;color:#ffd700;font-size:0.65em;cursor:pointer;">' + (L?'🔍 Profundizar':'🔍 Deep dive') + '</button>';
+    html += '</div>';
+    html += '</div></div>';
+    // Store context for the chat
+    if (!window._readingChats[chatId]) window._readingChats[chatId] = { history: [], html: '', context: contextText, title: contextTitle };
+    else { window._readingChats[chatId].context = contextText; window._readingChats[chatId].title = contextTitle; }
+    return html;
+};
+
+window._readingChatSend = function(chatId) {
+    var inputEl = document.getElementById('readingInput_' + chatId);
+    var areaEl = document.getElementById('readingChat_' + chatId);
+    if (!inputEl || !areaEl) return;
+    var msg = inputEl.value.trim();
+    if (!msg) return;
+    inputEl.value = '';
+    inputEl.style.height = 'auto';
+    var L = currentLang === 'es';
+
+    if (!window._readingChats[chatId]) window._readingChats[chatId] = { history: [], html: '', context: '', title: '' };
+    var state = window._readingChats[chatId];
+
+    // User bubble
+    areaEl.innerHTML += '<div style="text-align:right;margin:6px 0;"><span style="display:inline-block;max-width:85%;background:rgba(102,126,234,0.2);color:#ddd;padding:8px 12px;border-radius:12px 12px 2px 12px;font-size:0.8em;">' + msg.replace(/</g,'&lt;') + '</span></div>';
+    state.history.push({ role: 'user', parts: [{ text: msg }] });
+
+    // Typing
+    areaEl.innerHTML += '<div id="readingTyping_' + chatId + '" style="text-align:left;margin:6px 0;"><span style="display:inline-block;background:rgba(102,126,234,0.06);color:#aaa;padding:8px 12px;border-radius:12px 12px 12px 2px;font-size:0.8em;">⏳ ' + (L?'Pensando...':'Thinking...') + '</span></div>';
+    areaEl.scrollTop = areaEl.scrollHeight;
+
+    var sysPrompt = (L
+        ? 'Eres un tutor experto de astrología. El usuario está leyendo una interpretación/entrada titulada "' + state.title + '". A continuación está el contenido completo:\n\n' + state.context.substring(0,3000) + '\n\nResponde preguntas sobre este contenido de forma didáctica y en español.'
+        : 'You are an expert astrology tutor. The user is reading an interpretation/entry titled "' + state.title + '". Here is the full content:\n\n' + state.context.substring(0,3000) + '\n\nAnswer questions about this content didactically.');
+
+    var apiKey = localStorage.getItem('gemini_api_key') || '';
+    if (!apiKey) {
+        var t = document.getElementById('readingTyping_' + chatId);
+        if (t) t.innerHTML = '<span style="display:inline-block;background:rgba(255,107,107,0.1);color:#ff6b6b;padding:8px 12px;border-radius:12px;font-size:0.8em;">' + (L?'⚠️ Configura tu API key en Preferencias':'⚠️ Configure your API key in Preferences') + '</span>';
+        return;
+    }
+
+    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            system_instruction: { parts: [{ text: sysPrompt }] },
+            contents: state.history,
+            generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+        })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        var t = document.getElementById('readingTyping_' + chatId);
+        if (t) t.remove();
+        var reply = '';
+        try { reply = data.candidates[0].content.parts[0].text; } catch(e) { reply = L?'Error al obtener respuesta.':'Error getting response.'; }
+        state.history.push({ role: 'model', parts: [{ text: reply }] });
+        var formatted = reply.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<i>$1</i>').replace(/\n/g, '<br>');
+        areaEl.innerHTML += '<div style="text-align:left;margin:6px 0;"><span style="display:inline-block;max-width:92%;background:rgba(102,126,234,0.06);border:1px solid rgba(102,126,234,0.12);color:#ccc;padding:10px 12px;border-radius:12px 12px 12px 2px;font-size:0.8em;line-height:1.5;">' + formatted + '</span></div>';
+        state.html = areaEl.innerHTML;
+        areaEl.scrollTop = areaEl.scrollHeight;
+    }).catch(function(err) {
+        var t = document.getElementById('readingTyping_' + chatId);
+        if (t) t.innerHTML = '<span style="display:inline-block;background:rgba(255,107,107,0.1);color:#ff6b6b;padding:8px 12px;border-radius:12px;font-size:0.8em;">❌ ' + err.message + '</span>';
+    });
+};
+
+window._toggleReadingVoiceConvo = function(chatId) {
+    // Toggle voice conversation mode for reading chats
+    var btn = document.getElementById('readingConvo_' + chatId);
+    if (!btn) return;
+    var isActive = btn.style.background && btn.style.background.indexOf('126,234') > -1 && btn.style.background.indexOf('0.3') > -1;
+    if (isActive) {
+        btn.style.background = 'rgba(255,255,255,0.06)';
+    } else {
+        btn.style.background = 'rgba(102,126,234,0.3)';
+        // Start voice input and auto-send
+        startGenericVoice('readingInput_' + chatId, '_readingChatSend(\'' + chatId + '\')', 'readingVoice_' + chatId);
+    }
+};
+
 function exportAllReadings() {
     var readings = getSavedReadings();
     if (readings.length === 0) return;
@@ -7724,7 +7891,7 @@ function saveInterpChatAsReading(chatId) {
     });
     var fullHtml = '<p>' + fullText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
     saveReading(chat.title + ' (Chat)', fullText, fullHtml);
-    alert(L ? '✅ Chat guardado en Lecturas' : '✅ Chat saved to Readings');
+    // Toast is now shown by saveReading dialog
 }
 
 function shareInterpChat(chatId) {
