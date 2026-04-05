@@ -26701,79 +26701,78 @@ function goToCurrentCycle() {
     };
 
     // ── Contextual In-Tab Button Guide ──
+    // Each button shows as a clickable chip; tap to reveal its description
     function _enableContextualTips() {
         var GUIDE_KEY = 'moonSync_tabGuides';
         var shownGuides = JSON.parse(localStorage.getItem(GUIDE_KEY) || '{}');
-
-        function _g(icon, label, desc) {
-            return '<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;">' +
-                '<span style="font-size:1em;flex-shrink:0;">' + icon + '</span>' +
-                '<div><span style="font-weight:700;color:#fff;">' + label + '</span> — ' +
-                '<span style="color:rgba(255,255,255,0.55);">' + desc + '</span></div></div>';
-        }
 
         function _getGuideData() {
             var L = currentLang === 'es';
             return {
                 'lunar': {
-                    title: L ? '🌑 Guía: Calendario Lunar' : '🌑 Guide: Lunar Calendar',
+                    title: L ? '🌑 Calendario Lunar' : '🌑 Lunar Calendar',
                     color: '#7ec8ff',
-                    items:
-                        _g('📅', L ? 'Toca un Día' : 'Tap a Day', L ? 'Abre el detalle con aspectos, diario, sueños y eventos' : 'Opens detail with aspects, diary, dreams and events') +
-                        _g('⭐', L ? 'Aspectos del Día' : 'Daily Aspects', L ? 'Conjunciones, trígonos, cuadraturas. Toca cada uno para interpretación AI' : 'Conjunctions, trines, squares. Tap each for AI interpretation') +
-                        _g('📓', L ? 'Diario y Sueños' : 'Diary & Dreams', L ? 'Escribe reflexiones y sueños con interpretación AI' : 'Write reflections and dreams with AI interpretation') +
-                        _g('📅', L ? 'Agenda / Eventos' : 'Agenda / Events', L ? 'Crea citas y recordatorios, sincroniza con Google Calendar' : 'Create appointments and reminders, sync with Google Calendar') +
-                        _g('🌊', L ? 'Panel HOY' : 'TODAY Panel', L ? 'Fase lunar, ciclo, mareas, distancia y declinación' : 'Lunar phase, cycle, tides, distance and declination') +
-                        _g('◀▶', L ? 'Navegación' : 'Navigation', L ? 'Desliza o usa flechas para cambiar de ciclo lunar' : 'Swipe or use arrows to change lunar cycle')
+                    buttons: [
+                        { icon: '📅', label: L ? 'Toca un Día' : 'Tap a Day', desc: L ? 'Abre el detalle con aspectos, diario, sueños y eventos' : 'Opens detail with aspects, diary, dreams and events' },
+                        { icon: '⭐', label: L ? 'Aspectos' : 'Aspects', desc: L ? 'Conjunciones, trígonos, cuadraturas. Toca cada uno para interpretación AI' : 'Conjunctions, trines, squares. Tap each for AI interpretation' },
+                        { icon: '📓', label: L ? 'Diario' : 'Diary', desc: L ? 'Escribe reflexiones y sueños con interpretación AI' : 'Write reflections and dreams with AI interpretation' },
+                        { icon: '📅', label: L ? 'Agenda' : 'Agenda', desc: L ? 'Crea citas y recordatorios, sincroniza con Google Calendar' : 'Create appointments and reminders, sync with Google Calendar' },
+                        { icon: '🌊', label: L ? 'HOY' : 'TODAY', desc: L ? 'Fase lunar, ciclo, mareas, distancia y declinación' : 'Lunar phase, cycle, tides, distance and declination' },
+                        { icon: '◀▶', label: L ? 'Navegar' : 'Navigate', desc: L ? 'Desliza o usa flechas para cambiar de ciclo lunar' : 'Swipe or use arrows to change lunar cycle' }
+                    ]
                 },
                 'solar': {
-                    title: L ? '☉ Guía: Calendario Solar' : '☉ Guide: Solar Calendar',
+                    title: L ? '☉ Calendario Solar' : '☉ Solar Calendar',
                     color: '#e8c84a',
-                    items:
-                        _g('🗺️', L ? 'Mapa Solar' : 'Solar Map', L ? 'Posición del Sol sobre la Tierra con línea día/noche' : 'Sun position over Earth with day/night line') +
-                        _g('🌅', L ? 'Amanecer / Atardecer' : 'Sunrise / Sunset', L ? 'Horas exactas para tu ubicación' : 'Exact times for your location') +
-                        _g('📏', L ? 'Duración del Día' : 'Day Duration', L ? 'Horas de luz solar y ángulo máximo del Sol' : 'Hours of sunlight and maximum Sun angle') +
-                        _g('🌍', L ? 'Distancia Tierra-Sol' : 'Earth-Sun Distance', L ? 'Distancia actual en kilómetros' : 'Current distance in kilometers') +
-                        _g('🔢', L ? 'Numerología' : 'Numerology', L ? 'Número del día y su significado' : 'Day number and its meaning') +
-                        _g('◀▶', L ? 'Navegación' : 'Navigation', L ? 'Desliza entre signos solares' : 'Swipe between solar signs')
+                    buttons: [
+                        { icon: '🗺️', label: L ? 'Mapa' : 'Map', desc: L ? 'Posición del Sol sobre la Tierra con línea día/noche' : 'Sun position over Earth with day/night line' },
+                        { icon: '🌅', label: L ? 'Amanecer' : 'Sunrise', desc: L ? 'Horas exactas de amanecer y atardecer para tu ubicación' : 'Exact sunrise and sunset times for your location' },
+                        { icon: '📏', label: L ? 'Duración' : 'Duration', desc: L ? 'Horas de luz solar y ángulo máximo del Sol' : 'Hours of sunlight and maximum Sun angle' },
+                        { icon: '🌍', label: L ? 'Distancia' : 'Distance', desc: L ? 'Distancia actual Tierra-Sol en kilómetros' : 'Current Earth-Sun distance in kilometers' },
+                        { icon: '🔢', label: L ? 'Numerología' : 'Numerology', desc: L ? 'Número del día y su significado' : 'Day number and its meaning' },
+                        { icon: '◀▶', label: L ? 'Navegar' : 'Navigate', desc: L ? 'Desliza entre signos solares' : 'Swipe between solar signs' }
+                    ]
                 },
                 'personal': {
-                    title: L ? '🔮 Guía: Tab Astro' : '🔮 Guide: Astro Tab',
+                    title: L ? '🔮 Tab Astro' : '🔮 Astro Tab',
                     color: '#c39bd3',
-                    items:
-                        _g('🪐', L ? 'Carta' : 'Chart', L ? 'Tu carta natal con rueda zodiacal interactiva' : 'Your natal chart with interactive zodiac wheel') +
-                        _g('📊', L ? 'Tablas' : 'Tables', L ? 'Posiciones planetarias detalladas' : 'Detailed planetary positions') +
-                        _g('📅', L ? 'Calendario' : 'Calendar', L ? 'Tránsitos personalizados a tu carta natal' : 'Personalized transits to your natal chart') +
-                        _g('🌟', L ? 'Hoy' : 'Today', L ? 'Aspectos planetarios de hoy sobre tu carta' : "Today's aspects to your chart") +
-                        _g('🔄', L ? 'Ciclos' : 'Cycles', L ? 'Retornos lunares, progresiones del mes' : 'Lunar returns, monthly progressions') +
-                        _g('📆', '2026', L ? 'Aspectos del año completo' : 'Full year aspects') +
-                        _g('🗺️', L ? 'Mapa' : 'Map', L ? 'Astrocartografía: líneas MC/IC/AC/DC' : 'Astrocartography: MC/IC/AC/DC lines') +
-                        _g('💞', L ? 'Sinastría' : 'Synastry', L ? 'Compatibilidad entre dos cartas' : 'Compatibility between two charts') +
-                        _g('💫', L ? 'Compuesta' : 'Composite', L ? 'Energía combinada de la relación' : 'Combined relationship energy') +
-                        _g('🤝', 'Davison', L ? 'Punto medio en tiempo y espacio' : 'Midpoint in time and space') +
-                        _g('🤖', L ? 'Tutor AI' : 'AI Tutor', L ? 'Chat interactivo de astrología' : 'Interactive astrology chat') +
-                        _g('🎓', L ? 'Curso Pro' : 'Pro Course', L ? '18 módulos, 130 temas, tests adaptativos' : '18 modules, 130 topics, adaptive tests')
+                    buttons: [
+                        { icon: '🪐', label: L ? 'Carta' : 'Chart', desc: L ? 'Tu carta natal con rueda zodiacal interactiva' : 'Your natal chart with interactive zodiac wheel' },
+                        { icon: '📊', label: L ? 'Tablas' : 'Tables', desc: L ? 'Posiciones planetarias detalladas' : 'Detailed planetary positions' },
+                        { icon: '📅', label: L ? 'Calendario' : 'Calendar', desc: L ? 'Tránsitos personalizados a tu carta natal' : 'Personalized transits to your natal chart' },
+                        { icon: '🌟', label: L ? 'Hoy' : 'Today', desc: L ? 'Aspectos planetarios de hoy sobre tu carta' : "Today's aspects to your chart" },
+                        { icon: '🔄', label: L ? 'Ciclos' : 'Cycles', desc: L ? 'Retornos lunares, progresiones del mes' : 'Lunar returns, monthly progressions' },
+                        { icon: '📆', label: '2026', desc: L ? 'Aspectos planetarios del año completo' : 'Full year aspects' },
+                        { icon: '🗺️', label: L ? 'Mapa' : 'Map', desc: L ? 'Astrocartografía: líneas MC/IC/AC/DC' : 'Astrocartography: MC/IC/AC/DC lines' },
+                        { icon: '💞', label: L ? 'Sinastría' : 'Synastry', desc: L ? 'Compatibilidad entre dos cartas' : 'Compatibility between two charts' },
+                        { icon: '💫', label: L ? 'Compuesta' : 'Composite', desc: L ? 'Energía combinada de la relación' : 'Combined relationship energy' },
+                        { icon: '🤝', label: 'Davison', desc: L ? 'Punto medio en tiempo y espacio' : 'Midpoint in time and space' },
+                        { icon: '🤖', label: L ? 'Tutor AI' : 'AI Tutor', desc: L ? 'Chat interactivo de astrología' : 'Interactive astrology chat' },
+                        { icon: '🎓', label: L ? 'Curso' : 'Course', desc: L ? '18 módulos, 130 temas, tests adaptativos' : '18 modules, 130 topics, adaptive tests' }
+                    ]
                 },
                 'social': {
-                    title: L ? '🌐 Guía: AstroConnect' : '🌐 Guide: AstroConnect',
+                    title: L ? '🌐 AstroConnect' : '🌐 AstroConnect',
                     color: '#00bcd4',
-                    items:
-                        _g('🏠', L ? 'Inicio' : 'Home', L ? 'Feed de publicaciones, likes y comentarios' : 'Post feed, likes and comments') +
-                        _g('🔔', L ? 'Actividad' : 'Activity', L ? 'Notificaciones de likes, comentarios y seguidores' : 'Likes, comments and follower notifications') +
-                        _g('🔍', L ? 'Descubrir' : 'Discover', L ? 'Busca usuarios por planeta y signo' : 'Search users by planet and sign') +
-                        _g('🪐', L ? 'Cósmicos' : 'Cosmic', L ? 'Grupos automáticos por compatibilidad (65%+)' : 'Auto groups by compatibility (65%+)') +
-                        _g('👥', L ? 'Grupos' : 'Groups', L ? 'Comunidades astrológicas temáticas' : 'Themed astrological communities') +
-                        _g('💬', 'Chat', L ? 'Mensajes privados con otros usuarios' : 'Private messages with other users') +
-                        _g('⚙️', L ? 'Perfil' : 'Profile', L ? 'Tu perfil, privacidad y datos públicos' : 'Your profile, privacy and public data')
+                    buttons: [
+                        { icon: '🏠', label: L ? 'Inicio' : 'Home', desc: L ? 'Feed de publicaciones, likes y comentarios' : 'Post feed, likes and comments' },
+                        { icon: '🔔', label: L ? 'Actividad' : 'Activity', desc: L ? 'Notificaciones de likes, comentarios y seguidores' : 'Likes, comments and follower notifications' },
+                        { icon: '🔍', label: L ? 'Descubrir' : 'Discover', desc: L ? 'Busca usuarios por planeta y signo' : 'Search users by planet and sign' },
+                        { icon: '🪐', label: L ? 'Cósmicos' : 'Cosmic', desc: L ? 'Grupos automáticos por compatibilidad (65%+)' : 'Auto groups by compatibility (65%+)' },
+                        { icon: '👥', label: L ? 'Grupos' : 'Groups', desc: L ? 'Comunidades astrológicas temáticas' : 'Themed astrological communities' },
+                        { icon: '💬', label: 'Chat', desc: L ? 'Mensajes privados con otros usuarios' : 'Private messages with other users' },
+                        { icon: '⚙️', label: L ? 'Perfil' : 'Profile', desc: L ? 'Tu perfil, privacidad y datos públicos' : 'Your profile, privacy and public data' }
+                    ]
                 },
                 'gregorian': {
-                    title: L ? '📅 Guía: Calendario Gregoriano' : '📅 Guide: Gregorian Calendar',
+                    title: L ? '📅 Gregoriano' : '📅 Gregorian',
                     color: '#4a9eff',
-                    items:
-                        _g('📅', L ? 'Vista Mensual' : 'Monthly View', L ? 'Calendario clásico semanal con eventos astrológicos' : 'Classic weekly calendar with astrological events') +
-                        _g('🌑', L ? 'Fases Lunares' : 'Lunar Phases', L ? 'Iconos de fase en cada día' : 'Phase icons on each day') +
-                        _g('⭐', L ? 'Aspectos' : 'Aspects', L ? 'Aspectos planetarios integrados en cada día' : 'Planetary aspects integrated in each day') +
-                        _g('📅', L ? 'Toca un Día' : 'Tap a Day', L ? 'Abre detalle con diario, eventos y aspectos' : 'Opens detail with diary, events and aspects')
+                    buttons: [
+                        { icon: '📅', label: L ? 'Mes' : 'Month', desc: L ? 'Calendario clásico semanal con eventos astrológicos' : 'Classic weekly calendar with astrological events' },
+                        { icon: '🌑', label: L ? 'Fases' : 'Phases', desc: L ? 'Iconos de fase lunar en cada día' : 'Lunar phase icons on each day' },
+                        { icon: '⭐', label: L ? 'Aspectos' : 'Aspects', desc: L ? 'Aspectos planetarios integrados en cada día' : 'Planetary aspects integrated in each day' },
+                        { icon: '📅', label: L ? 'Toca un Día' : 'Tap a Day', desc: L ? 'Abre detalle con diario, eventos y aspectos' : 'Opens detail with diary, events and aspects' }
+                    ]
                 }
             };
         }
@@ -26785,61 +26784,70 @@ function goToCurrentCycle() {
             localStorage.setItem(GUIDE_KEY, JSON.stringify(shownGuides));
 
             var L = currentLang === 'es';
-            // Remove any existing guide banner
             var old = document.getElementById('tabGuideBanner');
             if (old) old.remove();
 
             var banner = document.createElement('div');
             banner.id = 'tabGuideBanner';
-            banner.style.cssText = 'position:fixed;top:55px;left:50%;transform:translateX(-50%);z-index:5000;max-width:370px;width:92%;background:linear-gradient(170deg,rgba(7,9,42,0.98),rgba(4,5,25,0.98));border:1.5px solid ' + guide.color + '55;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.6);animation:slideDown 0.3s ease;overflow:hidden;';
+            banner.style.cssText = 'position:fixed;top:55px;left:50%;transform:translateX(-50%);z-index:5000;max-width:380px;width:93%;background:linear-gradient(170deg,rgba(7,9,42,0.98),rgba(4,5,25,0.98));border:1.5px solid ' + guide.color + '55;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.6);animation:slideDown 0.3s ease;overflow:hidden;';
 
-            // Header (always visible, acts as toggle)
-            var header = '<div id="tabGuideHeader" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:linear-gradient(135deg,' + guide.color + '15,' + guide.color + '08);">' +
-                '<span style="font-weight:700;font-size:0.88em;color:' + guide.color + ';">' + guide.title + '</span>' +
-                '<div style="display:flex;align-items:center;gap:8px;">' +
-                    '<span id="tabGuideToggleIcon" style="font-size:0.7em;color:rgba(255,255,255,0.3);transition:transform 0.2s;">▼</span>' +
-                    '<button id="tabGuideClose" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:1.1em;cursor:pointer;padding:0 2px;">✕</button>' +
-                '</div>' +
+            // Header with title and close
+            var html = '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:linear-gradient(135deg,' + guide.color + '15,' + guide.color + '08);">' +
+                '<span style="font-weight:700;font-size:0.85em;color:' + guide.color + ';">' + guide.title + '</span>' +
+                '<button id="tabGuideClose" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:1.1em;cursor:pointer;padding:0 4px;">✕</button>' +
             '</div>';
 
-            // Body (collapsible)
-            var body = '<div id="tabGuideBody" style="padding:8px 14px 12px;font-size:0.82em;line-height:1.5;max-height:45vh;overflow-y:auto;">' + guide.items +
-                '<div style="margin-top:8px;text-align:center;"><button id="tabGuideGotIt" style="padding:6px 20px;background:' + guide.color + '22;border:1px solid ' + guide.color + '44;border-radius:20px;color:' + guide.color + ';font-size:0.85em;font-weight:600;cursor:pointer;">' + (L ? '✓ Entendido' : '✓ Got it') + '</button></div>' +
-            '</div>';
+            // Subtitle
+            html += '<div style="padding:6px 14px 4px;font-size:0.7em;color:rgba(255,255,255,0.35);">' + (L ? 'Toca cada botón para ver qué hace:' : 'Tap each button to see what it does:') + '</div>';
 
-            banner.innerHTML = header + body;
-            document.body.appendChild(banner);
+            // Button chips in a flex wrap
+            html += '<div style="padding:4px 12px 8px;display:flex;flex-wrap:wrap;gap:5px;">';
+            guide.buttons.forEach(function(btn, idx) {
+                html += '<button class="tg-chip" data-idx="' + idx + '" style="padding:5px 10px;border-radius:20px;border:1px solid ' + guide.color + '44;background:' + guide.color + '11;color:' + guide.color + ';font-size:0.78em;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;">' + btn.icon + ' ' + btn.label + '</button>';
+            });
+            html += '</div>';
 
-            // Toggle collapse
-            document.getElementById('tabGuideHeader').onclick = function(e) {
-                if (e.target.id === 'tabGuideClose') return;
-                var bodyEl = document.getElementById('tabGuideBody');
-                var icon = document.getElementById('tabGuideToggleIcon');
-                if (bodyEl.style.display === 'none') {
-                    bodyEl.style.display = '';
-                    icon.textContent = '▼';
-                } else {
-                    bodyEl.style.display = 'none';
-                    icon.textContent = '▶';
-                }
-            };
-
-            // Close button
-            document.getElementById('tabGuideClose').onclick = function() {
-                banner.style.opacity = '0';
-                banner.style.transition = 'opacity 0.3s';
-                setTimeout(function() { if (banner.parentNode) banner.remove(); }, 300);
-            };
+            // Description area (hidden until a chip is tapped)
+            html += '<div id="tabGuideDesc" style="display:none;margin:0 12px 10px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:10px;border-left:3px solid ' + guide.color + ';font-size:0.8em;color:rgba(255,255,255,0.7);line-height:1.5;animation:fadeInUp 0.2s ease;"></div>';
 
             // Got it button
+            html += '<div style="text-align:center;padding:0 12px 10px;"><button id="tabGuideGotIt" style="padding:6px 20px;background:' + guide.color + '22;border:1px solid ' + guide.color + '44;border-radius:20px;color:' + guide.color + ';font-size:0.8em;font-weight:600;cursor:pointer;">' + (L ? '✓ Entendido' : '✓ Got it') + '</button></div>';
+
+            banner.innerHTML = html;
+            document.body.appendChild(banner);
+
+            // Chip click handlers
+            var chips = banner.querySelectorAll('.tg-chip');
+            chips.forEach(function(chip) {
+                chip.onclick = function() {
+                    var idx = parseInt(this.dataset.idx);
+                    var btn = guide.buttons[idx];
+                    var descEl = document.getElementById('tabGuideDesc');
+                    if (!descEl) return;
+                    // Highlight active chip
+                    chips.forEach(function(c) {
+                        c.style.background = guide.color + '11';
+                        c.style.color = guide.color;
+                    });
+                    this.style.background = guide.color + '44';
+                    this.style.color = '#fff';
+                    // Show description
+                    descEl.style.display = 'block';
+                    descEl.innerHTML = '<span style="font-weight:700;color:#fff;">' + btn.icon + ' ' + btn.label + '</span> — ' + btn.desc;
+                };
+            });
+
+            // Close
+            document.getElementById('tabGuideClose').onclick = function() {
+                banner.style.opacity = '0'; banner.style.transition = 'opacity 0.3s';
+                setTimeout(function() { if (banner.parentNode) banner.remove(); }, 300);
+            };
             document.getElementById('tabGuideGotIt').onclick = function() {
-                banner.style.opacity = '0';
-                banner.style.transition = 'opacity 0.3s';
+                banner.style.opacity = '0'; banner.style.transition = 'opacity 0.3s';
                 setTimeout(function() { if (banner.parentNode) banner.remove(); }, 300);
             };
         };
 
-        // Allow resetting guides from preferences
         window._resetTabGuides = function() {
             localStorage.removeItem(GUIDE_KEY);
             shownGuides = {};
@@ -30760,9 +30768,23 @@ function _getCommunityPosts(communityId, callback) {
 
 function _likePost(communityId, postId) {
     if (!_db || !_socialUser) return;
-    _db.collection('communities').doc(communityId).collection('posts').doc(postId).update({
-        likes: firebase.firestore.FieldValue.arrayUnion(_socialUser.uid),
-        likeCount: firebase.firestore.FieldValue.increment(1)
+    var postRef = _db.collection('communities').doc(communityId).collection('posts').doc(postId);
+    postRef.get().then(function(doc) {
+        if (!doc.exists) return;
+        var post = doc.data();
+        var likes = post.likes || [];
+        var alreadyLiked = likes.indexOf(_socialUser.uid) >= 0;
+        if (alreadyLiked) {
+            postRef.update({
+                likes: firebase.firestore.FieldValue.arrayRemove(_socialUser.uid),
+                likeCount: firebase.firestore.FieldValue.increment(-1)
+            });
+        } else {
+            postRef.update({
+                likes: firebase.firestore.FieldValue.arrayUnion(_socialUser.uid),
+                likeCount: firebase.firestore.FieldValue.increment(1)
+            });
+        }
     });
 }
 
@@ -30912,23 +30934,54 @@ function _getFeed(callback) {
     });
 }
 
+// Refresh feed posts in-place (used after like/unlike/comment)
+function _loadFeed() {
+    var isES = currentLang === 'es';
+    _getFeed(function(posts) {
+        var el = document.getElementById('feedPosts');
+        if (!el) return;
+        if (posts.length === 0) {
+            el.innerHTML = '<div style="padding:30px;text-align:center;color:rgba(255,255,255,0.3);font-size:0.85em;">' +
+                (isES ? '¡Sé el primero en publicar!' : 'Be the first to post!') + '</div>';
+            return;
+        }
+        var html = '';
+        posts.forEach(function(post) { html += _renderFeedPostCard(post, isES); });
+        el.innerHTML = html;
+    });
+}
+
 function _likeFeedPost(postId) {
     if (!_db || !_socialUser) return;
     var likerName = _socialUser.displayName || _socialUser.email.split('@')[0];
-    _db.collection('feed').doc(postId).update({
-        likes: firebase.firestore.FieldValue.arrayUnion(_socialUser.uid),
-        likeCount: firebase.firestore.FieldValue.increment(1),
-        likedBy: firebase.firestore.FieldValue.arrayUnion({ uid: _socialUser.uid, name: likerName })
-    }).then(function() {
-        // Send notification to post author
-        _db.collection('feed').doc(postId).get().then(function(doc) {
-            if (doc.exists) {
-                var post = doc.data();
+    var postRef = _db.collection('feed').doc(postId);
+    // First check if already liked to prevent duplicate counts
+    postRef.get().then(function(doc) {
+        if (!doc.exists) return;
+        var post = doc.data();
+        var likes = post.likes || [];
+        var alreadyLiked = likes.indexOf(_socialUser.uid) >= 0;
+        if (alreadyLiked) {
+            // Unlike: remove like
+            postRef.update({
+                likes: firebase.firestore.FieldValue.arrayRemove(_socialUser.uid),
+                likeCount: firebase.firestore.FieldValue.increment(-1),
+                likedBy: firebase.firestore.FieldValue.arrayRemove({ uid: _socialUser.uid, name: likerName })
+            }).then(function() { _loadFeed(); });
+        } else {
+            // Like: add like
+            postRef.update({
+                likes: firebase.firestore.FieldValue.arrayUnion(_socialUser.uid),
+                likeCount: firebase.firestore.FieldValue.increment(1),
+                likedBy: firebase.firestore.FieldValue.arrayUnion({ uid: _socialUser.uid, name: likerName })
+            }).then(function() {
+                // Send notification to post author
                 if (post.authorUid && post.authorUid !== _socialUser.uid) {
                     _sendNotification(post.authorUid, 'like', { postId: postId, postPreview: (post.content || '').substring(0, 60) });
                 }
-            }
-        });
+                _loadFeed();
+            });
+        }
     });
 }
 
@@ -32636,7 +32689,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-const APP_VERSION = 'v552';
+const APP_VERSION = 'v554';
 var _pendingSW = null;
 
 // What's New removed per user request
