@@ -1,5 +1,5 @@
 const CACHE_NAME = 'astro-currents-v558';
-const BASE = '/moon-sync';
+const BASE = '/astro-currents';
 const ASSETS = [
   BASE + '/',
   BASE + '/index.html',

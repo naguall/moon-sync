@@ -8920,7 +8920,7 @@ function triggerDreamAlarm() {
         } else {
             new Notification(currentLang === 'es' ? '🌙 Ensueño' : '🌙 Dream', {
                 body: currentLang === 'es' ? 'Toca para grabar tu sueño' : 'Tap to record your dream',
-                icon: '/moon-sync/icons/icon-192.png',
+                icon: '/astro-currents/icons/icon-192.png',
                 tag: 'dream-alarm',
                 requireInteraction: true
             });
@@ -33029,7 +33029,7 @@ if ('serviceWorker' in navigator) {
         }
     }
 
-    navigator.serviceWorker.register('/moon-sync/sw.js', { updateViaCache: 'none' })
+    navigator.serviceWorker.register('/astro-currents/sw.js', { updateViaCache: 'none' })
         .then(handleSWRegistration)
         .catch(function(error) {
             console.log('❌ SW registration failed, trying relative path:', error);

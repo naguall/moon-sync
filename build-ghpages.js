@@ -9,7 +9,7 @@ const path = require('path');
 
 const ROOT = __dirname;
 const DOCS = path.join(ROOT, 'docs');
-const BASE_PATH = '/moon-sync'; // GitHub repo name = URL base
+const BASE_PATH = '/astro-currents'; // GitHub repo name = URL base
 
 // Files to copy
 const FILES = [
@@ -386,5 +386,5 @@ console.log('  ✓ install.html (landing page)');
 copied++;
 
 console.log('\n🚀 GitHub Pages build complete: ' + copied + ' files → docs/\n');
-console.log('URL: https://naguall.github.io/moon-sync/install.html');
-console.log('App: https://naguall.github.io/moon-sync/index.html\n');
+console.log('URL: https://naguall.github.io/astro-currents/install.html');
+console.log('App: https://naguall.github.io/astro-currents/index.html\n');
