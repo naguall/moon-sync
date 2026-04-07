@@ -25172,10 +25172,8 @@ function renderCalendar() {
         weekDiv.innerHTML = `
             <div class="week-header" style="display:grid;grid-template-columns:repeat(8,1fr);gap:var(--day-cell-gap,3px);align-items:center;padding:4px 0;" ${isClickableWeek ? `onclick="navigateToLunar2026Moon(${week.startDate.getTime()}, '${index === 0 ? 'new' : 'full'}')"` : ''}>
                 <div style="grid-column:1/3;font-size:0.6em;color:#8899cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;">${week.days.length}d • ${formatDate(week.startDate)} - ${formatDate(week.endDate)}</div>
-                <div style="grid-column:3/6;display:flex;align-items:center;justify-content:center;gap:4px;">
-                    <div class="moon-icon" style="margin:0;display:flex;align-items:center;justify-content:center;">${week.emoji}</div>
-                    <span style="font-size:0.65em;font-weight:bold;color:#e8c84a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${week.name}</span>
-                </div>
+                <div class="moon-icon" style="grid-column:3/4;margin:0;display:flex;align-items:center;justify-content:center;">${week.emoji}</div>
+                <div style="grid-column:4/6;font-size:0.65em;font-weight:bold;color:#e8c84a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${week.name}</div>
                 <div style="grid-column:6/9;font-size:0.65em;color:#c9a840;white-space:nowrap;text-align:right;overflow:hidden;text-overflow:ellipsis;padding-right:4px;">${week.zodiacSign}</div>
             </div>
             <div class="days-container" style="grid-template-columns:repeat(8,1fr);">${daysHTML}${(() => {
@@ -32888,7 +32886,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v570';
+var APP_VERSION = 'v571';
 var _pendingSW = null;
 
 // What's New removed per user request
