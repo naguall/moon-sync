@@ -25176,7 +25176,7 @@ function renderCalendar() {
                     <div class="moon-icon" style="margin:0;display:flex;align-items:center;justify-content:center;">${week.emoji}</div>
                     <span style="font-size:0.65em;font-weight:bold;color:#e8c84a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${week.name}</span>
                 </div>
-                <div style="grid-column:7/9;font-size:0.65em;color:#c9a840;white-space:nowrap;text-align:right;overflow:hidden;text-overflow:ellipsis;padding-right:4px;">${week.zodiacSign}</div>
+                <div style="grid-column:6/9;font-size:0.65em;color:#c9a840;white-space:nowrap;text-align:right;overflow:hidden;text-overflow:ellipsis;padding-right:4px;">${week.zodiacSign}</div>
             </div>
             <div class="days-container" style="grid-template-columns:repeat(8,1fr);">${daysHTML}${(() => {
                 // Fill empty cells at the END to complete 8 columns (lunar week = 8 days)
@@ -32888,7 +32888,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v569';
+var APP_VERSION = 'v570';
 var _pendingSW = null;
 
 // What's New removed per user request
