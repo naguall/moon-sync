@@ -26691,7 +26691,7 @@ function goToCurrentCycle() {
                     { sel: '#currentDayInfo', icon: '📋', title: L ? 'Info del día de HOY' : 'TODAY\'s Info', desc: L ? 'Información del día HOY con los eventos de agenda, aspectos lunares del día. Haz click y expande la información. Navega en el calendario y regresa al día de hoy haciendo click en día de HOY.' : 'TODAY\'s info with agenda events and daily lunar aspects. Click to expand the information. Navigate the calendar and return to today by clicking on TODAY.' }
                 ],
                 'lunar': [
-                    { sel: '.day-cell.perfection-day,.lunar-week.active .week-header', icon: '🌕', title: L ? 'Fases Lunares' : 'Lunar Phases', desc: L ? 'Las 4 fases donde se perfecciona la Luna. Ese día se perfecciona la fase: Luna Nueva, Cuarto Creciente, Luna Llena o Cuarto Menguante.' : 'The 4 phases where the Moon perfects. On that day the phase perfects: New Moon, First Quarter, Full Moon or Last Quarter.' },
+                    { sel: '.day-cell.perfection-day', multi: true, icon: '🌕', title: L ? 'Fases Lunares' : 'Lunar Phases', desc: L ? 'Días en que se perfeccionan las 4 fases lunares: Luna Nueva, Cuarto Creciente, Luna Llena o Cuarto Menguante.' : 'Days when the 4 lunar phases perfect: New Moon, First Quarter, Full Moon or Last Quarter.' },
                     { sel: '.day-cell.today,.day-cell:not(.past)', icon: '📅', title: L ? 'Toca un Día' : 'Tap a Day', desc: L ? 'Haz click y anota eventos de agenda, escribe en tu diario personal y de sueños, consulta aspectos del día.' : 'Click and note agenda events, write in your personal and dream diary, check daily aspects.' },
                     { sel: '[onclick*="toggleLunarRiseSetList"]', icon: '🌙', title: L ? 'Salida y Puesta' : 'Moonrise & Moonset', desc: L ? 'Haz click y mira las salidas y puestas de la Luna del año.' : 'Click and see the Moon rises and sets for the year.' },
                     { sel: '[onclick*="openTideCycleModal"],.tide-curve-container', icon: '🌊', title: L ? 'Curva de Mareas' : 'Tide Curve', desc: L ? 'Haz click para mirar las mareas de esta semana.' : 'Click to see this week\'s tides.' },
@@ -26751,6 +26751,16 @@ function goToCurrentCycle() {
             // Filter to only steps whose elements exist in DOM
             var validSteps = [];
             steps.forEach(function(step) {
+                if (step.multi) {
+                    // Multi-element spotlight: use querySelectorAll
+                    var els = document.querySelectorAll(step.sel);
+                    var visibleEls = [];
+                    els.forEach(function(el) { if (el.offsetParent !== null) visibleEls.push(el); });
+                    if (visibleEls.length > 0) {
+                        validSteps.push({ sel: step.sel, multi: true, icon: step.icon, title: step.title, desc: step.desc });
+                    }
+                    return;
+                }
                 var sels = step.sel.split(',');
                 for (var i = 0; i < sels.length; i++) {
                     var el = document.querySelector(sels[i].trim());
@@ -26782,6 +26792,8 @@ function goToCurrentCycle() {
 
             // Track ancestors whose z-index we elevated
             var _elevatedAncestors = [];
+            // Track multiple highlighted elements for multi-spotlight
+            var _prevMultiEls = [];
 
             // Restore previous highlighted element to normal
             function _unhighlightPrev() {
@@ -26798,11 +26810,54 @@ function goToCurrentCycle() {
                     _prevHighlightEl.style.filter = _prevHighlightStyles.filter || '';
                     _prevHighlightEl = null;
                 }
+                // Restore multi-highlighted elements
+                _prevMultiEls.forEach(function(item) {
+                    item.el.style.position = item.orig.position || '';
+                    item.el.style.zIndex = item.orig.zIndex || '';
+                    item.el.style.boxShadow = item.orig.boxShadow || '';
+                    item.el.style.borderRadius = item.orig.borderRadius || '';
+                    item.el.style.outline = item.orig.outline || '';
+                    item.el.style.outlineOffset = item.orig.outlineOffset || '';
+                    item.el.style.background = item.orig.background || '';
+                    item.el.style.animation = item.orig.animation || '';
+                    item.el.style.transform = item.orig.transform || '';
+                    item.el.style.filter = item.orig.filter || '';
+                });
+                _prevMultiEls = [];
                 // Restore ancestor z-indexes
                 _elevatedAncestors.forEach(function(item) {
                     item.el.style.zIndex = item.origZ;
                 });
                 _elevatedAncestors = [];
+            }
+
+            function _highlightSingleEl(el) {
+                el.style.position = 'relative';
+                el.style.zIndex = '9995';
+                el.style.boxShadow = '0 0 0 5px rgba(102,126,234,1), 0 0 20px 10px rgba(102,126,234,0.8), 0 0 60px 20px rgba(102,126,234,0.5), 0 0 100px 40px rgba(102,126,234,0.3)';
+                el.style.borderRadius = el.style.borderRadius || '8px';
+                el.style.outline = '3px solid rgba(255,255,255,0.8)';
+                el.style.outlineOffset = '4px';
+                el.style.background = 'rgba(102,126,234,0.35)';
+                var _elRect = el.getBoundingClientRect();
+                if (_elRect.width > 300) {
+                    el.style.animation = 'none';
+                    el.style.transform = 'none';
+                } else {
+                    el.style.animation = 'spotlightPulse 1.5s ease-in-out infinite';
+                    el.style.transform = 'scale(1.15)';
+                }
+                el.style.filter = 'brightness(1.8)';
+                // Elevate ancestors
+                var ancestor = el.parentElement;
+                while (ancestor && ancestor !== document.body) {
+                    var cs = window.getComputedStyle(ancestor);
+                    if (cs.zIndex !== 'auto' && cs.position !== 'static') {
+                        _elevatedAncestors.push({ el: ancestor, origZ: ancestor.style.zIndex });
+                        ancestor.style.zIndex = '9993';
+                    }
+                    ancestor = ancestor.parentElement;
+                }
             }
 
             function _showStep(idx) {
@@ -26813,6 +26868,82 @@ function goToCurrentCycle() {
                 _unhighlightPrev();
                 currentIdx = idx;
                 var step = validSteps[idx];
+
+                // Multi-element spotlight
+                if (step.multi) {
+                    var allEls = document.querySelectorAll(step.sel);
+                    var visibleEls = [];
+                    allEls.forEach(function(e) { if (e.offsetParent !== null) visibleEls.push(e); });
+                    if (!visibleEls.length) { _showStep(idx + 1); return; }
+
+                    // Scroll first element into view
+                    visibleEls[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    setTimeout(function() {
+                        // Highlight ALL matching elements
+                        visibleEls.forEach(function(mel) {
+                            var origStyles = {
+                                position: mel.style.position, zIndex: mel.style.zIndex,
+                                boxShadow: mel.style.boxShadow, borderRadius: mel.style.borderRadius,
+                                outline: mel.style.outline, outlineOffset: mel.style.outlineOffset,
+                                background: mel.style.background, animation: mel.style.animation,
+                                transform: mel.style.transform, filter: mel.style.filter
+                            };
+                            _prevMultiEls.push({ el: mel, orig: origStyles });
+                            _highlightSingleEl(mel);
+                        });
+
+                        // Position tooltip near the center of all highlighted elements
+                        var firstRect = visibleEls[0].getBoundingClientRect();
+                        var rect = firstRect;
+
+                        // Build and position tooltip (same as single element)
+                        var counter = (idx + 1) + ' / ' + validSteps.length;
+                        var html = '<div style="padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;">' +
+                            '<div style="display:flex;align-items:center;gap:8px;">' +
+                            '<span style="font-size:1.4em;">' + step.icon + '</span>' +
+                            '<span style="font-weight:700;font-size:0.95em;color:#fff;">' + step.title + '</span>' +
+                            '</div>' +
+                            '<span style="font-size:0.7em;color:rgba(255,255,255,0.3);font-weight:600;">' + counter + '</span>' +
+                            '</div>';
+                        html += '<div style="padding:0 16px 12px;font-size:0.82em;color:rgba(255,255,255,0.65);line-height:1.5;">' + step.desc + '</div>';
+                        var pct = ((idx + 1) / validSteps.length * 100);
+                        html += '<div style="height:3px;background:rgba(255,255,255,0.06);"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:3px;transition:width 0.3s;"></div></div>';
+                        html += '<div style="display:flex;gap:8px;padding:10px 16px;justify-content:space-between;align-items:center;">' +
+                            '<button id="wkSkip" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:0.78em;cursor:pointer;padding:4px 8px;">' + (L ? 'Saltar todo' : 'Skip all') + '</button>' +
+                            '<div style="display:flex;gap:8px;">';
+                        if (idx > 0) {
+                            html += '<button id="wkPrev" style="padding:7px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:20px;color:rgba(255,255,255,0.6);font-size:0.8em;font-weight:600;cursor:pointer;">← ' + (L ? 'Ant' : 'Prev') + '</button>';
+                        }
+                        if (idx < validSteps.length - 1) {
+                            html += '<button id="wkNext" style="padding:7px 16px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:20px;color:#fff;font-size:0.8em;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,0.4);">' + (L ? 'Siguiente →' : 'Next →') + '</button>';
+                        } else {
+                            html += '<button id="wkNext" style="padding:7px 16px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:20px;color:#fff;font-size:0.8em;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,0.4);">✓ ' + (L ? '¡Listo!' : 'Done!') + '</button>';
+                        }
+                        html += '</div></div>';
+                        tooltip.innerHTML = html;
+
+                        // Position tooltip in center of viewport, below the first element
+                        var ttW = 320;
+                        var ttLeft = Math.max(10, Math.min(window.innerWidth - ttW - 10, rect.left + rect.width / 2 - ttW / 2));
+                        var ttTop = rect.bottom + 20;
+                        if (ttTop + 200 > window.innerHeight) ttTop = rect.top - 220;
+                        if (ttTop < 10) ttTop = window.innerHeight / 2 - 100;
+                        tooltip.style.left = ttLeft + 'px';
+                        tooltip.style.top = ttTop + 'px';
+
+                        // Button listeners
+                        var skipBtn = document.getElementById('wkSkip');
+                        var nextBtn = document.getElementById('wkNext');
+                        var prevBtn = document.getElementById('wkPrev');
+                        if (skipBtn) skipBtn.onclick = _finishWalkthrough;
+                        if (nextBtn) nextBtn.onclick = function() { _showStep(idx + 1); };
+                        if (prevBtn) prevBtn.onclick = function() { _showStep(idx - 1); };
+                    }, 400);
+                    return;
+                }
+
+                // Single element spotlight (original behavior)
                 var el = document.querySelector(step.sel);
                 if (!el) { _showStep(idx + 1); return; }
 
@@ -26837,38 +26968,7 @@ function goToCurrentCycle() {
                     _prevHighlightStyles.animation = el.style.animation;
                     _prevHighlightStyles.transform = el.style.transform;
                     _prevHighlightStyles.filter = el.style.filter;
-                    el.style.position = 'relative';
-                    el.style.zIndex = '9995';
-                    el.style.boxShadow = '0 0 0 5px rgba(102,126,234,1), 0 0 20px 10px rgba(102,126,234,0.8), 0 0 60px 20px rgba(102,126,234,0.5), 0 0 100px 40px rgba(102,126,234,0.3)';
-                    el.style.borderRadius = el.style.borderRadius || '8px';
-                    el.style.outline = '3px solid rgba(255,255,255,0.8)';
-                    el.style.outlineOffset = '4px';
-                    el.style.background = 'rgba(102,126,234,0.35)';
-                    // Skip zoom/pulse for large elements (banners, info boxes)
-                    var _elRect = el.getBoundingClientRect();
-                    if (_elRect.width > 300) {
-                        el.style.animation = 'none';
-                        el.style.transform = 'none';
-                    } else {
-                        el.style.animation = 'spotlightPulse 1.5s ease-in-out infinite';
-                        el.style.transform = 'scale(1.15)';
-                    }
-                    el.style.filter = 'brightness(1.8)';
-
-                    // Walk up ancestors and elevate any that create stacking contexts
-                    // so the highlighted element can appear ABOVE the backdrop (z-index 9990)
-                    var ancestor = el.parentElement;
-                    while (ancestor && ancestor !== document.body) {
-                        var cs = window.getComputedStyle(ancestor);
-                        var zVal = cs.zIndex;
-                        var pos = cs.position;
-                        // If ancestor has a z-index and creates a stacking context, elevate it
-                        if (zVal !== 'auto' && pos !== 'static') {
-                            _elevatedAncestors.push({ el: ancestor, origZ: ancestor.style.zIndex });
-                            ancestor.style.zIndex = '9993';
-                        }
-                        ancestor = ancestor.parentElement;
-                    }
+                    _highlightSingleEl(el);
 
                     var rect = el.getBoundingClientRect();
 
@@ -32775,7 +32875,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v566';
+var APP_VERSION = 'v567';
 var _pendingSW = null;
 
 // What's New removed per user request
