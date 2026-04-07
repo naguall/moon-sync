@@ -26678,7 +26678,7 @@ function goToCurrentCycle() {
             var L = currentLang === 'es';
             var steps = {
                 'header': [
-                    { sel: '#notificationBtn', icon: '🔔', title: L ? 'Notificaciones' : 'Notifications', desc: L ? 'Recibe las notificaciones de eventos en tu agenda, aspectos planetarios, comunidad y más.' : 'Get notifications for agenda events, planetary aspects, community and more.' },
+                    { sel: '#notifHistoryBtn,#notificationBtn', icon: '🔔', title: L ? 'Notificaciones' : 'Notifications', desc: L ? 'Recibe las notificaciones de eventos en tu agenda, aspectos planetarios, comunidad y más.' : 'Get notifications for agenda events, planetary aspects, community and more.' },
                     { sel: '#savedReadingsBtn', icon: '📚', title: L ? 'Lecturas Guardadas' : 'Saved Readings', desc: L ? 'Al salvar cualquier interpretación de la app puedes releerla, editar, preguntar y expandir acá. Lo mismo con tu diario personal y diario de sueños.' : 'Save any app interpretation to reread, edit, ask questions and expand. Same with your personal diary and dream journal.' },
                     { sel: '#moonCompassBtn', icon: '🧭', title: L ? 'Brújula Celeste' : 'Celestial Compass', desc: L ? 'Brújula que apunta hacia la posición real de los astros en el cielo en tiempo real.' : 'Compass pointing to the real-time position of celestial bodies in the sky.' },
                     { sel: '#preferencesBtn', icon: '⚙️', title: L ? 'Preferencias' : 'Preferences', desc: L ? 'Idioma, notificaciones, tamaño del calendario, ubicación, programación de alarma de sueños, interpretadores y más.' : 'Language, notifications, calendar size, location, dream alarm scheduling, interpreters and more.' },
@@ -32768,7 +32768,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v564';
+var APP_VERSION = 'v565';
 var _pendingSW = null;
 
 // What's New removed per user request
