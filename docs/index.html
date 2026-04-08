@@ -27375,7 +27375,7 @@ function goToCurrentCycle() {
 
     // CSS animation keyframes
     var styleEl = document.createElement('style');
-    styleEl.textContent = '@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes slideDown{from{opacity:0;transform:translate(-50%,-10px)}to{opacity:1;transform:translate(-50%,0)}} @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}} @keyframes spotlightPulse{0%,100%{box-shadow:0 0 0 5px rgba(102,126,234,1),0 0 20px 10px rgba(102,126,234,0.8),0 0 60px 20px rgba(102,126,234,0.5),0 0 100px 40px rgba(102,126,234,0.3);transform:scale(1.08)}50%{box-shadow:0 0 0 8px rgba(102,126,234,1),0 0 30px 15px rgba(102,126,234,0.9),0 0 80px 30px rgba(102,126,234,0.6),0 0 120px 50px rgba(102,126,234,0.3);transform:scale(1.12)}} @keyframes tooltipAppear{0%{opacity:0;transform:translateX(-50%) scale(0.85) translateY(12px)}100%{opacity:1;transform:translateX(-50%) scale(1) translateY(0)}}';
+    styleEl.textContent = '@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes slideDown{from{opacity:0;transform:translate(-50%,-10px)}to{opacity:1;transform:translate(-50%,0)}} @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}} @keyframes spotlightPulse{0%,100%{box-shadow:0 0 0 5px rgba(102,126,234,1),0 0 20px 10px rgba(102,126,234,0.8),0 0 60px 20px rgba(102,126,234,0.5),0 0 100px 40px rgba(102,126,234,0.3);transform:scale(1.06)}50%{box-shadow:0 0 0 8px rgba(102,126,234,1),0 0 30px 15px rgba(102,126,234,0.9),0 0 80px 30px rgba(102,126,234,0.6),0 0 120px 50px rgba(102,126,234,0.3);transform:scale(1.12)}} @keyframes tooltipAppear{0%{opacity:0;transform:scale(0.9) translateY(10px)}100%{opacity:1;transform:scale(1) translateY(0)}}';
     document.head.appendChild(styleEl);
 
     // ══════════════════════════════════════════════════
@@ -27504,7 +27504,7 @@ function goToCurrentCycle() {
             // Tooltip
             var tooltip = document.createElement('div');
             tooltip.id = 'wkTooltip';
-            tooltip.style.cssText = 'position:fixed;z-index:9998;max-width:320px;width:90%;background:linear-gradient(170deg,rgba(15,17,55,0.98),rgba(8,10,35,0.98));border:1.5px solid rgba(102,126,234,0.5);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.7);padding:0;overflow:hidden;animation:tooltipAppear 0.35s cubic-bezier(0.34,1.56,0.64,1);';
+            tooltip.style.cssText = 'position:fixed;z-index:9998;max-width:320px;width:calc(100% - 24px);background:linear-gradient(170deg,rgba(15,17,55,0.98),rgba(8,10,35,0.98));border:1.5px solid rgba(102,126,234,0.5);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.7);padding:0;overflow:hidden;animation:tooltipAppear 0.35s cubic-bezier(0.34,1.56,0.64,1);';
 
             document.body.appendChild(backdrop);
             document.body.appendChild(tooltip);
@@ -27661,9 +27661,9 @@ function goToCurrentCycle() {
                         tooltip.innerHTML = html;
 
                         // Position tooltip below or above elements, always within viewport
-                        var ttW = 320;
-                        var ttH = 180;
-                        var ttLeft = Math.max(10, Math.min(window.innerWidth - ttW - 10, rect.left + rect.width / 2 - ttW / 2));
+                        var ttW = Math.min(320, window.innerWidth - 24);
+                        var ttH = 200;
+                        var ttLeft = Math.max(12, (window.innerWidth - ttW) / 2);
                         var spBelow = window.innerHeight - rect.bottom;
                         var spAbove = rect.top;
                         var ttTop;
@@ -27676,6 +27676,7 @@ function goToCurrentCycle() {
                         }
                         ttTop = Math.max(10, Math.min(ttTop, window.innerHeight - ttH - 10));
                         tooltip.style.left = ttLeft + 'px';
+                        tooltip.style.transform = 'none';
                         tooltip.style.top = ttTop + 'px';
 
                         // Button listeners
@@ -27755,7 +27756,8 @@ function goToCurrentCycle() {
                     tooltip.innerHTML = html;
 
                     // Position tooltip below or above the element, always within viewport
-                    var ttHeight = 180;
+                    var ttWidth = Math.min(320, window.innerWidth - 24);
+                    var ttHeight = 200;
                     var spaceBelow = window.innerHeight - rect.bottom;
                     var spaceAbove = rect.top;
                     var tooltipTop;
@@ -27769,8 +27771,9 @@ function goToCurrentCycle() {
                     }
                     // Clamp to viewport bounds
                     tooltipTop = Math.max(10, Math.min(tooltipTop, window.innerHeight - ttHeight - 10));
-                    tooltip.style.left = '50%';
-                    tooltip.style.transform = 'translateX(-50%)';
+                    var tooltipLeft = Math.max(12, (window.innerWidth - ttWidth) / 2);
+                    tooltip.style.left = tooltipLeft + 'px';
+                    tooltip.style.transform = 'none';
                     tooltip.style.top = tooltipTop + 'px';
 
                     // Wire buttons
@@ -27846,6 +27849,18 @@ function goToCurrentCycle() {
         _hookWalkthrough('switchToGregorianMode', 'gregorian');
         _hookWalkthrough('switchToPersonalMode', 'personal');
         _hookWalkthrough('switchToSocialMode', 'social');
+
+        // Deferred hooks for functions defined later (e.g. switchToSocialMode)
+        setTimeout(function() {
+            if (!_wkShown['social'] && typeof window.switchToSocialMode === 'function' && !window._socialWkHooked) {
+                window._socialWkHooked = true;
+                _hookWalkthrough('switchToSocialMode', 'social');
+            }
+            if (!_wkShown['personal'] && typeof window.switchToPersonalMode === 'function' && !window._personalWkHooked) {
+                window._personalWkHooked = true;
+                _hookWalkthrough('switchToPersonalMode', 'personal');
+            }
+        }, 3000);
 
     })();
 
