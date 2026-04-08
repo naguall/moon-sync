@@ -22873,79 +22873,60 @@ function showPersonalDayDetail(year, month, day) {
             </div>
 
             <!-- Slow Planet Transits (Jupiter+) -->
-            ${slowTransits.length > 0 ? `
-            <div style="margin-bottom:12px;">
-                <div style="font-size:0.75em;font-weight:700;color:#e74c3c;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">🔴 ${L ? 'Tránsitos Mayores (Lentos)' : 'Major Transits (Slow)'} (${slowTransits.length})</div>
-                ${slowTransits.map(t => {
-                    const aspDesc = (planetNames[t.transitPlanet]||t.transitPlanet) + ' ' + (aspectNames[t.type]||t.type) + ' ' + (L?'natal ':'natal ') + (planetNames[t.natalPlanet]||t.natalPlanet);
-                    const perfStr = t.perfectionTime ? t.perfectionTime.toLocaleTimeString(L?'es':'en',{hour:'2-digit',minute:'2-digit'}) : '';
-                    const orbColor = parseFloat(t.orb) < 1 ? '#ff6b6b' : parseFloat(t.orb) < 3 ? '#ffa726' : 'rgba(255,255,255,0.4)';
-                    return \`
-                    <div class="transit-aspect-row \${t.class}" onclick="interpretTransitAspect('\${t.transitPlanet}','\${t.type}','\${t.natalPlanet}','\${dateStr.replace(/'/g,"\\\\'")}')" style="cursor:pointer;padding:8px 10px;border-left:3px solid \${t.color};\${t.major ? 'background:rgba(255,255,255,0.03);' : ''}" title="\${L?'Click para interpretar':'Click to interpret'}">
-                        <span style="font-size:1.2em;">\${t.transitSymbol}</span>
-                        <span style="color:\${t.color};font-weight:700;font-size:1.1em;">\${t.symbol}</span>
-                        <span style="font-size:1.2em;">\${t.natalSymbol}</span>
-                        <div style="flex:1;margin-left:8px;">
-                            <div style="color:rgba(255,255,255,0.7);font-size:0.85em;\${t.major?'font-weight:600;':''}">
-                                \${aspDesc}
-                            </div>
-                            <div style="display:flex;gap:8px;align-items:center;margin-top:2px;">
-                                <span style="font-size:0.7em;color:\${orbColor};font-weight:600;">\${t.orbFormatted}</span>
-                                <span style="font-size:0.65em;padding:1px 5px;border-radius:3px;background:\${t.applying?'rgba(76,175,80,0.15)':'rgba(255,152,0,0.15)'};color:\${t.applying?'#81c784':'#ffb74d'};">\${t.applying?(L?'Aplicativo':'Applying'):(L?'Separativo':'Separating')}</span>
-                                \${perfStr ? \`<span style="font-size:0.65em;color:rgba(255,215,0,0.7);">⏱ \${perfStr}</span>\` : ''}
-                            </div>
-                        </div>
-                        <span style="font-size:0.7em;color:rgba(201,168,64,0.5);">✨</span>
-                    </div>\`;
-                }).join('')}
-            </div>` : ''}
+            ${slowTransits.length > 0 ? '<div style="margin-bottom:12px;"><div style="font-size:0.75em;font-weight:700;color:#e74c3c;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">🔴 ' + (L ? 'Tránsitos Mayores (Lentos)' : 'Major Transits (Slow)') + ' (' + slowTransits.length + ')</div>' + slowTransits.map(function(t) {
+                    var aspDesc = (planetNames[t.transitPlanet]||t.transitPlanet) + ' ' + (aspectNames[t.type]||t.type) + ' ' + (L?'natal ':'natal ') + (planetNames[t.natalPlanet]||t.natalPlanet);
+                    var perfStr = t.perfectionTime ? t.perfectionTime.toLocaleTimeString(L?'es':'en',{hour:'2-digit',minute:'2-digit'}) : '';
+                    var orbColor = parseFloat(t.orb) < 1 ? '#ff6b6b' : parseFloat(t.orb) < 3 ? '#ffa726' : 'rgba(255,255,255,0.4)';
+                    var safeDate = dateStr.replace(/'/g, "\\'");
+                    return '<div class="transit-aspect-row ' + t.class + '" onclick="interpretTransitAspect(\'' + t.transitPlanet + '\',\'' + t.type + '\',\'' + t.natalPlanet + '\',\'' + safeDate + '\')" style="cursor:pointer;padding:8px 10px;border-left:3px solid ' + t.color + ';' + (t.major ? 'background:rgba(255,255,255,0.03);' : '') + '" title="' + (L?'Click para interpretar':'Click to interpret') + '">'
+                        + '<span style="font-size:1.2em;">' + t.transitSymbol + '</span>'
+                        + '<span style="color:' + t.color + ';font-weight:700;font-size:1.1em;">' + t.symbol + '</span>'
+                        + '<span style="font-size:1.2em;">' + t.natalSymbol + '</span>'
+                        + '<div style="flex:1;margin-left:8px;">'
+                            + '<div style="color:rgba(255,255,255,0.7);font-size:0.85em;' + (t.major?'font-weight:600;':'') + '">' + aspDesc + '</div>'
+                            + '<div style="display:flex;gap:8px;align-items:center;margin-top:2px;">'
+                                + '<span style="font-size:0.7em;color:' + orbColor + ';font-weight:600;">' + t.orbFormatted + '</span>'
+                                + '<span style="font-size:0.65em;padding:1px 5px;border-radius:3px;background:' + (t.applying?'rgba(76,175,80,0.15)':'rgba(255,152,0,0.15)') + ';color:' + (t.applying?'#81c784':'#ffb74d') + ';">' + (t.applying?(L?'Aplicativo':'Applying'):(L?'Separativo':'Separating')) + '</span>'
+                                + (perfStr ? '<span style="font-size:0.65em;color:rgba(255,215,0,0.7);">⏱ ' + perfStr + '</span>' : '')
+                            + '</div>'
+                        + '</div>'
+                        + '<span style="font-size:0.7em;color:rgba(201,168,64,0.5);">✨</span>'
+                    + '</div>';
+                }).join('') + '</div>' : ''}
 
             <!-- Personal Planet Transits (Sun, Venus, Mars) -->
-            ${personalTransits.length > 0 ? `
-            <div style="margin-bottom:12px;">
-                <div style="font-size:0.75em;font-weight:700;color:#f1c40f;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">🟡 ${L ? 'Tránsitos Personales' : 'Personal Transits'} (${personalTransits.length})</div>
-                ${personalTransits.map(t => {
-                    const aspDesc = (planetNames[t.transitPlanet]||t.transitPlanet) + ' ' + (aspectNames[t.type]||t.type) + ' ' + (L?'natal ':'natal ') + (planetNames[t.natalPlanet]||t.natalPlanet);
-                    const perfStr = t.perfectionTime ? t.perfectionTime.toLocaleTimeString(L?'es':'en',{hour:'2-digit',minute:'2-digit'}) : '';
-                    const orbColor = parseFloat(t.orb) < 1 ? '#ff6b6b' : parseFloat(t.orb) < 3 ? '#ffa726' : 'rgba(255,255,255,0.4)';
-                    return \`
-                    <div class="transit-aspect-row \${t.class}" onclick="interpretTransitAspect('\${t.transitPlanet}','\${t.type}','\${t.natalPlanet}','\${dateStr.replace(/'/g,"\\\\'")}')" style="cursor:pointer;padding:6px 10px;border-left:2px solid \${t.color}40;" title="\${L?'Click para interpretar':'Click to interpret'}">
-                        <span style="font-size:1em;">\${t.transitSymbol}</span>
-                        <span style="color:\${t.color};font-weight:600;">\${t.symbol}</span>
-                        <span style="font-size:1em;">\${t.natalSymbol}</span>
-                        <div style="flex:1;margin-left:6px;">
-                            <div style="color:rgba(255,255,255,0.6);font-size:0.8em;">
-                                \${aspDesc}
-                            </div>
-                            <div style="display:flex;gap:6px;align-items:center;margin-top:1px;">
-                                <span style="font-size:0.65em;color:\${orbColor};">\${t.orbFormatted}</span>
-                                <span style="font-size:0.6em;color:\${t.applying?'#81c784':'#ffb74d'};">\${t.applyingLabel}</span>
-                                \${perfStr ? \`<span style="font-size:0.6em;color:rgba(255,215,0,0.6);">⏱ \${perfStr}</span>\` : ''}
-                            </div>
-                        </div>
-                        <span style="font-size:0.65em;color:rgba(201,168,64,0.4);">✨</span>
-                    </div>\`;
-                }).join('')}
-            </div>` : ''}
+            ${personalTransits.length > 0 ? '<div style="margin-bottom:12px;"><div style="font-size:0.75em;font-weight:700;color:#f1c40f;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">🟡 ' + (L ? 'Tránsitos Personales' : 'Personal Transits') + ' (' + personalTransits.length + ')</div>' + personalTransits.map(function(t) {
+                    var aspDesc = (planetNames[t.transitPlanet]||t.transitPlanet) + ' ' + (aspectNames[t.type]||t.type) + ' ' + (L?'natal ':'natal ') + (planetNames[t.natalPlanet]||t.natalPlanet);
+                    var perfStr = t.perfectionTime ? t.perfectionTime.toLocaleTimeString(L?'es':'en',{hour:'2-digit',minute:'2-digit'}) : '';
+                    var orbColor = parseFloat(t.orb) < 1 ? '#ff6b6b' : parseFloat(t.orb) < 3 ? '#ffa726' : 'rgba(255,255,255,0.4)';
+                    var safeDate = dateStr.replace(/'/g, "\\'");
+                    return '<div class="transit-aspect-row ' + t.class + '" onclick="interpretTransitAspect(\'' + t.transitPlanet + '\',\'' + t.type + '\',\'' + t.natalPlanet + '\',\'' + safeDate + '\')" style="cursor:pointer;padding:6px 10px;border-left:2px solid ' + t.color + '40;" title="' + (L?'Click para interpretar':'Click to interpret') + '">'
+                        + '<span style="font-size:1em;">' + t.transitSymbol + '</span>'
+                        + '<span style="color:' + t.color + ';font-weight:600;">' + t.symbol + '</span>'
+                        + '<span style="font-size:1em;">' + t.natalSymbol + '</span>'
+                        + '<div style="flex:1;margin-left:6px;">'
+                            + '<div style="color:rgba(255,255,255,0.6);font-size:0.8em;">' + aspDesc + '</div>'
+                            + '<div style="display:flex;gap:6px;align-items:center;margin-top:1px;">'
+                                + '<span style="font-size:0.65em;color:' + orbColor + ';">' + t.orbFormatted + '</span>'
+                                + '<span style="font-size:0.6em;color:' + (t.applying?'#81c784':'#ffb74d') + ';">' + t.applyingLabel + '</span>'
+                                + (perfStr ? '<span style="font-size:0.6em;color:rgba(255,215,0,0.6);">⏱ ' + perfStr + '</span>' : '')
+                            + '</div>'
+                        + '</div>'
+                        + '<span style="font-size:0.65em;color:rgba(201,168,64,0.4);">✨</span>'
+                    + '</div>';
+                }).join('') + '</div>' : ''}
 
             <!-- Fast Transits (Moon, Mercury) — collapsed -->
-            ${fastTransits.length > 0 ? `
-            <div style="margin-bottom:12px;">
-                <div onclick="var c=this.nextElementSibling;c.style.display=c.style.display==='none'?'block':'none';this.querySelector('.chevron').textContent=c.style.display==='none'?'▸':'▾'" style="font-size:0.72em;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                    <span class="chevron">▸</span> ☽☿ ${L ? 'Luna y Mercurio' : 'Moon & Mercury'} (${fastTransits.length})
-                </div>
-                <div style="display:none;">
-                    ${fastTransits.map(t => \`
-                    <div class="transit-aspect-row \${t.class}" onclick="interpretTransitAspect('\${t.transitPlanet}','\${t.type}','\${t.natalPlanet}','\${dateStr.replace(/'/g,"\\\\'")}')" style="opacity:0.6;cursor:pointer;padding:4px 10px;" title="\${L?'Click para interpretar':'Click to interpret'}">
-                        <span style="font-size:0.9em;">\${t.transitSymbol}</span>
-                        <span style="color:\${t.color};font-size:0.85em;">\${t.symbol}</span>
-                        <span style="font-size:0.9em;">\${t.natalSymbol}</span>
-                        <span style="color:rgba(255,255,255,0.3);margin-left:4px;font-size:0.75em;">\${planetNames[t.natalPlanet]||t.natalPlanet}</span>
-                        <span style="font-size:0.6em;color:rgba(255,255,255,0.25);margin-left:auto;">\${t.orbFormatted} \${t.applyingLabel}</span>
-                    </div>
-                    \`).join('')}
-                </div>
-            </div>` : ''}
+            ${fastTransits.length > 0 ? '<div style="margin-bottom:12px;"><div onclick="var c=this.nextElementSibling;c.style.display=c.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.chevron\').textContent=c.style.display===\'none\'?\'▸\':\'▾\'" style="font-size:0.72em;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;display:flex;align-items:center;gap:4px;"><span class="chevron">▸</span> ☽☿ ' + (L ? 'Luna y Mercurio' : 'Moon & Mercury') + ' (' + fastTransits.length + ')</div><div style="display:none;">' + fastTransits.map(function(t) {
+                    var safeDate = dateStr.replace(/'/g, "\\'");
+                    return '<div class="transit-aspect-row ' + t.class + '" onclick="interpretTransitAspect(\'' + t.transitPlanet + '\',\'' + t.type + '\',\'' + t.natalPlanet + '\',\'' + safeDate + '\')" style="opacity:0.6;cursor:pointer;padding:4px 10px;" title="' + (L?'Click para interpretar':'Click to interpret') + '">'
+                        + '<span style="font-size:0.9em;">' + t.transitSymbol + '</span>'
+                        + '<span style="color:' + t.color + ';font-size:0.85em;">' + t.symbol + '</span>'
+                        + '<span style="font-size:0.9em;">' + t.natalSymbol + '</span>'
+                        + '<span style="color:rgba(255,255,255,0.3);margin-left:4px;font-size:0.75em;">' + (planetNames[t.natalPlanet]||t.natalPlanet) + '</span>'
+                        + '<span style="font-size:0.6em;color:rgba(255,255,255,0.25);margin-left:auto;">' + t.orbFormatted + ' ' + t.applyingLabel + '</span>'
+                    + '</div>';
+                }).join('') + '</div></div>' : ''}
 
             <!-- Interpretar el día button -->
             ${(slowTransits.length > 0 || personalTransits.length > 0 || fastTransits.length > 0) ? `
