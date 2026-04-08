@@ -28168,12 +28168,18 @@ function updateDailyQuizTime(idx, val) {
 // Gather questions from Knowledge Graph + Course for review
 function _gatherQuizQuestions(count) {
     var allQs = [];
-    // 1. From Knowledge Graph
+    var LP = (typeof LearnerProfile !== 'undefined') ? LearnerProfile : null;
+    if (LP) try { LP.load(); } catch(e) {}
+
+    // 1. From Knowledge Graph — only studied/attempted topics
     if (typeof ASTRO_KNOWLEDGE_GRAPH !== 'undefined') {
         var G = ASTRO_KNOWLEDGE_GRAPH;
         var nodeIds = Object.keys(G.nodes);
         nodeIds.forEach(function(nid) {
             var node = G.nodes[nid];
+            // Only include if user has interacted with this topic
+            var level = LP ? LP.getNodeLevel(nid) : 'no_expuesto';
+            if (level === 'no_expuesto') return; // Skip unstudied topics
             if (node.questions && node.questions.length > 0) {
                 node.questions.forEach(function(q) {
                     allQs.push({ q: q.q, options: q.options, correct: q.correct, explanation: q.explanation || '', source: node.title, nodeId: nid, type: 'review' });
@@ -28181,10 +28187,14 @@ function _gatherQuizQuestions(count) {
             }
         });
     }
-    // 2. From Course curriculum
+    // 2. From Course curriculum — only completed lessons
     if (typeof CURRICULUM !== 'undefined') {
+        var doneLessons = {};
+        try { var stored = JSON.parse(localStorage.getItem('astroCurrents_courseDone') || '{}'); doneLessons = stored; } catch(e) {}
         CURRICULUM.forEach(function(mod) {
             (mod.lessons || []).forEach(function(lesson) {
+                // Only include lessons the user has completed
+                if (!doneLessons[lesson.id]) return;
                 if (lesson.questions && lesson.questions.length > 0) {
                     lesson.questions.forEach(function(q) {
                         var isES = currentLang === 'es';
@@ -28202,13 +28212,13 @@ function _gatherQuizQuestions(count) {
     return allQs.slice(0, count);
 }
 
-// Gather new concepts (topics not yet studied)
+// Gather new interesting concepts to explore (not quiz — just info)
 function _gatherNewConcepts(count) {
     var concepts = [];
     if (typeof ASTRO_KNOWLEDGE_GRAPH === 'undefined') return concepts;
     var G = ASTRO_KNOWLEDGE_GRAPH;
     var LP = (typeof LearnerProfile !== 'undefined') ? LearnerProfile : null;
-    if (LP) LP.load();
+    if (LP) try { LP.load(); } catch(e) {}
     var nodeIds = Object.keys(G.nodes);
     // Shuffle
     for (var i = nodeIds.length - 1; i > 0; i--) {
@@ -28253,7 +28263,7 @@ function launchDailyQuiz() {
     // New concepts section
     if (concepts.length > 0) {
         html += '<div style="margin-bottom:16px;">';
-        html += '<div style="font-size:0.75em;font-weight:700;color:#4ecdc4;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">💡 ' + (L?'Conceptos Nuevos':'New Concepts') + '</div>';
+        html += '<div style="font-size:0.75em;font-weight:700;color:#4ecdc4;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">💡 ' + (L?'Aprende Algo Nuevo':'Learn Something New') + '</div>';
         concepts.forEach(function(c, ci) {
             html += '<div style="background:rgba(78,205,196,0.06);border:1px solid rgba(78,205,196,0.2);border-radius:10px;margin-bottom:8px;overflow:hidden;">';
             html += '<div onclick="var body=this.nextElementSibling;var arrow=this.querySelector(\'.caret\');if(body.style.display===\'none\'){body.style.display=\'block\';arrow.textContent=\'▾\';}else{body.style.display=\'none\';arrow.textContent=\'▸\';}" style="padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;">';
@@ -29861,7 +29871,7 @@ function openPreferencesModal() {
         _dqTimesHtml += '<input type="time" value="' + (_dqPrefs.hours[_dqi]||'09:00') + '" onchange="updateDailyQuizTime(' + _dqi + ',this.value)" style="padding:6px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,215,0,0.3);border-radius:6px;color:#ffd700;font-size:0.82em;" />';
     }
     sectionsHtml += _s('🧠', currentLang==='es'?'Quiz Diario de Repaso':'Daily Review Quiz', '#ffd700',
-        '<div style="font-size:0.72em;color:rgba(255,255,255,0.4);margin-bottom:10px;">' + (currentLang==='es'?'Recibe quizzes diarios para repasar lo aprendido. Las preguntas vienen del curso y del knowledge graph.':'Receive daily quizzes to review what you\'ve learned. Questions come from the course and knowledge graph.') + '</div>' +
+        '<div style="font-size:0.72em;color:rgba(255,255,255,0.4);margin-bottom:10px;">' + (currentLang==='es'?'Recibe quizzes diarios para repasar lo que ya estudiaste con el tutor o el curso.':'Receive daily quizzes to review what you\'ve already studied with the tutor or course.') + '</div>' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
             '<span style="font-size:0.82em;color:rgba(255,255,255,0.6);">' + (currentLang==='es'?'Activar Quiz Diario':'Enable Daily Quiz') + '</span>' +
             '<label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">' +
@@ -29888,7 +29898,7 @@ function openPreferencesModal() {
         '<div style="margin-bottom:10px;">' +
             '<div style="font-size:0.68em;color:rgba(255,255,255,0.35);margin-bottom:3px;">' + (currentLang==='es'?'Días por semana':'Days per week') + '</div>' +
             '<div style="display:flex;gap:4px;">' +
-                [1,2,3,4,5,6,7].map(function(d) { return '<button onclick="updateDailyQuizPref(\'daysPerWeek\',' + d + ');openPreferencesModal();" style="flex:1;padding:6px 0;border-radius:6px;font-size:0.78em;font-weight:700;cursor:pointer;background:' + (_dqPrefs.daysPerWeek===d?'linear-gradient(135deg,rgba(255,215,0,0.25),rgba(255,215,0,0.08))':'rgba(255,255,255,0.04)') + ';border:' + (_dqPrefs.daysPerWeek===d?'2px solid rgba(255,215,0,0.6)':'1px solid rgba(255,255,255,0.1)') + ';color:' + (_dqPrefs.daysPerWeek===d?'#ffd700':'rgba(255,255,255,0.4)') + ';">' + d + '</button>'; }).join('') +
+                [1,2,3,4,5,6,7].map(function(d) { return '<button onclick="updateDailyQuizPref(\'daysPerWeek\',' + d + ');var bs=this.parentElement.querySelectorAll(\'button\');bs.forEach(function(b){b.style.background=\'rgba(255,255,255,0.04)\';b.style.border=\'1px solid rgba(255,255,255,0.1)\';b.style.color=\'rgba(255,255,255,0.4)\';});this.style.background=\'linear-gradient(135deg,rgba(255,215,0,0.25),rgba(255,215,0,0.08))\';this.style.border=\'2px solid rgba(255,215,0,0.6)\';this.style.color=\'#ffd700\';" style="flex:1;padding:6px 0;border-radius:6px;font-size:0.78em;font-weight:700;cursor:pointer;background:' + (_dqPrefs.daysPerWeek===d?'linear-gradient(135deg,rgba(255,215,0,0.25),rgba(255,215,0,0.08))':'rgba(255,255,255,0.04)') + ';border:' + (_dqPrefs.daysPerWeek===d?'2px solid rgba(255,215,0,0.6)':'1px solid rgba(255,255,255,0.1)') + ';color:' + (_dqPrefs.daysPerWeek===d?'#ffd700':'rgba(255,255,255,0.4)') + ';">' + d + '</button>'; }).join('') +
             '</div>' +
         '</div>' +
         '<div style="margin-bottom:10px;"><div style="font-size:0.68em;color:rgba(255,255,255,0.35);margin-bottom:3px;">' + (currentLang==='es'?'Hora(s) del quiz':'Quiz time(s)') + '</div>' +
@@ -29897,9 +29907,9 @@ function openPreferencesModal() {
         '<hr style="border-color:rgba(255,255,255,0.06);margin:12px 0;" />' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
             '<div><span style="font-size:0.82em;color:rgba(255,255,255,0.6);">💡 ' + (currentLang==='es'?'Conceptos nuevos diarios':'Daily new concepts') + '</span>' +
-                '<div style="font-size:0.65em;color:rgba(255,255,255,0.3);">' + (currentLang==='es'?'Recibe conceptos nuevos para seguir aprendiendo':'Receive new concepts to keep learning') + '</div></div>' +
+                '<div style="font-size:0.65em;color:rgba(255,255,255,0.3);">' + (currentLang==='es'?'Recibe información interesante de temas nuevos que puedes explorar':'Receive interesting info on new topics you can explore') + '</div></div>' +
             '<label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">' +
-                '<input type="checkbox" ' + (_dqPrefs.newConcepts?'checked':'') + ' onchange="updateDailyQuizPref(\'newConcepts\',this.checked);openPreferencesModal();" style="opacity:0;width:0;height:0;" />' +
+                '<input type="checkbox" ' + (_dqPrefs.newConcepts?'checked':'') + ' onchange="updateDailyQuizPref(\'newConcepts\',this.checked);var track=this.nextElementSibling;var thumb=track.nextElementSibling;if(this.checked){track.style.background=\'linear-gradient(135deg,#4ecdc4,#44b09e)\';thumb.style.left=\'22px\';}else{track.style.background=\'rgba(255,255,255,0.15)\';thumb.style.left=\'2px\';}" style="opacity:0;width:0;height:0;" />' +
                 '<span style="position:absolute;inset:0;background:' + (_dqPrefs.newConcepts?'linear-gradient(135deg,#4ecdc4,#44b09e)':'rgba(255,255,255,0.15)') + ';border-radius:24px;transition:0.3s;"></span>' +
                 '<span style="position:absolute;left:' + (_dqPrefs.newConcepts?'22':'2') + 'px;top:2px;width:20px;height:20px;background:white;border-radius:50%;transition:0.3s;"></span>' +
             '</label>' +
