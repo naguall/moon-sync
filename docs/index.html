@@ -27834,12 +27834,28 @@ function goToCurrentCycle() {
             if (typeof orig === 'function') {
                 window[fnName] = function() {
                     orig.apply(this, arguments);
-                    // Small delay for DOM to update
-                    setTimeout(function() {
-                        if (!_wkShown[screen]) {
+                    // Longer delay for dynamic content to render (subtabs, social panels)
+                    var _tryCount = 0;
+                    var _tryRun = function() {
+                        if (_wkShown[screen]) return;
+                        var steps = _getWalkthroughSteps(screen);
+                        // Check if at least 2 step elements exist in DOM
+                        var found = 0;
+                        steps.forEach(function(st) {
+                            var sels = st.sel.split(',');
+                            for (var i = 0; i < sels.length; i++) {
+                                var el = document.querySelector(sels[i].trim());
+                                if (el && el.offsetParent !== null) { found++; return; }
+                            }
+                        });
+                        if (found >= 2 || _tryCount >= 3) {
                             _runWalkthrough(screen);
+                        } else {
+                            _tryCount++;
+                            setTimeout(_tryRun, 800);
                         }
-                    }, 800);
+                    };
+                    setTimeout(_tryRun, 1200);
                 };
             }
         }
@@ -34084,7 +34100,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v598';
+var APP_VERSION = 'v599';
 var _pendingSW = null;
 
 // What's New removed per user request
