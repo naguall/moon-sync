@@ -16648,7 +16648,12 @@ function getHouseForLongitude(longitude, houseCusps) {
 }
 
 // --- Transit Aspects to Natal Chart ---
+var _transitsCache = {};
+var _transitsCacheSize = 0;
 function calculateTransitsToNatal(transitDate, natalChart) {
+    var _cacheKey = transitDate.toDateString();
+    if (_transitsCache[_cacheKey]) return _transitsCache[_cacheKey];
+    if (_transitsCacheSize > 90) { _transitsCache = {}; _transitsCacheSize = 0; }
     const planets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'chiron'];
     const aspectTypes = [
         { name: 'conjunction', symbol: '☌', angle: 0, orb: 8, color: '#e74c3c', class: 'conjunction', major: true },
@@ -16689,12 +16694,6 @@ function calculateTransitsToNatal(transitDate, natalChart) {
                     const aspectDiffTomorrow = Math.abs(diffTomorrow - aspect.angle);
                     const isApplying = aspectDiffTomorrow < aspectDiff;
 
-                    // Calculate exact perfection time for non-Moon transits
-                    let perfectionTime = null;
-                    if (transitPlanet !== 'moon') {
-                        try { perfectionTime = findExactTransitTime(transitPlanet, natalLon, aspect.angle, transitDate); } catch(e) {}
-                    }
-
                     // Classify planet speed tier
                     const tier = slowPlanets.includes(transitPlanet) ? 'slow'
                         : ['sun','venus','mars'].includes(transitPlanet) ? 'personal' : 'fast';
@@ -16716,7 +16715,7 @@ function calculateTransitsToNatal(transitDate, natalChart) {
                         exactness: effectiveOrb - aspectDiff,
                         applying: isApplying,
                         applyingLabel: isApplying ? 'Ap' : 'Sep',
-                        perfectionTime: perfectionTime,
+                        perfectionTime: null,
                         tier: tier
                     });
                 }
@@ -16744,10 +16743,6 @@ function calculateTransitsToNatal(transitDate, natalChart) {
                         if (diffTomorrow > 180) diffTomorrow = 360 - diffTomorrow;
                         const isApplying = Math.abs(diffTomorrow - aspect.angle) < aspectDiff;
 
-                        let perfT = null;
-                        if (transitPlanet !== 'moon') {
-                            try { perfT = findExactTransitTime(transitPlanet, point.lon, aspect.angle, transitDate); } catch(e) {}
-                        }
                         const tier = slowPlanets.includes(transitPlanet) ? 'slow'
                             : ['sun','venus','mars'].includes(transitPlanet) ? 'personal' : 'fast';
 
@@ -16768,7 +16763,7 @@ function calculateTransitsToNatal(transitDate, natalChart) {
                             exactness: aspect.orb - aspectDiff,
                             applying: isApplying,
                             applyingLabel: isApplying ? 'Ap' : 'Sep',
-                            perfectionTime: perfT,
+                            perfectionTime: null,
                             tier: tier
                         });
                     }
@@ -16782,12 +16777,15 @@ function calculateTransitsToNatal(transitDate, natalChart) {
 
     // Remove duplicates (same transit+natal pair, keep most exact)
     const seen = new Set();
-    return aspects.filter(a => {
+    var _result = aspects.filter(a => {
         const key = `${a.transitPlanet}-${a.natalPlanet}-${a.type}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
     });
+    _transitsCache[_cacheKey] = _result;
+    _transitsCacheSize++;
+    return _result;
 }
 
 // ===== SYNASTRY: Cross-aspect calculation between two charts =====
@@ -22797,6 +22795,12 @@ function showPersonalDayDetail(year, month, day) {
     if (!natalChart) return;
 
     const transits = calculateTransitsToNatal(date, natalChart);
+    // Calculate perfection times only for this detail view (expensive, not done in bulk)
+    transits.forEach(function(t) {
+        if (t.tier !== 'fast') {
+            try { t.perfectionTime = findExactTransitTime(t.transitPlanet, t.natalLon, t.type === 'conjunction' ? 0 : t.type === 'semisextile' ? 30 : t.type === 'semicuadratura' ? 45 : t.type === 'sextile' ? 60 : t.type === 'square' ? 90 : t.type === 'trine' ? 120 : t.type === 'sesquicuadratura' ? 135 : t.type === 'quincunx' ? 150 : 180, date); } catch(e) {}
+        }
+    });
     const slowTransits = transits.filter(t => t.tier === 'slow');
     const personalTransits = transits.filter(t => t.tier === 'personal');
     const fastTransits = transits.filter(t => t.tier === 'fast');
@@ -27423,7 +27427,7 @@ function goToCurrentCycle() {
                 'personal': [
                     { sel: '[onclick*="switchNatalTab(\'chart\')"],[onclick*="switchNatalTab(\'chart\')"]', icon: '🪐', title: L ? 'Carta Natal y Elementos' : 'Natal Chart & Elements', desc: L ? 'Rueda zodiacal interactiva, elementos y cualidades de tu carta' : 'Interactive zodiac wheel, elements and qualities of your chart' },
                     { sel: '[onclick*="switchNatalTab(\'tables\')"]', icon: '📊', title: L ? 'Tablas' : 'Tables', desc: L ? 'Posiciones detalladas: planetas, signos, casas, grados. Haz click individualmente en cualquiera de ellos para más información' : 'Detailed positions: planets, signs, houses, degrees. Click individually on any of them for more information' },
-                    { sel: '[onclick*="switchNatalTab(\'calendar\')"]', icon: '📅', title: L ? 'Tránsitos' : 'Transits', desc: L ? 'Calendario personal, el primer día del año es tu cumpleaños, mostrando tus propios solsticios y equinoccios, tránsitos y más de tu ciclo personal' : 'Personal calendar, the first day of the year is your birthday, showing your own solstices and equinoxes, transits and more of your personal cycle' },
+                    { sel: '[onclick*="switchNatalTab(\'calendar\')"]', icon: '📅', title: L ? 'Tránsitos' : 'Transits', desc: L ? 'Calendario personal que empieza en tu cumpleaños. Mira tus solsticios y equinoccios personales, cuántos días han pasado desde tu cumpleaños y cuántos faltan para el próximo, con numerología' : 'Personal calendar starting on your birthday. See your personal solstices and equinoxes, days passed since your birthday and days remaining until the next one, with numerology' },
                     { sel: '[onclick*="switchNatalTab(\'hoy\')"]', icon: '🌟', title: L ? 'Hoy' : 'Today', desc: L ? 'Aspectos planetarios que te afectan hoy. Haz click en cualquier aspecto para expandir' : 'Planetary aspects affecting you today. Click on any aspect to expand' },
                     { sel: '[onclick*="switchNatalTab(\'ciclos\')"]', icon: '🔄', title: L ? 'Ciclos' : 'Cycles', desc: L ? 'Tus ciclos planetarios activos basados en tu carta natal. Retorno solar, lunar, progresiones, ciclos del mes y más' : 'Your active planetary cycles based on your natal chart. Solar return, lunar return, progressions, monthly cycles and more' },
                     { sel: '[onclick*="switchNatalTab(\'aspects2026\')"]', icon: '📆', title: '2026', desc: L ? 'Eventos importantes de todo el año, agrupados por planeta, signo, figuras de aspecto, aspectos mayores y más' : 'Important events for the whole year, grouped by planet, sign, aspect patterns, major aspects and more' },
