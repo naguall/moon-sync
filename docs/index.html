@@ -22659,7 +22659,7 @@ function generateGregorianMonth() {
 
     // Planet & Constellation Rise/Set Panel (expanded in Gregorian, OUTSIDE the grid)
     if (typeof Astronomy !== 'undefined' && typeof ASTRO_USER_LAT !== 'undefined' && ASTRO_USER_LAT !== null) {
-        html += '<div style="margin-top:10px;">';
+        html += '<div id="gregCelestialPanel" style="margin-top:10px;">';
         html += '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(5,10,30,0.7);border:1px solid rgba(74,158,255,0.18);border-radius:8px 8px 0 0;">';
         html += '<span style="color:#7ec8ff;font-size:0.9em;">🔭</span>';
         html += '<span style="font-family:\'Cinzel\',serif;color:#7ec8ff;font-size:0.72em;font-weight:600;letter-spacing:1px;text-transform:uppercase;">' + (currentLang==='es'?'Planetas y Constelaciones':'Planets & Constellations') + '</span>';
@@ -26713,8 +26713,10 @@ function goToCurrentCycle() {
                     { sel: '[onclick*="openLocationSelector"]', icon: '📍', title: L ? 'Ubicación' : 'Location', desc: L ? 'Configura tu ubicación para cálculos precisos de amanecer, atardecer y duración del día.' : 'Set your location for precise sunrise, sunset and day duration calculations.' }
                 ],
                 'gregorian': [
-                    { sel: '#gregorianCalendar,.gregorian-calendar', icon: '📅', title: L ? 'Calendario Semanal' : 'Weekly Calendar', desc: L ? 'Toca cualquier día para ver aspectos, escribir diario o agregar eventos' : 'Tap any day to see aspects, write diary or add events' },
-                    { sel: '[onclick*="showEventForm"],.event-add-btn', icon: '➕', title: L ? 'Agregar Evento' : 'Add Event', desc: L ? 'Crea eventos y recordatorios, sincroniza con Google Calendar' : 'Create events and reminders, sync with Google Calendar' }
+                    { sel: '#currentDayInfo,[onclick*="goToToday"]', icon: '📋', title: L ? 'Banner HOY' : 'TODAY Banner', desc: L ? 'Eventos del día, información del día actual y aspectos planetarios de hoy. Haz click para navegar al día de hoy.' : 'Daily events, current day info and today\'s planetary aspects. Click to navigate to today.' },
+                    { sel: '#gregorianCalendar .day-cell.today,#gregorianCalendar .day-cell:not(.past)', icon: '📅', title: L ? 'Toca un Día' : 'Tap a Day', desc: L ? 'Haz click en cualquier día para ver aspectos planetarios, escribir en tu diario personal y de sueños, o agregar eventos.' : 'Click any day to see planetary aspects, write in your personal and dream diary, or add events.' },
+                    { sel: '[onclick*="previousGregorianMonth"],[onclick*="nextGregorianMonth"]', multi: true, icon: '◀▶', title: L ? 'Navegación' : 'Navigation', desc: L ? 'Usa las flechas para moverte entre meses. El calendario muestra aspectos planetarios y fases lunares en cada día.' : 'Use the arrows to move between months. The calendar shows planetary aspects and lunar phases on each day.' },
+                    { sel: '#gregCelestialPanel', icon: '🔭', title: L ? 'Planetas y Constelaciones' : 'Planets & Constellations', desc: L ? 'Horas exactas de salida y puesta de planetas y constelaciones visibles para tu ubicación.' : 'Exact rise and set times for planets and visible constellations at your location.' }
                 ],
                 'personal': [
                     { sel: '[onclick*="switchNatalTab(\'chart\')"],[onclick*="switchNatalTab(\'chart\')"]', icon: '🪐', title: L ? 'Carta Natal' : 'Natal Chart', desc: L ? 'Rueda zodiacal interactiva con todas tus posiciones planetarias' : 'Interactive zodiac wheel with all your planetary positions' },
@@ -32899,7 +32901,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v581';
+var APP_VERSION = 'v582';
 var _pendingSW = null;
 
 // What's New removed per user request
