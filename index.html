@@ -26697,15 +26697,15 @@ function goToCurrentCycle() {
                     { sel: '#currentDayInfo', icon: '📋', title: L ? 'Info del día de HOY' : 'TODAY\'s Info', desc: L ? 'Información del día HOY con los eventos de agenda, aspectos lunares del día. Haz click y expande la información. Navega en el calendario y regresa al día de hoy haciendo click en día de HOY.' : 'TODAY\'s info with agenda events and daily lunar aspects. Click to expand the information. Navigate the calendar and return to today by clicking on TODAY.' }
                 ],
                 'lunar': [
-                    { sel: '.day-cell.perfection-day', multi: true, icon: '🌕', title: L ? 'Fases Lunares' : 'Lunar Phases', desc: L ? 'Días en que se perfeccionan las 4 fases lunares: Luna Nueva, Cuarto Creciente, Luna Llena o Cuarto Menguante.' : 'Days when the 4 lunar phases perfect: New Moon, First Quarter, Full Moon or Last Quarter.' },
+                    { sel: '.day-cell.perfection-day,.week-header .moon-icon', multi: true, icon: '🌕', title: L ? 'Fases Lunares' : 'Lunar Phases', desc: L ? 'Días en que se perfeccionan las 4 fases lunares: Luna Nueva, Cuarto Creciente, Luna Llena o Cuarto Menguante.' : 'Days when the 4 lunar phases perfect: New Moon, First Quarter, Full Moon or Last Quarter.' },
                     { sel: '.day-cell.today,.day-cell:not(.past)', icon: '📅', title: L ? 'Toca un Día' : 'Tap a Day', desc: L ? 'Haz click y anota eventos de agenda, escribe en tu diario personal y de sueños, consulta aspectos del día.' : 'Click and note agenda events, write in your personal and dream diary, check daily aspects.' },
                     { sel: '[onclick*="toggleLunarRiseSetList"]', icon: '🌙', title: L ? 'Salida y Puesta' : 'Moonrise & Moonset', desc: L ? 'Haz click y mira las salidas y puestas de la Luna del año.' : 'Click and see the Moon rises and sets for the year.' },
                     { sel: '[onclick*="openTideCycleModal"],.tide-curve-container', icon: '🌊', title: L ? 'Curva de Mareas' : 'Tide Curve', desc: L ? 'Haz click para mirar las mareas de esta semana.' : 'Click to see this week\'s tides.' },
                     { sel: '[onclick*="openLocationSelector"]', icon: '📍', title: L ? 'Ubicación' : 'Location', desc: L ? 'Pon la ubicación deseada para cálculos precisos de salidas, puestas y mareas.' : 'Set your desired location for precise rise, set and tide calculations.' },
-                    { sel: '#sublunaryGlobe,#sublunaryGlobeWrap', icon: '🌍', title: L ? 'Mapa Lunar' : 'Lunar Map', desc: L ? 'Posición sublunar: el punto sobre la Tierra donde la Luna está directamente encima en tiempo real.' : 'Sublunar position: the point on Earth where the Moon is directly overhead in real time.' }
+                    { sel: '#sublunaryMapContainer,#sublunaryGlobeWrap', multi: true, icon: '🌍', title: L ? 'Mapa Lunar' : 'Lunar Map', desc: L ? 'Posición sublunar en mapa 2D y globo 3D: el punto sobre la Tierra donde la Luna está directamente encima en tiempo real.' : 'Sublunar position on 2D map and 3D globe: the point on Earth where the Moon is directly overhead in real time.' }
                 ],
                 'solar': [
-                    { sel: '#currentDayInfo,[onclick*="goToToday"]', icon: '☀️', title: L ? 'Banner HOY Solar' : 'Solar TODAY Banner', desc: L ? 'Signo solar actual, día solar, duración del signo y próximas lunaciones (Luna Llena y Luna Nueva).' : 'Current solar sign, solar day, sign duration and upcoming lunations (Full Moon and New Moon).' },
+                    { sel: '#currentDayInfo,[onclick*="goToToday"]', icon: '☀️', title: L ? 'Banner HOY Solar' : 'Solar TODAY Banner', desc: L ? 'Día solar, signo solar actual, eventos del día y aspectos planetarios del día.' : 'Solar day, current solar sign, daily events and daily planetary aspects.' },
                     { sel: '.week-header', icon: '♈', title: L ? 'Decanatos' : 'Decanates', desc: L ? 'Cada signo se divide en 3 decanatos de ~10 días: Iniciación, Manifestación y Culminación, cada uno con su propia energía.' : 'Each sign is divided into 3 decanates of ~10 days: Initiation, Manifestation and Culmination, each with its own energy.' },
                     { sel: '.day-cell.today,.day-cell:not(.past)', icon: '📅', title: L ? 'Toca un Día' : 'Tap a Day', desc: L ? 'Haz click en cualquier día para ver aspectos planetarios, escribir en tu diario personal y de sueños, o agregar eventos.' : 'Click any day to see planetary aspects, write in your personal and dream diary, or add events.' },
                     { sel: '[onclick*="toggleSolarRiseSetList"],.btn-shine-solar', icon: '🌅', title: L ? 'Amanecer y Atardecer' : 'Sunrise & Sunset', desc: L ? 'Horas exactas de amanecer y atardecer para tu ubicación. Toca para ver la lista completa del año.' : 'Exact sunrise and sunset times for your location. Tap to see the full year list.' },
@@ -32899,7 +32899,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v579';
+var APP_VERSION = 'v580';
 var _pendingSW = null;
 
 // What's New removed per user request
