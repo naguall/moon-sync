@@ -16651,13 +16651,15 @@ function getHouseForLongitude(longitude, houseCusps) {
 function calculateTransitsToNatal(transitDate, natalChart) {
     const planets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'chiron'];
     const aspectTypes = [
-        { name: 'conjunction', symbol: '☌', angle: 0, orb: 6, color: '#e74c3c', class: 'conjunction', major: true },
+        { name: 'conjunction', symbol: '☌', angle: 0, orb: 8, color: '#e74c3c', class: 'conjunction', major: true },
         { name: 'semisextile', symbol: '⚺', angle: 30, orb: 1.5, color: '#78909c', class: 'semisextile', major: false },
-        { name: 'sextile', symbol: '⚹', angle: 60, orb: 3, color: '#3498db', class: 'sextile', major: true },
-        { name: 'square', symbol: '□', angle: 90, orb: 6, color: '#f1c40f', class: 'square', major: true },
-        { name: 'trine', symbol: '△', angle: 120, orb: 6, color: '#2ecc71', class: 'trine', major: true },
+        { name: 'semicuadratura', symbol: '∠', angle: 45, orb: 1.5, color: '#b0876e', class: 'semisquare', major: false },
+        { name: 'sextile', symbol: '⚹', angle: 60, orb: 4, color: '#3498db', class: 'sextile', major: true },
+        { name: 'square', symbol: '□', angle: 90, orb: 7, color: '#f1c40f', class: 'square', major: true },
+        { name: 'trine', symbol: '△', angle: 120, orb: 7, color: '#2ecc71', class: 'trine', major: true },
+        { name: 'sesquicuadratura', symbol: '⊼', angle: 135, orb: 1.5, color: '#c97a4e', class: 'sesquisquare', major: false },
         { name: 'quincunx', symbol: '⚻', angle: 150, orb: 2.5, color: '#8e44ad', class: 'quincunx', major: false },
-        { name: 'opposition', symbol: '☍', angle: 180, orb: 6, color: '#c0392b', class: 'opposition', major: true }
+        { name: 'opposition', symbol: '☍', angle: 180, orb: 8, color: '#c0392b', class: 'opposition', major: true }
     ];
 
     const aspects = [];
@@ -16687,6 +16689,16 @@ function calculateTransitsToNatal(transitDate, natalChart) {
                     const aspectDiffTomorrow = Math.abs(diffTomorrow - aspect.angle);
                     const isApplying = aspectDiffTomorrow < aspectDiff;
 
+                    // Calculate exact perfection time for non-Moon transits
+                    let perfectionTime = null;
+                    if (transitPlanet !== 'moon') {
+                        try { perfectionTime = findExactTransitTime(transitPlanet, natalLon, aspect.angle, transitDate); } catch(e) {}
+                    }
+
+                    // Classify planet speed tier
+                    const tier = slowPlanets.includes(transitPlanet) ? 'slow'
+                        : ['sun','venus','mars'].includes(transitPlanet) ? 'personal' : 'fast';
+
                     aspects.push({
                         transitPlanet,
                         transitLon: transitLon,
@@ -16703,7 +16715,9 @@ function calculateTransitsToNatal(transitDate, natalChart) {
                         orbFormatted: aspectDiff.toFixed(1) + '\u00b0',
                         exactness: effectiveOrb - aspectDiff,
                         applying: isApplying,
-                        applyingLabel: isApplying ? 'Ap' : 'Sep'
+                        applyingLabel: isApplying ? 'Ap' : 'Sep',
+                        perfectionTime: perfectionTime,
+                        tier: tier
                     });
                 }
             }
@@ -16730,6 +16744,13 @@ function calculateTransitsToNatal(transitDate, natalChart) {
                         if (diffTomorrow > 180) diffTomorrow = 360 - diffTomorrow;
                         const isApplying = Math.abs(diffTomorrow - aspect.angle) < aspectDiff;
 
+                        let perfT = null;
+                        if (transitPlanet !== 'moon') {
+                            try { perfT = findExactTransitTime(transitPlanet, point.lon, aspect.angle, transitDate); } catch(e) {}
+                        }
+                        const tier = slowPlanets.includes(transitPlanet) ? 'slow'
+                            : ['sun','venus','mars'].includes(transitPlanet) ? 'personal' : 'fast';
+
                         aspects.push({
                             transitPlanet,
                             transitLon: transitLon,
@@ -16746,7 +16767,9 @@ function calculateTransitsToNatal(transitDate, natalChart) {
                             orbFormatted: aspectDiff.toFixed(1) + '\u00b0',
                             exactness: aspect.orb - aspectDiff,
                             applying: isApplying,
-                            applyingLabel: isApplying ? 'Ap' : 'Sep'
+                            applyingLabel: isApplying ? 'Ap' : 'Sep',
+                            perfectionTime: perfT,
+                            tier: tier
                         });
                     }
                 }
@@ -21070,6 +21093,47 @@ function findExactReturnTime(planetName, targetLon, searchStart, searchEnd) {
     return new Date((lo + hi) / 2);
 }
 
+// Find exact perfection time for a transit aspect (when orb reaches 0)
+function findExactTransitTime(transitPlanet, natalLon, aspectAngle, baseDate) {
+    // Search ±36 hours from baseDate for the moment when the aspect is exact
+    var searchStart = new Date(baseDate.getTime() - 36 * 3600000);
+    var searchEnd = new Date(baseDate.getTime() + 36 * 3600000);
+    var stepMs = 3600000; // 1-hour steps
+
+    function aspectOrb(date) {
+        var tLon = getPlanetPosition(transitPlanet, date);
+        var diff = Math.abs(tLon - natalLon);
+        if (diff > 180) diff = 360 - diff;
+        return Math.abs(diff - aspectAngle);
+    }
+
+    // Find minimum orb bracket
+    var bestOrb = 999, bestTime = baseDate.getTime();
+    for (var t = searchStart.getTime(); t <= searchEnd.getTime(); t += stepMs) {
+        var orb = aspectOrb(new Date(t));
+        if (orb < bestOrb) { bestOrb = orb; bestTime = t; }
+    }
+
+    // Bisect around bestTime ± 1 hour for minute accuracy
+    var lo = bestTime - stepMs, hi = bestTime + stepMs;
+    for (var i = 0; i < 20; i++) {
+        var m1 = lo + (hi - lo) / 3;
+        var m2 = lo + 2 * (hi - lo) / 3;
+        if (aspectOrb(new Date(m1)) < aspectOrb(new Date(m2))) {
+            hi = m2;
+        } else {
+            lo = m1;
+        }
+    }
+    var exactDate = new Date((lo + hi) / 2);
+    var exactOrb = aspectOrb(exactDate);
+    // Only return if perfection is within 2 days and orb < 0.5°
+    if (exactOrb < 0.5 && Math.abs(exactDate.getTime() - baseDate.getTime()) < 48 * 3600000) {
+        return exactDate;
+    }
+    return null;
+}
+
 // Find the exact Solar Return (Sun returning to natal longitude)
 function findExactSolarReturn(natalSunLon, year) {
     // Sun takes ~365.25 days, search a 4-day window around the approximate birthday
@@ -22733,8 +22797,9 @@ function showPersonalDayDetail(year, month, day) {
     if (!natalChart) return;
 
     const transits = calculateTransitsToNatal(date, natalChart);
-    const majorTransits = transits.filter(t => !['moon','mercury'].includes(t.transitPlanet));
-    const moonTransits = transits.filter(t => t.transitPlanet === 'moon');
+    const slowTransits = transits.filter(t => t.tier === 'slow');
+    const personalTransits = transits.filter(t => t.tier === 'personal');
+    const fastTransits = transits.filter(t => t.tier === 'fast');
 
     // Also get current transit positions
     const transitPositions = {};
@@ -22807,41 +22872,83 @@ function showPersonalDayDetail(year, month, day) {
                 </div>
             </div>
 
-            <!-- Major Transits to Natal -->
+            <!-- Slow Planet Transits (Jupiter+) -->
+            ${slowTransits.length > 0 ? `
             <div style="margin-bottom:12px;">
-                <div style="font-size:0.75em;font-weight:700;color:#c39bd3;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">${L ? 'Tránsitos a tu Carta Natal' : 'Transits to your Natal Chart'} (${majorTransits.length})</div>
-                ${majorTransits.length > 0 ? majorTransits.map(t => {
+                <div style="font-size:0.75em;font-weight:700;color:#e74c3c;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">🔴 ${L ? 'Tránsitos Mayores (Lentos)' : 'Major Transits (Slow)'} (${slowTransits.length})</div>
+                ${slowTransits.map(t => {
                     const aspDesc = (planetNames[t.transitPlanet]||t.transitPlanet) + ' ' + (aspectNames[t.type]||t.type) + ' ' + (L?'natal ':'natal ') + (planetNames[t.natalPlanet]||t.natalPlanet);
-                    return `
-                    <div class="transit-aspect-row ${t.class}" onclick="interpretTransitAspect('${t.transitPlanet}','${t.type}','${t.natalPlanet}','${dateStr.replace(/'/g,"\\'")}')" style="cursor:pointer;" title="${L?'Click para interpretar':'Click to interpret'}">
-                        <span style="font-size:1.1em;">${t.transitSymbol}</span>
-                        <span style="color:${t.color};font-weight:700;">${t.symbol}</span>
-                        <span style="font-size:1.1em;">${t.natalSymbol}</span>
-                        <span style="flex:1;color:rgba(255,255,255,0.5);margin-left:6px;font-size:0.9em;">
-                            ${aspDesc}
-                        </span>
+                    const perfStr = t.perfectionTime ? t.perfectionTime.toLocaleTimeString(L?'es':'en',{hour:'2-digit',minute:'2-digit'}) : '';
+                    const orbColor = parseFloat(t.orb) < 1 ? '#ff6b6b' : parseFloat(t.orb) < 3 ? '#ffa726' : 'rgba(255,255,255,0.4)';
+                    return \`
+                    <div class="transit-aspect-row \${t.class}" onclick="interpretTransitAspect('\${t.transitPlanet}','\${t.type}','\${t.natalPlanet}','\${dateStr.replace(/'/g,"\\\\'")}')" style="cursor:pointer;padding:8px 10px;border-left:3px solid \${t.color};\${t.major ? 'background:rgba(255,255,255,0.03);' : ''}" title="\${L?'Click para interpretar':'Click to interpret'}">
+                        <span style="font-size:1.2em;">\${t.transitSymbol}</span>
+                        <span style="color:\${t.color};font-weight:700;font-size:1.1em;">\${t.symbol}</span>
+                        <span style="font-size:1.2em;">\${t.natalSymbol}</span>
+                        <div style="flex:1;margin-left:8px;">
+                            <div style="color:rgba(255,255,255,0.7);font-size:0.85em;\${t.major?'font-weight:600;':''}">
+                                \${aspDesc}
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center;margin-top:2px;">
+                                <span style="font-size:0.7em;color:\${orbColor};font-weight:600;">\${t.orbFormatted}</span>
+                                <span style="font-size:0.65em;padding:1px 5px;border-radius:3px;background:\${t.applying?'rgba(76,175,80,0.15)':'rgba(255,152,0,0.15)'};color:\${t.applying?'#81c784':'#ffb74d'};">\${t.applying?(L?'Aplicativo':'Applying'):(L?'Separativo':'Separating')}</span>
+                                \${perfStr ? \`<span style="font-size:0.65em;color:rgba(255,215,0,0.7);">⏱ \${perfStr}</span>\` : ''}
+                            </div>
+                        </div>
                         <span style="font-size:0.7em;color:rgba(201,168,64,0.5);">✨</span>
-                    </div>`;
-                }).join('') : `<div style="font-size:0.8em;color:rgba(255,255,255,0.3);padding:6px;">${L?'Sin aspectos mayores':'No major aspects'}</div>`}
-            </div>
+                    </div>\`;
+                }).join('')}
+            </div>` : ''}
 
-            <!-- Moon Transits -->
-            ${moonTransits.length > 0 ? `
-            <div>
-                <div style="font-size:0.75em;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">☽ ${L ? 'Luna' : 'Moon'}</div>
-                ${moonTransits.map(t => `
-                    <div class="transit-aspect-row ${t.class}" onclick="interpretTransitAspect('moon','${t.type}','${t.natalPlanet}','${dateStr.replace(/'/g,"\\'")}')" style="opacity:0.7;cursor:pointer;" title="${L?'Click para interpretar':'Click to interpret'}">
-                        <span>☽</span>
-                        <span style="color:${t.color};">${t.symbol}</span>
-                        <span>${t.natalSymbol}</span>
-                        <span style="color:rgba(255,255,255,0.35);margin-left:4px;">${planetNames[t.natalPlanet] || t.natalPlanet}</span>
-                        <span style="font-size:0.7em;color:rgba(201,168,64,0.4);">✨</span>
+            <!-- Personal Planet Transits (Sun, Venus, Mars) -->
+            ${personalTransits.length > 0 ? `
+            <div style="margin-bottom:12px;">
+                <div style="font-size:0.75em;font-weight:700;color:#f1c40f;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">🟡 ${L ? 'Tránsitos Personales' : 'Personal Transits'} (${personalTransits.length})</div>
+                ${personalTransits.map(t => {
+                    const aspDesc = (planetNames[t.transitPlanet]||t.transitPlanet) + ' ' + (aspectNames[t.type]||t.type) + ' ' + (L?'natal ':'natal ') + (planetNames[t.natalPlanet]||t.natalPlanet);
+                    const perfStr = t.perfectionTime ? t.perfectionTime.toLocaleTimeString(L?'es':'en',{hour:'2-digit',minute:'2-digit'}) : '';
+                    const orbColor = parseFloat(t.orb) < 1 ? '#ff6b6b' : parseFloat(t.orb) < 3 ? '#ffa726' : 'rgba(255,255,255,0.4)';
+                    return \`
+                    <div class="transit-aspect-row \${t.class}" onclick="interpretTransitAspect('\${t.transitPlanet}','\${t.type}','\${t.natalPlanet}','\${dateStr.replace(/'/g,"\\\\'")}')" style="cursor:pointer;padding:6px 10px;border-left:2px solid \${t.color}40;" title="\${L?'Click para interpretar':'Click to interpret'}">
+                        <span style="font-size:1em;">\${t.transitSymbol}</span>
+                        <span style="color:\${t.color};font-weight:600;">\${t.symbol}</span>
+                        <span style="font-size:1em;">\${t.natalSymbol}</span>
+                        <div style="flex:1;margin-left:6px;">
+                            <div style="color:rgba(255,255,255,0.6);font-size:0.8em;">
+                                \${aspDesc}
+                            </div>
+                            <div style="display:flex;gap:6px;align-items:center;margin-top:1px;">
+                                <span style="font-size:0.65em;color:\${orbColor};">\${t.orbFormatted}</span>
+                                <span style="font-size:0.6em;color:\${t.applying?'#81c784':'#ffb74d'};">\${t.applyingLabel}</span>
+                                \${perfStr ? \`<span style="font-size:0.6em;color:rgba(255,215,0,0.6);">⏱ \${perfStr}</span>\` : ''}
+                            </div>
+                        </div>
+                        <span style="font-size:0.65em;color:rgba(201,168,64,0.4);">✨</span>
+                    </div>\`;
+                }).join('')}
+            </div>` : ''}
+
+            <!-- Fast Transits (Moon, Mercury) — collapsed -->
+            ${fastTransits.length > 0 ? `
+            <div style="margin-bottom:12px;">
+                <div onclick="var c=this.nextElementSibling;c.style.display=c.style.display==='none'?'block':'none';this.querySelector('.chevron').textContent=c.style.display==='none'?'▸':'▾'" style="font-size:0.72em;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                    <span class="chevron">▸</span> ☽☿ ${L ? 'Luna y Mercurio' : 'Moon & Mercury'} (${fastTransits.length})
+                </div>
+                <div style="display:none;">
+                    ${fastTransits.map(t => \`
+                    <div class="transit-aspect-row \${t.class}" onclick="interpretTransitAspect('\${t.transitPlanet}','\${t.type}','\${t.natalPlanet}','\${dateStr.replace(/'/g,"\\\\'")}')" style="opacity:0.6;cursor:pointer;padding:4px 10px;" title="\${L?'Click para interpretar':'Click to interpret'}">
+                        <span style="font-size:0.9em;">\${t.transitSymbol}</span>
+                        <span style="color:\${t.color};font-size:0.85em;">\${t.symbol}</span>
+                        <span style="font-size:0.9em;">\${t.natalSymbol}</span>
+                        <span style="color:rgba(255,255,255,0.3);margin-left:4px;font-size:0.75em;">\${planetNames[t.natalPlanet]||t.natalPlanet}</span>
+                        <span style="font-size:0.6em;color:rgba(255,255,255,0.25);margin-left:auto;">\${t.orbFormatted} \${t.applyingLabel}</span>
                     </div>
-                `).join('')}
+                    \`).join('')}
+                </div>
             </div>` : ''}
 
             <!-- Interpretar el día button -->
-            ${(majorTransits.length > 0 || moonTransits.length > 0) ? `
+            ${(slowTransits.length > 0 || personalTransits.length > 0 || fastTransits.length > 0) ? `
             <div style="margin-top:14px;text-align:center;">
                 <button onclick="interpretCalendarDay(${year},${month},${day})" style="padding:12px 20px;background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.5);border-radius:12px;color:#ffd54f;font-size:0.9em;font-weight:700;cursor:pointer;width:90%;max-width:400px;">
                     ✨ ${L ? 'Interpretar el día' : 'Interpret the day'}
@@ -23084,10 +23191,14 @@ function interpretCosmicCycle(cycleType) {
 // Aspect name translations
 const aspectNames = {
     conjunction: currentLang === 'es' ? 'conjunción' : 'conjunction',
-    opposition: currentLang === 'es' ? 'oposición' : 'opposition',
-    trine: currentLang === 'es' ? 'trígono' : 'trine',
+    semisextile: currentLang === 'es' ? 'semisextil' : 'semisextile',
+    semicuadratura: currentLang === 'es' ? 'semicuadratura' : 'semisquare',
+    sextile: currentLang === 'es' ? 'sextil' : 'sextile',
     square: currentLang === 'es' ? 'cuadratura' : 'square',
-    sextile: currentLang === 'es' ? 'sextil' : 'sextile'
+    trine: currentLang === 'es' ? 'trígono' : 'trine',
+    sesquicuadratura: currentLang === 'es' ? 'sesquicuadratura' : 'sesquisquare',
+    quincunx: currentLang === 'es' ? 'quincuncio' : 'quincunx',
+    opposition: currentLang === 'es' ? 'oposición' : 'opposition'
 };
 
 let currentGregorianMonth = new Date().getMonth(); // 0-11
@@ -33511,7 +33622,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v592';
+var APP_VERSION = 'v593';
 var _pendingSW = null;
 
 // What's New removed per user request
