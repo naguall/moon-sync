@@ -29841,7 +29841,7 @@ function openPreferencesModal() {
     sectionsHtml += _s('🔊', (currentLang==='es'?'Voz':'Voice') + ' <span style="font-size:0.75em;opacity:0.6;font-weight:400;">(' + currentVoiceName + ')</span>', '#7ec8ff', voiceContent);
 
     // ── Tamaño de Celdas ──
-    var cs = localStorage.getItem('dayCellSize') || 'medium';
+    var cs = localStorage.getItem('dayCellSize') || 'small';
     var _cb = function(sz, label) {
         return '<button onclick="setCellSize(\'' + sz + '\');openPreferencesModal();" style="flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:0.9em;font-weight:600;background:' + (cs===sz?'linear-gradient(135deg,rgba(78,205,196,0.25),rgba(78,205,196,0.08))':'rgba(255,255,255,0.04)') + ';border:' + (cs===sz?'2px solid rgba(78,205,196,0.6)':'1px solid rgba(255,255,255,0.15)') + ';color:' + (cs===sz?'#4ecdc4':'rgba(255,255,255,0.5)') + ';">' + label + '</button>';
     };
@@ -30073,7 +30073,7 @@ function reapplyCellSize() {
 // Apply saved cell size on load
 if (!window._cellSizeApplied) {
     window._cellSizeApplied = true;
-    const savedSize = localStorage.getItem('dayCellSize') || 'medium';
+    const savedSize = localStorage.getItem('dayCellSize') || 'small';
     setTimeout(() => setCellSize(savedSize), 100);
 }
 
@@ -34058,7 +34058,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v594';
+var APP_VERSION = 'v595';
 var _pendingSW = null;
 
 // What's New removed per user request
