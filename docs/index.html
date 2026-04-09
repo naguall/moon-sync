@@ -28901,22 +28901,32 @@ function checkNotifications() {
 })();
 
 function checkCustomMessages(now, todayKey) {
-    if (!window.CUSTOM_MESSAGES) return;
+    // Check deployed messages (window.CUSTOM_MESSAGES from custom-messages.js)
+    _checkMsgSource(window.CUSTOM_MESSAGES, now, todayKey, 'notif-custom-msg-');
 
-    var entry = window.CUSTOM_MESSAGES[todayKey];
+    // Also check creator's local messages (localStorage)
+    try {
+        var localMsgs = JSON.parse(localStorage.getItem('myCustomMessages') || '{}');
+        if (Object.keys(localMsgs).length > 0) {
+            _checkMsgSource(localMsgs, now, todayKey, 'notif-my-msg-');
+        }
+    } catch(e) {}
+}
+
+function _checkMsgSource(source, now, todayKey, notifPrefix) {
+    if (!source) return;
+    var entry = source[todayKey];
     if (!entry) return;
 
-    // Support both single object and array of messages
     var messages = Array.isArray(entry) ? entry : [entry];
 
     for (var i = 0; i < messages.length; i++) {
         var msg = messages[i];
         if (!msg || !msg.message) continue;
 
-        var notifKey = 'notif-custom-msg-' + todayKey + '-' + i;
+        var notifKey = notifPrefix + todayKey + '-' + i;
         if (localStorage.getItem(notifKey)) continue;
 
-        // Parse send time (default 08:00 CR)
         var sendTime = msg.time || '08:00';
         var parts = sendTime.split(':');
         var sendHour = parseInt(parts[0]) || 8;
@@ -28925,16 +28935,15 @@ function checkCustomMessages(now, todayKey) {
         var scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sendHour, sendMin, 0, 0);
         var diff = now.getTime() - scheduledTime.getTime();
 
-        // Send if we're past the scheduled time (within 24h window)
         if (diff >= 0 && diff < 24 * 60 * 60 * 1000) {
             var title = msg.title || 'AstroField';
             sendNotif(title, {
                 body: msg.message,
-                tag: 'custom-msg-' + todayKey + '-' + i,
+                tag: notifPrefix + todayKey + '-' + i,
                 requireInteraction: true
             });
             localStorage.setItem(notifKey, 'true');
-            console.log('Custom message sent for', todayKey, '[' + i + ']:', msg.message.substring(0, 50));
+            console.log('Message sent for', todayKey, '[' + i + ']:', msg.message.substring(0, 50));
         }
     }
 }
@@ -28949,7 +28958,7 @@ function handleNotifCategoryToggle(categoryId, enabled) {
 // ══════════════════════════════════════════════════
 // PERSONAL MESSAGES EDITOR (in-app, localStorage)
 // ══════════════════════════════════════════════════
-function openMyMessagesEditor() {
+function openMyMessagesEditor(tab) {
     var modal = document.getElementById('myMessagesModal');
     var body = document.getElementById('myMessagesBody');
     var titleEl = document.getElementById('myMsgModalTitle');
@@ -28957,6 +28966,7 @@ function openMyMessagesEditor() {
 
     var L = currentLang === 'es';
     titleEl.textContent = L ? 'Mis Mensajes' : 'My Messages';
+    var activeTab = tab || 'scheduled';
 
     var msgs = JSON.parse(localStorage.getItem('myCustomMessages') || '{}');
     var sortedDates = Object.keys(msgs).sort();
@@ -28964,69 +28974,92 @@ function openMyMessagesEditor() {
     var today = new Date();
     var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
 
-    var html = '';
-
-    // ── Info banner ──
-    html += '<div style="padding:8px 10px;margin-bottom:10px;background:rgba(102,204,255,0.06);border:1px solid rgba(102,204,255,0.15);border-radius:8px;font-size:0.72em;color:rgba(255,255,255,0.45);line-height:1.5;">';
-    html += L ? '💡 Los mensajes se envían como notificación a todos los usuarios en la fecha y hora programada. Después de crear o borrar mensajes, toca <b style="color:#4ecdc4;">Publicar</b> para aplicar los cambios.' : '💡 Messages are sent as notifications to all users at the scheduled date and time. After creating or deleting messages, tap <b style="color:#4ecdc4;">Publish</b> to apply changes.';
-    html += '</div>';
-
-    // ── New message form ──
-    html += '<div style="margin-bottom:14px;padding:12px;background:rgba(102,204,255,0.06);border:1px solid rgba(102,204,255,0.2);border-radius:10px;">';
-    html += '<div style="font-size:0.82em;font-weight:700;color:#66CCFF;margin-bottom:10px;">' + (L?'Nuevo mensaje':'New message') + '</div>';
-    html += '<div style="display:flex;gap:8px;margin-bottom:8px;">';
-    html += '<div style="flex:1;"><label style="font-size:0.68em;color:rgba(255,255,255,0.4);display:block;margin-bottom:3px;">' + (L?'Fecha':'Date') + '</label>';
-    html += '<input type="date" id="msgDate" value="' + todayStr + '" style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:white;font-size:0.85em;"></div>';
-    html += '<div style="width:80px;"><label style="font-size:0.68em;color:rgba(255,255,255,0.4);display:block;margin-bottom:3px;">' + (L?'Hora':'Time') + '</label>';
-    html += '<input type="time" id="msgTime" value="08:00" style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:white;font-size:0.85em;"></div>';
-    html += '</div>';
-    html += '<div style="margin-bottom:8px;"><label style="font-size:0.68em;color:rgba(255,255,255,0.4);display:block;margin-bottom:3px;">' + (L?'Titulo (opcional)':'Title (optional)') + '</label>';
-    html += '<input type="text" id="msgTitle" placeholder="AstroField" style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:white;font-size:0.85em;box-sizing:border-box;"></div>';
-    html += '<div style="margin-bottom:10px;"><label style="font-size:0.68em;color:rgba(255,255,255,0.4);display:block;margin-bottom:3px;">' + (L?'Mensaje':'Message') + '</label>';
-    html += '<textarea id="msgText" rows="3" placeholder="' + (L?'Escribe tu mensaje...':'Write your message...') + '" style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:white;font-size:0.85em;resize:vertical;box-sizing:border-box;"></textarea></div>';
-    html += '<button onclick="saveMyMessage()" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(102,204,255,0.2),rgba(102,204,255,0.08));border:1px solid rgba(102,204,255,0.4);border-radius:8px;color:#66CCFF;font-size:0.85em;font-weight:700;cursor:pointer;">';
-    html += '+ ' + (L?'Agregar mensaje':'Add message') + '</button>';
-    html += '</div>';
-
-    // ── PUBLISH button (generates custom-messages.js and copies to clipboard) ──
-    html += '<div style="display:flex;gap:6px;margin-bottom:14px;">';
-    html += '<button onclick="publishMyMessages()" style="flex:1;padding:10px;background:linear-gradient(135deg,rgba(78,205,196,0.25),rgba(78,205,196,0.08));border:1px solid rgba(78,205,196,0.5);border-radius:8px;color:#4ecdc4;font-size:0.85em;font-weight:700;cursor:pointer;">';
-    html += '📤 ' + (L?'Publicar (copiar código)':'Publish (copy code)') + '</button>';
-    html += '<button onclick="loadFromCustomMessages()" style="padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.5);font-size:0.78em;cursor:pointer;">';
-    html += '📥 ' + (L?'Importar':'Import') + '</button>';
-    html += '</div>';
-
-    // ── List existing messages ──
-    if (sortedDates.length > 0) {
-        html += '<div style="font-size:0.78em;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">';
-        html += (L?'Mensajes programados':'Scheduled messages') + ' (' + sortedDates.reduce(function(c,k){ var e=msgs[k]; return c+(Array.isArray(e)?e.length:1); },0) + ')';
-        html += '</div>';
-
-        for (var i = 0; i < sortedDates.length; i++) {
-            var dateKey = sortedDates[i];
-            var dateEntries = Array.isArray(msgs[dateKey]) ? msgs[dateKey] : [msgs[dateKey]];
-            var isPast = dateKey < todayStr;
-
-            for (var j = 0; j < dateEntries.length; j++) {
-                var m = dateEntries[j];
-                if (!m || !m.message) continue;
-                var sent = !!localStorage.getItem('notif-my-msg-' + dateKey + '-' + j);
-                html += '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;margin-bottom:4px;background:rgba(255,255,255,' + (isPast?'0.02':'0.04') + ');border:1px solid rgba(255,255,255,' + (isPast?'0.06':'0.12') + ');border-radius:8px;' + (isPast?'opacity:0.5;':'') + '">';
-                html += '<div style="flex:1;">';
-                html += '<div style="font-size:0.72em;color:rgba(255,255,255,0.4);">' + dateKey + ' ' + (m.time||'08:00');
-                if (sent) html += ' <span style="color:#4ecdc4;">' + (L?'(enviado)':'(sent)') + '</span>';
-                html += '</div>';
-                if (m.title && m.title !== 'AstroField') html += '<div style="font-size:0.75em;color:#66CCFF;font-weight:600;">' + m.title + '</div>';
-                html += '<div style="font-size:0.82em;color:#e8eaf6;margin-top:2px;">' + m.message + '</div>';
-                html += '</div>';
-                html += '<button onclick="deleteMyMessage(\'' + dateKey + '\',' + j + ')" style="background:none;border:none;color:#ff6b6b;cursor:pointer;font-size:1.1em;padding:2px 6px;flex-shrink:0;" title="' + (L?'Eliminar':'Delete') + '">✕</button>';
-                html += '</div>';
+    // Separate scheduled (future/today unsent) vs sent (past or sent)
+    var scheduled = [];
+    var sent = [];
+    for (var di = 0; di < sortedDates.length; di++) {
+        var dk = sortedDates[di];
+        var entries = Array.isArray(msgs[dk]) ? msgs[dk] : [msgs[dk]];
+        for (var ei = 0; ei < entries.length; ei++) {
+            var e = entries[ei];
+            if (!e || !e.message) continue;
+            var wasSent = !!localStorage.getItem('notif-my-msg-' + dk + '-' + ei) || !!localStorage.getItem('notif-custom-msg-' + dk + '-' + ei);
+            if (wasSent || dk < todayStr) {
+                sent.push({date: dk, idx: ei, msg: e, sent: wasSent});
+            } else {
+                scheduled.push({date: dk, idx: ei, msg: e});
             }
         }
-    } else {
-        html += '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.82em;">';
-        html += L ? 'No hay mensajes programados. Crea uno arriba.' : 'No scheduled messages. Create one above.';
+    }
+
+    var html = '';
+
+    // ── Tabs: Programados | Enviados ──
+    var tabActive = 'background:linear-gradient(135deg,rgba(102,204,255,0.2),rgba(102,204,255,0.08));color:#66CCFF;font-weight:700;border:1px solid rgba(102,204,255,0.4);';
+    var tabInactive = 'background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.4);font-weight:500;border:1px solid rgba(255,255,255,0.1);';
+    html += '<div style="display:flex;gap:6px;margin-bottom:12px;">';
+    html += '<button onclick="openMyMessagesEditor(\'scheduled\')" style="flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:0.85em;' + (activeTab==='scheduled'?tabActive:tabInactive) + '">📋 ' + (L?'Programados':'Scheduled') + ' (' + scheduled.length + ')</button>';
+    html += '<button onclick="openMyMessagesEditor(\'sent\')" style="flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:0.85em;' + (activeTab==='sent'?tabActive:tabInactive) + '">✅ ' + (L?'Enviados':'Sent') + ' (' + sent.length + ')</button>';
+    html += '</div>';
+
+    if (activeTab === 'scheduled') {
+        // ── New message form ──
+        html += '<div style="margin-bottom:14px;padding:12px;background:rgba(102,204,255,0.06);border:1px solid rgba(102,204,255,0.2);border-radius:10px;">';
+        html += '<div style="font-size:0.82em;font-weight:700;color:#66CCFF;margin-bottom:10px;">' + (L?'Nuevo mensaje':'New message') + '</div>';
+        html += '<div style="display:flex;gap:8px;margin-bottom:8px;">';
+        html += '<div style="flex:1;"><label style="font-size:0.68em;color:rgba(255,255,255,0.4);display:block;margin-bottom:3px;">' + (L?'Fecha':'Date') + '</label>';
+        html += '<input type="date" id="msgDate" value="' + todayStr + '" style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:white;font-size:0.85em;"></div>';
+        html += '<div style="width:80px;"><label style="font-size:0.68em;color:rgba(255,255,255,0.4);display:block;margin-bottom:3px;">' + (L?'Hora':'Time') + '</label>';
+        html += '<input type="time" id="msgTime" value="08:00" style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:white;font-size:0.85em;"></div>';
         html += '</div>';
+        html += '<div style="margin-bottom:8px;"><label style="font-size:0.68em;color:rgba(255,255,255,0.4);display:block;margin-bottom:3px;">' + (L?'Titulo (opcional)':'Title (optional)') + '</label>';
+        html += '<input type="text" id="msgTitle" placeholder="AstroField" style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:white;font-size:0.85em;box-sizing:border-box;"></div>';
+        html += '<div style="margin-bottom:10px;"><label style="font-size:0.68em;color:rgba(255,255,255,0.4);display:block;margin-bottom:3px;">' + (L?'Mensaje':'Message') + '</label>';
+        html += '<textarea id="msgText" rows="3" placeholder="' + (L?'Escribe tu mensaje...':'Write your message...') + '" style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:white;font-size:0.85em;resize:vertical;box-sizing:border-box;"></textarea></div>';
+        html += '<button onclick="saveMyMessage()" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(102,204,255,0.2),rgba(102,204,255,0.08));border:1px solid rgba(102,204,255,0.4);border-radius:8px;color:#66CCFF;font-size:0.85em;font-weight:700;cursor:pointer;">';
+        html += '+ ' + (L?'Agregar mensaje':'Add message') + '</button>';
+        html += '</div>';
+
+        // ── Scheduled messages list ──
+        if (scheduled.length > 0) {
+            for (var si = 0; si < scheduled.length; si++) {
+                var s = scheduled[si];
+                html += '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;margin-bottom:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;">';
+                html += '<div style="flex:1;">';
+                html += '<div style="font-size:0.72em;color:rgba(255,255,255,0.4);">📅 ' + s.date + ' ⏰ ' + (s.msg.time||'08:00') + '</div>';
+                if (s.msg.title && s.msg.title !== 'AstroField') html += '<div style="font-size:0.75em;color:#66CCFF;font-weight:600;">' + s.msg.title + '</div>';
+                html += '<div style="font-size:0.82em;color:#e8eaf6;margin-top:2px;">' + s.msg.message + '</div>';
+                html += '</div>';
+                html += '<button onclick="deleteMyMessage(\'' + s.date + '\',' + s.idx + ')" style="background:none;border:none;color:#ff6b6b;cursor:pointer;font-size:1.1em;padding:2px 6px;flex-shrink:0;" title="' + (L?'Eliminar':'Delete') + '">✕</button>';
+                html += '</div>';
+            }
+        } else {
+            html += '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.82em;">';
+            html += L ? 'No hay mensajes programados.' : 'No scheduled messages.';
+            html += '</div>';
+        }
+    } else {
+        // ── SENT tab ──
+        if (sent.length > 0) {
+            // Show most recent first
+            sent.reverse();
+            for (var xi = 0; xi < sent.length; xi++) {
+                var x = sent[xi];
+                html += '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;margin-bottom:4px;background:rgba(78,205,196,0.04);border:1px solid rgba(78,205,196,0.12);border-radius:8px;opacity:0.75;">';
+                html += '<div style="flex:1;">';
+                html += '<div style="font-size:0.72em;color:rgba(255,255,255,0.4);">📅 ' + x.date + ' ⏰ ' + (x.msg.time||'08:00');
+                html += ' <span style="color:#4ecdc4;font-weight:600;">' + (x.sent?(L?'✅ Enviado':'✅ Sent'):(L?'⏳ Pasado':'⏳ Past')) + '</span>';
+                html += '</div>';
+                if (x.msg.title && x.msg.title !== 'AstroField') html += '<div style="font-size:0.75em;color:#66CCFF;font-weight:600;">' + x.msg.title + '</div>';
+                html += '<div style="font-size:0.82em;color:#e8eaf6;margin-top:2px;">' + x.msg.message + '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+        } else {
+            html += '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.82em;">';
+            html += L ? 'No hay mensajes enviados aún.' : 'No sent messages yet.';
+            html += '</div>';
+        }
     }
 
     body.innerHTML = html;
@@ -29074,8 +29107,8 @@ function saveMyMessage() {
     document.getElementById('msgText').value = '';
     document.getElementById('msgTitle').value = '';
     var L = currentLang === 'es';
-    _showToast(L ? 'Mensaje guardado. Toca Publicar para enviarlo a todos.' : 'Message saved. Tap Publish to send to all.', '#4ecdc4');
-    openMyMessagesEditor(); // Refresh list
+    _showToast(L ? 'Mensaje programado.' : 'Message scheduled.', '#4ecdc4');
+    openMyMessagesEditor('scheduled'); // Refresh list
 }
 
 function deleteMyMessage(dateKey, idx) {
@@ -29091,7 +29124,7 @@ function deleteMyMessage(dateKey, idx) {
     }
 
     localStorage.setItem('myCustomMessages', JSON.stringify(msgs));
-    openMyMessagesEditor(); // Refresh
+    openMyMessagesEditor('scheduled'); // Refresh
 }
 
 // Generate custom-messages.js code and copy to clipboard
@@ -34100,7 +34133,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v599';
+var APP_VERSION = 'v600';
 var _pendingSW = null;
 
 // What's New removed per user request
