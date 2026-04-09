@@ -463,11 +463,15 @@
         .profile-action-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(155,89,182,0.2); background: rgba(155,89,182,0.08); color: rgba(255,255,255,0.6); font-size: 0.9em; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; padding: 0; }
         .profile-action-btn:hover { background: rgba(155,89,182,0.2); color: #c39bd3; border-color: rgba(155,89,182,0.4); }
         /* Natal Sub-Tabs */
-        .natal-subtabs { display: flex; gap: 0; margin-bottom: 12px; background: rgba(15,5,30,0.8); border-radius: 10px; border: 1px solid rgba(155,89,182,0.2); flex-wrap: wrap; }
+        .natal-group-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+        .natal-group-tab { flex: 1; padding: 9px 12px; border: 1px solid rgba(155,89,182,0.25); background: rgba(15,5,30,0.6); color: rgba(255,255,255,0.45); font-size: 0.82em; font-weight: 700; cursor: pointer; transition: all 0.3s; text-align: center; border-radius: 10px; white-space: nowrap; }
+        .natal-group-tab:hover { color: rgba(255,255,255,0.7); background: rgba(155,89,182,0.12); }
+        .natal-group-tab.active { color: #c39bd3; background: linear-gradient(135deg, rgba(155,89,182,0.2), rgba(102,126,234,0.15)); border-color: rgba(155,89,182,0.5); }
+        .natal-subtabs { display: flex; gap: 0; margin-bottom: 12px; background: rgba(15,5,30,0.8); border-radius: 10px; border: none; flex-wrap: wrap; }
         @media (orientation: landscape) { .natal-subtabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; } .natal-subtabs::-webkit-scrollbar { display: none; } }
-        .natal-subtab { flex: 0 0 auto; padding: 8px 10px; border: none; background: transparent; color: rgba(255,255,255,0.45); font-size: 0.78em; font-weight: 600; cursor: pointer; transition: all 0.3s; text-align: center; border-bottom: 2px solid transparent; white-space: nowrap; }
+        .natal-subtab { flex: 0 0 auto; padding: 8px 10px; border: none; background: transparent; color: rgba(255,255,255,0.45); font-size: 0.78em; font-weight: 600; cursor: pointer; transition: all 0.3s; text-align: center; white-space: nowrap; border-radius: 8px; }
         .natal-subtab:hover { color: rgba(255,255,255,0.7); background: rgba(155,89,182,0.1); }
-        .natal-subtab.active { color: #c39bd3; background: rgba(155,89,182,0.15); border-bottom: 2px solid #c39bd3; }
+        .natal-subtab.active { color: #c39bd3; background: rgba(155,89,182,0.15); }
         /* Responsive Calendar button text: short in portrait, full in landscape */
         .subtab-full { display: none; }
         .subtab-short { display: inline; }
@@ -739,7 +743,7 @@
                 <button id="lunarModeBtn" onclick="switchToLunarMode()" style="padding:4px 9px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;border-radius:16px;color:white;font-weight:bold;cursor:pointer;white-space:nowrap;font-size:0.8em;">Lunar</button>
                 <button id="solarModeBtn" onclick="switchToSolarMode()" style="padding:4px 9px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:16px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;font-size:0.8em;">Solar</button>
                 <button id="gregorianModeBtn" onclick="switchToGregorianMode()" style="padding:4px 9px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:16px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;font-size:0.8em;"><span id="gregorianButtonLabel">Greg</span></button>
-                <button id="personalModeBtn" onclick="switchToPersonalMode()" style="padding:4px 9px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:16px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;font-size:0.8em;"><span id="personalButtonLabel">Astrología</span></button>
+                <button id="personalModeBtn" onclick="switchToPersonalMode()" style="padding:4px 9px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:16px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;font-size:0.8em;"><span id="personalButtonLabel">Astrológico</span></button>
                 <button id="socialModeBtn" onclick="switchToSocialMode()" style="padding:4px 9px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:16px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;font-size:0.8em;">Social</button>
                 <!-- HIDDEN: Earth and Solar System buttons (kept for future reactivation) -->
                 <button id="earthModeBtn" onclick="switchToEarthMode()" style="display:none;padding:4px 9px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:16px;color:rgba(255,255,255,0.6);font-weight:bold;cursor:pointer;white-space:nowrap;font-size:0.8em;"><span id="earthButtonLabel">Tierra</span></button>
@@ -7932,16 +7936,14 @@ async function fetchAIInterpretation(specificPrompt, targetDivId, readingTitle, 
             chatHtml += '<textarea rows="1" id="interpChatInput_' + chatId + '" placeholder="' + (L ? 'Pregunta sobre esta lectura...' : 'Ask about this reading...') + '" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\');}" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,80)+\'px\';" style="flex:1;padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.25);border-radius:20px;color:rgba(255,255,255,0.9);font-size:0.85em;outline:none;resize:none;overflow-y:auto;max-height:80px;font-family:inherit;"></textarea>';
             chatHtml += '<button onclick="sendInterpChatMessage(\'' + chatId + '\',\'' + readingKey + '\')" style="padding:8px 14px;background:rgba(201,168,64,0.2);border:1px solid rgba(201,168,64,0.4);border-radius:20px;color:#c9a840;font-size:0.85em;cursor:pointer;font-weight:600;">\u2192</button>';
             chatHtml += '</div>';
-            chatHtml += '<div style="display:flex;justify-content:center;gap:8px;margin-bottom:8px;">';
+            chatHtml += '<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:4px;">';
             chatHtml += '<button id="' + _voiceBtnId + '" onclick="startGenericVoice(\'interpChatInput_' + chatId + '\',\'' + _sendFn.replace(/'/g, "\\'") + '\',\'' + _voiceBtnId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1em;cursor:pointer;flex-shrink:0;" title="' + (L ? 'Voz' : 'Voice') + '">🎙️</button>';
             chatHtml += '<button onclick="readAloudLastMsg(\'interpChatMessages_' + chatId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1em;cursor:pointer;flex-shrink:0;line-height:1;" title="' + (L ? 'Leer en voz alta' : 'Read aloud') + '">🔊</button>';
             chatHtml += '<button id="voiceConvoBtn_' + chatId + '" onclick="_toggleVoiceConvo(\'' + chatId + '\',\'' + readingKey + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:0.85em;cursor:pointer;flex-shrink:0;line-height:1;" title="' + (L ? 'Modo conversación por voz' : 'Voice conversation mode') + '">🗣️</button>';
-            chatHtml += '</div>';
-            // Action buttons row
-            chatHtml += '<div style="display:flex;gap:6px;justify-content:center;">';
-            chatHtml += '<button onclick="saveInterpChatAsReading(\'' + chatId + '\')" style="flex:1;padding:5px 8px;background:rgba(201,168,64,0.1);border:1px solid rgba(201,168,64,0.25);border-radius:6px;color:#c9a840;font-size:0.75em;cursor:pointer;font-weight:600;">' + (L ? 'Guardar' : 'Save') + '</button>';
-            chatHtml += '<button onclick="var d=window[\'' + readingKey + '\'];if(d)shareReading(d);" style="flex:1;padding:5px 8px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2);border-radius:6px;color:#25d366;font-size:0.75em;cursor:pointer;font-weight:600;">' + (L ? 'Compartir' : 'Share') + '</button>';
-            chatHtml += '<button onclick="deleteInterpChat(\'' + chatId + '\');var m=this.closest(\'.modal\');if(m)m.classList.remove(\'show\');" style="flex:1;padding:5px 8px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);border-radius:6px;color:#ff6b6b;font-size:0.75em;cursor:pointer;font-weight:600;">' + (L ? 'Borrar' : 'Delete') + '</button>';
+            chatHtml += '<div style="width:1px;height:24px;background:rgba(255,255,255,0.1);"></div>';
+            chatHtml += '<button onclick="saveInterpChatAsReading(\'' + chatId + '\')" style="width:34px;height:34px;border-radius:50%;background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.2);color:#4ecdc4;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="' + (L ? 'Guardar' : 'Save') + '">💾</button>';
+            chatHtml += '<button onclick="var d=window[\'' + readingKey + '\'];if(d)shareReading(d);" style="width:34px;height:34px;border-radius:50%;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);color:#667eea;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="' + (L ? 'Compartir' : 'Share') + '">📤</button>';
+            chatHtml += '<button onclick="deleteInterpChat(\'' + chatId + '\');var m=this.closest(\'.modal\');if(m)m.classList.remove(\'show\');" style="width:34px;height:34px;border-radius:50%;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);color:#ff6b6b;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="' + (L ? 'Borrar' : 'Delete') + '">🗑️</button>';
             chatHtml += '</div>';
             chatHtml += '</div>';
             chatHtml += '</div>';
@@ -19595,19 +19597,25 @@ function buildNatalSubTabs(natalChart, natal, profileDisplayName, L, sunSign, mo
 
     // ===== COMBINE WITH TABS =====
     return `
-        <div class="natal-subtabs">
+        <div class="natal-group-tabs">
+            <button class="natal-group-tab active" onclick="switchNatalGroup('detalles',this)">📋 ${L?'Detalles':'Details'}</button>
+            <button class="natal-group-tab" onclick="switchNatalGroup('avanzado',this)">🔮 ${L?'Avanzado':'Advanced'}</button>
+        </div>
+        <div id="natalGroupDetalles" class="natal-subtabs">
             <button class="natal-subtab" onclick="switchNatalTab('chart',this)">${L?'Carta':'Chart'}</button>
             <button class="natal-subtab" onclick="switchNatalTab('tables',this)">${L?'Tablas':'Tables'}</button>
             <button class="natal-subtab active" onclick="switchNatalTab('calendar',this)"><span class="subtab-short">${L?'Calend':'Calend'}</span><span class="subtab-full">${L?'Calendario':'Calendar'}</span></button>
             <button class="natal-subtab" onclick="switchNatalTab('hoy',this)">${L?'Hoy':'Today'}</button>
+            <button class="natal-subtab" onclick="switchNatalTab('cartography',this)">${L?'Mapa':'Map'}</button>
             <button class="natal-subtab" onclick="switchNatalTab('ciclos',this)">${L?'Ciclos':'Cycles'}</button>
             <button class="natal-subtab" onclick="switchNatalTab('aspects2026',this)">2026</button>
-            <button class="natal-subtab" onclick="switchNatalTab('cartography',this)">${L?'Mapa':'Map'}</button>
+        </div>
+        <div id="natalGroupAvanzado" class="natal-subtabs" style="display:none;">
             <button class="natal-subtab" onclick="switchNatalTab('sinastria',this)"><span class="subtab-short">${L?'Sinastría':'Synastry'}</span><span class="subtab-full">${L?'Sinastría':'Synastry'}</span></button>
             <button class="natal-subtab" onclick="switchNatalTab('compuesta',this)"><span class="subtab-short">${L?'Compuesta':'Composite'}</span><span class="subtab-full">${L?'Carta Compuesta':'Composite Chart'}</span></button>
             <button class="natal-subtab" onclick="switchNatalTab('davison',this)"><span class="subtab-short">Davison</span><span class="subtab-full">${L?'Carta Davison':'Davison Chart'}</span></button>
-            <button class="natal-subtab" onclick="switchNatalTab('tutor',this)" style="color:#667eea;border-color:rgba(102,126,234,0.3);">🤖 Tutor</button>
-            <button class="natal-subtab" onclick="switchNatalTab('mapa',this)" style="color:#ffd700;border-color:rgba(255,215,0,0.3);">🎓 ${L?'Curso Pro':'Course Pro'}</button>
+            <button class="natal-subtab" onclick="switchNatalTab('tutor',this)" style="color:#667eea;">🤖 Tutor</button>
+            <button class="natal-subtab" onclick="switchNatalTab('mapa',this)" style="color:#ffd700;">🎓 ${L?'Curso Pro':'Course Pro'}</button>
         </div>
         <div id="natalTabChart" class="natal-tab-content" style="display:none;">${chartTab}</div>
         <div id="natalTabTables" class="natal-tab-content" style="display:none;">${tablesTab}</div>
@@ -19704,6 +19712,22 @@ function switchNatalTab(tabName, btn) {
     var fab = document.getElementById('aiChatFab');
     if (fab) {
         fab.style.display = (tabName === 'tutor') ? 'none' : 'flex';
+    }
+}
+
+// v623: Switch between Detalles / Avanzado group tabs
+function switchNatalGroup(group, btn) {
+    document.querySelectorAll('.natal-group-tab').forEach(function(el) { el.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    var detallesDiv = document.getElementById('natalGroupDetalles');
+    var avanzadoDiv = document.getElementById('natalGroupAvanzado');
+    if (detallesDiv) detallesDiv.style.display = group === 'detalles' ? 'flex' : 'none';
+    if (avanzadoDiv) avanzadoDiv.style.display = group === 'avanzado' ? 'flex' : 'none';
+    // Activate first subtab of the selected group
+    var targetGroup = group === 'detalles' ? detallesDiv : avanzadoDiv;
+    if (targetGroup) {
+        var firstBtn = targetGroup.querySelector('.natal-subtab');
+        if (firstBtn) firstBtn.click();
     }
 }
 
@@ -26452,7 +26476,9 @@ function goToCurrentCycle() {
         }
         _tutorPersonaHTML += '</select></div>';
 
-        tab.innerHTML = '<div style="padding:16px;">' +
+        tab.innerHTML = '<div style="display:flex;flex-direction:column;height:calc(100vh - 180px);padding:0 16px;">' +
+            // ═══ SCROLLABLE TOP AREA ═══
+            '<div style="flex:1;overflow-y:auto;padding-top:12px;padding-bottom:8px;">' +
             '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:1.5em;">🤖</span><div style="flex:1;"><div style="font-weight:700;color:#667eea;font-size:1em;">' + (isES ? 'Tutor de Astrología' : 'Astrology Tutor') + '</div>' +
             '<div style="font-size:0.7em;color:rgba(255,255,255,0.4);">' + (isES ? 'Tu conversación se guarda para continuar donde la dejaste' : 'Your conversation is saved to continue where you left off') + '</div></div>' +
             // Action buttons: New session + History
@@ -26487,24 +26513,27 @@ function goToCurrentCycle() {
             // History panel (hidden by default)
             historyHTML +
             // Chat area - restore previous HTML if available
-            '<div id="tutorAIChatArea" style="min-height:200px;max-height:50vh;overflow-y:auto;padding:8px;background:rgba(0,0,0,0.15);border:1px solid rgba(102,126,234,0.15);border-radius:12px;margin-bottom:10px;">' +
+            '<div id="tutorAIChatArea" style="min-height:100px;overflow-y:auto;padding:8px;background:rgba(0,0,0,0.15);border:1px solid rgba(102,126,234,0.15);border-radius:12px;">' +
             (restoredHTML || ('<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.8em;">' + (isES ? 'Escribe tu pregunta o toca un tema rápido' : 'Type your question or tap a quick topic') + '</div>')) +
             '</div>' +
-            // Input area with voice buttons
+            '</div>' +
+            // ═══ FIXED BOTTOM BAR ═══
+            '<div style="flex-shrink:0;padding:8px 0 12px;background:linear-gradient(to bottom,transparent,rgba(10,10,46,0.95) 15%);border-top:1px solid rgba(102,126,234,0.1);">' +
+            // Line 1: textarea + send
             '<div style="display:flex;gap:6px;align-items:flex-end;">' +
             '<textarea id="tutorInput" rows="1" placeholder="' + (isES ? 'Pregúntale al tutor...' : 'Ask the tutor...') + '" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(102,126,234,0.2);border-radius:10px;color:white;padding:8px 10px;font-size:0.85em;resize:none;outline:none;font-family:inherit;" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,80)+\'px\';" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendTutorAIMsg();}"></textarea>' +
             '<button onclick="sendTutorAIMsg()" style="background:linear-gradient(135deg,rgba(102,126,234,0.3),rgba(102,126,234,0.1));border:1px solid rgba(102,126,234,0.4);border-radius:10px;color:#667eea;padding:8px 14px;font-size:1em;cursor:pointer;flex-shrink:0;">➤</button>' +
             '</div>' +
-            '<div style="display:flex;justify-content:center;gap:10px;margin-top:6px;">' +
-            '<button onclick="startGenericVoice(\'tutorInput\',\'sendTutorAIMsg()\',\'tutorVoiceBtn\')" id="tutorVoiceBtn" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;flex-shrink:0;" title="' + (isES ? 'Dictar por voz' : 'Voice dictation') + '">🎙️</button>' +
-            '<button onclick="readAloudLastMsg(\'tutorAIChatArea\')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1.1em;cursor:pointer;flex-shrink:0;line-height:1;" title="' + (isES ? 'Leer en voz alta' : 'Read aloud') + '">🔊</button>' +
-            '<button onclick="_toggleTutorVoiceConvo()" id="tutorConvoBtn" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1.1em;cursor:pointer;flex-shrink:0;" title="' + (isES ? 'Conversación por voz' : 'Voice conversation') + '">🗣️</button>' +
+            // Line 2: ALL icons in one row (mic, speaker, conversation, save, share, delete)
+            '<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:6px;">' +
+            '<button onclick="startGenericVoice(\'tutorInput\',\'sendTutorAIMsg()\',\'tutorVoiceBtn\')" id="tutorVoiceBtn" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1em;cursor:pointer;flex-shrink:0;" title="' + (isES ? 'Dictar por voz' : 'Voice dictation') + '">🎙️</button>' +
+            '<button onclick="readAloudLastMsg(\'tutorAIChatArea\')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1em;cursor:pointer;flex-shrink:0;line-height:1;" title="' + (isES ? 'Leer en voz alta' : 'Read aloud') + '">🔊</button>' +
+            '<button onclick="_toggleTutorVoiceConvo()" id="tutorConvoBtn" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1em;cursor:pointer;flex-shrink:0;" title="' + (isES ? 'Conversación por voz' : 'Voice conversation') + '">🗣️</button>' +
+            '<div style="width:1px;height:24px;background:rgba(255,255,255,0.1);"></div>' +
+            '<button onclick="_tutorSaveChat()" style="width:36px;height:36px;border-radius:50%;background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.2);color:#4ecdc4;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="' + (isES?'Guardar':'Save') + '">💾</button>' +
+            '<button onclick="_tutorShareChat()" style="width:36px;height:36px;border-radius:50%;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);color:#667eea;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="' + (isES?'Compartir':'Share') + '">📤</button>' +
+            '<button onclick="_tutorClearChat()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);color:#ff6b6b;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="' + (isES?'Borrar':'Delete') + '">🗑️</button>' +
             '</div>' +
-            // Action buttons below input (like other chats)
-            '<div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">' +
-            '<button onclick="_tutorSaveChat()" style="padding:5px 12px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.25);border-radius:16px;color:#4ecdc4;font-size:0.68em;cursor:pointer;">💾 ' + (isES?'Guardar':'Save') + '</button>' +
-            '<button onclick="_tutorShareChat()" style="padding:5px 12px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.25);border-radius:16px;color:#667eea;font-size:0.68em;cursor:pointer;">📤 ' + (isES?'Compartir':'Share') + '</button>' +
-            '<button onclick="_tutorClearChat()" style="padding:5px 12px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.25);border-radius:16px;color:#ff6b6b;font-size:0.68em;cursor:pointer;">🗑️ ' + (isES?'Borrar':'Delete') + '</button>' +
             '</div>' +
             '</div>';
 
@@ -27315,6 +27344,14 @@ function goToCurrentCycle() {
         var _wkShown = JSON.parse(localStorage.getItem(WK_KEY) || '{}');
         var _wkActive = false;
 
+        // Reset walkthroughs on version change (v622)
+        var _wkLastVer = localStorage.getItem(WK_KEY + '_ver');
+        if (_wkLastVer !== APP_VERSION) {
+            localStorage.removeItem(WK_KEY);
+            _wkShown = {};
+            localStorage.setItem(WK_KEY + '_ver', APP_VERSION);
+        }
+
         function _saveWk() { localStorage.setItem(WK_KEY, JSON.stringify(_wkShown)); }
 
         // ── Walkthrough definitions per screen ──
@@ -27621,6 +27658,18 @@ function goToCurrentCycle() {
                 // Single element spotlight (original behavior)
                 var el = document.querySelector(step.sel);
                 if (!el) { _showStep(idx + 1); return; }
+
+                // v622: Activate tab if this is a mode button
+                var _modeActivateMap = {
+                    '#lunarModeBtn': 'switchToLunarMode',
+                    '#solarModeBtn': 'switchToSolarMode',
+                    '#gregorianModeBtn': 'switchToGregorianMode',
+                    '#personalModeBtn': 'switchToPersonalMode',
+                    '#socialModeBtn': 'switchToSocialMode'
+                };
+                if (_modeActivateMap[step.sel] && typeof window[_modeActivateMap[step.sel]] === 'function') {
+                    window[_modeActivateMap[step.sel]]();
+                }
 
                 // Scroll element into view
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -34126,7 +34175,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v621';
+var APP_VERSION = 'v624';
 var _pendingSW = null;
 
 // What's New removed per user request
@@ -34891,12 +34940,7 @@ DOMTokenList.prototype.add = function() {
                 <div style="font-size:0.7em;color:rgba(255,255,255,0.4);" id="hoyInterpDate"></div>
             </div>
         </div>
-        <div style="display:flex;gap:8px;">
-            <button onclick="shareHoyInterp()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);padding:6px 10px;font-size:0.75em;cursor:pointer;" title="Compartir">📤</button>
-            <button onclick="saveHoyInterp()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);padding:6px 10px;font-size:0.75em;cursor:pointer;" title="Guardar">💾</button>
-            <button onclick="clearHoyInterp()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);padding:6px 10px;font-size:0.75em;cursor:pointer;" title="Borrar chat">🗑️</button>
-            <button onclick="closeHoyInterp()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);padding:6px 10px;font-size:0.85em;cursor:pointer;">✕</button>
-        </div>
+        <button onclick="closeHoyInterp()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);padding:6px 10px;font-size:0.85em;cursor:pointer;">✕</button>
     </div>
     <div class="hoy-interp-messages" id="hoyInterpMessages"></div>
     <div style="padding:10px 16px;border-top:1px solid rgba(201,168,64,0.15);background:rgba(5,5,25,0.95);">
@@ -34904,9 +34948,13 @@ DOMTokenList.prototype.add = function() {
             <textarea id="hoyInterpInput" rows="1" placeholder="Pregunta sobre tu día..." data-i18n-ph="askAboutDay" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.2);border-radius:10px;color:white;padding:10px 12px;font-size:0.85em;resize:none;outline:none;font-family:inherit;" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHoyInterpMessage();}"></textarea>
             <button onclick="sendHoyInterpMessage()" style="background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.4);border-radius:10px;color:#ffd54f;padding:8px 14px;font-size:1em;cursor:pointer;flex-shrink:0;">➤</button>
         </div>
-        <div style="display:flex;justify-content:center;gap:10px;margin-top:6px;">
-            <button id="hoyVoiceBtn" onclick="startGenericVoice('hoyInterpInput','sendHoyInterpMessage()','hoyVoiceBtn')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;flex-shrink:0;" title="Voz" data-i18n-title="voice">🎙️</button>
-            <button onclick="readAloudLastMsg('hoyInterpMessages')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1.1em;cursor:pointer;flex-shrink:0;line-height:1;" title="Leer en voz alta" data-i18n-title="readAloud">🔊</button>
+        <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:6px;">
+            <button id="hoyVoiceBtn" onclick="startGenericVoice('hoyInterpInput','sendHoyInterpMessage()','hoyVoiceBtn')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1em;cursor:pointer;flex-shrink:0;" title="Voz" data-i18n-title="voice">🎙️</button>
+            <button onclick="readAloudLastMsg('hoyInterpMessages')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1em;cursor:pointer;flex-shrink:0;line-height:1;" title="Leer en voz alta" data-i18n-title="readAloud">🔊</button>
+            <div style="width:1px;height:24px;background:rgba(255,255,255,0.1);"></div>
+            <button onclick="saveHoyInterp()" style="width:36px;height:36px;border-radius:50%;background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.2);color:#4ecdc4;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="Guardar">💾</button>
+            <button onclick="shareHoyInterp()" style="width:36px;height:36px;border-radius:50%;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);color:#667eea;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="Compartir">📤</button>
+            <button onclick="clearHoyInterp()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);color:#ff6b6b;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="Borrar chat">🗑️</button>
         </div>
     </div>
 </div>
@@ -34921,10 +34969,7 @@ DOMTokenList.prototype.add = function() {
                 <div style="font-size:0.7em;color:rgba(255,255,255,0.4);" id="aiChatSubtitle"></div>
             </div>
         </div>
-        <div style="display:flex;gap:8px;">
-            <button onclick="clearAIChat()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);padding:6px 10px;font-size:0.75em;cursor:pointer;">🗑️</button>
-            <button onclick="closeAIChat()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);padding:6px 10px;font-size:0.85em;cursor:pointer;">✕</button>
-        </div>
+        <button onclick="closeAIChat()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);padding:6px 10px;font-size:0.85em;cursor:pointer;">✕</button>
     </div>
     <div class="ai-chat-messages" id="aiChatMessages"></div>
     <div id="aiQuickActions" style="display:none;padding:8px 16px;background:rgba(5,7,30,0.98);border-top:1px solid rgba(102,126,234,0.15);flex-shrink:0;"></div>
@@ -34933,10 +34978,14 @@ DOMTokenList.prototype.add = function() {
             <textarea id="aiChatInput" rows="1" placeholder="Escribe aquí..." data-i18n-ph="typeHere" style="text-align:center;" oninput="this.style.textAlign=this.value?'left':'center';this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';" onfocus="if(!this.value)this.style.textAlign='left';" onblur="if(!this.value)this.style.textAlign='center';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}"></textarea>
             <button onclick="sendAIMessage()">➤</button>
         </div>
-        <div style="display:flex;justify-content:center;gap:10px;">
-            <button id="aiVoiceBtn" onclick="toggleAIChatVoice()" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.2em;cursor:pointer;flex-shrink:0;" title="Voice input">🎙️</button>
-            <button onclick="readAloudLastMsg('aiChatMessages')" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1.2em;cursor:pointer;flex-shrink:0;line-height:1;" title="Leer en voz alta" data-i18n-title="readAloud">🔊</button>
-            <button id="aiTTSToggle" onclick="toggleTTS()" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;flex-shrink:0;" title="Voice responses">🔇</button>
+        <div style="display:flex;justify-content:center;align-items:center;gap:8px;">
+            <button id="aiVoiceBtn" onclick="toggleAIChatVoice()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1em;cursor:pointer;flex-shrink:0;" title="Voice input">🎙️</button>
+            <button onclick="readAloudLastMsg('aiChatMessages')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1em;cursor:pointer;flex-shrink:0;line-height:1;" title="Leer en voz alta" data-i18n-title="readAloud">🔊</button>
+            <button id="aiTTSToggle" onclick="toggleTTS()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1em;cursor:pointer;flex-shrink:0;" title="Voice responses">🔇</button>
+            <div style="width:1px;height:24px;background:rgba(255,255,255,0.1);"></div>
+            <button onclick="saveAIChat()" style="width:36px;height:36px;border-radius:50%;background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.2);color:#4ecdc4;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="Guardar">💾</button>
+            <button onclick="shareAIChat()" style="width:36px;height:36px;border-radius:50%;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);color:#667eea;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="Compartir">📤</button>
+            <button onclick="clearAIChat()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);color:#ff6b6b;font-size:0.9em;cursor:pointer;flex-shrink:0;" title="Borrar">🗑️</button>
         </div>
     </div>
 </div>
@@ -35886,6 +35935,32 @@ function clearAIChat() {
     localStorage.removeItem('aiChatHTML');
     document.getElementById('aiChatMessages').innerHTML = '';
     showAIWelcome();
+}
+
+// v624: Save AI chat to saved readings
+function saveAIChat() {
+    var isES = currentLang === 'es';
+    var area = document.getElementById('aiChatMessages');
+    if (!area || !area.textContent.trim()) return;
+    var text = area.innerText || area.textContent;
+    var title = (isES ? 'Chat FieldWeaver — ' : 'FieldWeaver Chat — ') + new Date().toLocaleDateString(isES?'es':'en',{day:'numeric',month:'short',year:'numeric'});
+    var saved = JSON.parse(localStorage.getItem('savedReadings') || '[]');
+    saved.push({title:title,text:text,date:new Date().toISOString(),type:'ai-chat'});
+    localStorage.setItem('savedReadings', JSON.stringify(saved));
+    alert(isES ? '✅ Chat guardado en Lecturas Guardadas' : '✅ Chat saved to Saved Readings');
+}
+
+// v624: Share AI chat
+function shareAIChat() {
+    var isES = currentLang === 'es';
+    var area = document.getElementById('aiChatMessages');
+    if (!area || !area.textContent.trim()) return;
+    var text = '✨ FieldWeaver Chat\n\n' + (area.innerText || area.textContent);
+    if (navigator.share) {
+        navigator.share({title:'FieldWeaver Chat',text:text}).catch(function(){});
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function(){ alert(isES?'📋 Copiado':'📋 Copied'); });
+    }
 }
 
 function aiQuickAction(id) {
