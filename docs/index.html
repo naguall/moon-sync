@@ -9210,7 +9210,25 @@ window._toggleSolfFreq = function(hz, on) {
     if (!prefs[key]) prefs[key] = { on: false, vol: 50 };
     prefs[key].on = on;
     localStorage.setItem('dreamAlarmSolfeggio', JSON.stringify(prefs));
-    openPreferencesModal();
+    // Update row visuals in-place (don't re-render modal)
+    var cb = event && event.target ? event.target : null;
+    if (cb) {
+        var row = cb.closest('div[style*="display:flex"]');
+        if (row) {
+            row.style.background = 'rgba(255,255,255,' + (on ? '0.04' : '0.01') + ')';
+            row.style.borderColor = 'rgba(255,255,255,' + (on ? '0.1' : '0.04') + ')';
+            var nameEl = row.querySelector('div[style*="flex:1"]');
+            if (nameEl) nameEl.style.color = 'rgba(255,255,255,' + (on ? '0.6' : '0.3') + ')';
+            var slider = row.querySelector('input[type="range"]');
+            if (slider) slider.style.opacity = on ? '1' : '0.3';
+            var toggle = row.querySelector('span[style*="position:absolute"]');
+            if (toggle) {
+                toggle.style.background = on ? 'rgba(138,43,226,0.5)' : 'rgba(255,255,255,0.12)';
+                var dot = toggle.querySelector('span');
+                if (dot) dot.style.left = on ? '17px' : '2px';
+            }
+        }
+    }
 };
 window._setSolfVol = function(hz, val) {
     var prefs = _getSolfeggioPrefs();
@@ -9227,7 +9245,7 @@ window._testSolfeggioSound = function() {
         var prefs = _getSolfeggioPrefs();
         var activeFreqs = [];
         for (var k in prefs) {
-            if (prefs[k].on) activeFreqs.push({ hz: parseInt(k), vol: prefs[k].vol / 100 });
+            if (prefs[k].on) activeFreqs.push({ hz: parseInt(k), vol: prefs[k].vol / 100 * 0.25 });
         }
         if (activeFreqs.length === 0) { alert(currentLang==='es'?'Activa al menos una frecuencia':'Enable at least one frequency'); return; }
         var ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -9415,10 +9433,10 @@ function playDreamAlarmSound() {
         var prefs = _getSolfeggioPrefs();
         var activeFreqs = [];
         for (var k in prefs) {
-            if (prefs[k].on) activeFreqs.push({ hz: parseInt(k), vol: prefs[k].vol / 100 });
+            if (prefs[k].on) activeFreqs.push({ hz: parseInt(k), vol: prefs[k].vol / 100 * 0.25 });
         }
         // Fallback if nothing selected
-        if (activeFreqs.length === 0) activeFreqs = [{ hz: 396, vol: 0.8 }, { hz: 528, vol: 0.5 }];
+        if (activeFreqs.length === 0) activeFreqs = [{ hz: 396, vol: 0.2 }, { hz: 528, vol: 0.14 }];
 
         var ctx = new (window.AudioContext || window.webkitAudioContext)();
         var duration = 60; // 60 seconds
@@ -18828,7 +18846,7 @@ function switchToPersonalMode() {
     const nav = document.querySelector('.navigation');
     if (nav) nav.style.display = 'none';
 
-    document.getElementById('calendarTitle').innerHTML = currentLang === 'es' ? 'Astro' : 'Astro';
+    document.getElementById('calendarTitle').innerHTML = currentLang === 'es' ? 'Astrológico' : 'Astrology';
 
     updateModeButtons();
 
@@ -27120,10 +27138,10 @@ function goToCurrentCycle() {
             if (typeof _startButtonWalkthrough === 'function') _startButtonWalkthrough(mode);
         }, 300);
     };
-    window.showOnboardingWelcome = function() {}; // no-op stub
+    var ONBOARDING_KEY = 'astroCurrents_onboarding';
+    var TIPS_KEY = 'astroCurrents_tips';
 
-    // OLD CODE BLOCK START — removed in v586
-    /* OLD ONBOARDING CODE REMOVED v586 — START
+    function _getSlides() {
         var L = currentLang === 'es';
         return [
             {
@@ -27448,6 +27466,8 @@ function goToCurrentCycle() {
         };
     }
 
+    _enableContextualTips();
+
     // ── Reset tutorial (for preferences button) ──
     window.resetOnboardingTutorial = function() {
         localStorage.removeItem(ONBOARDING_KEY);
@@ -27456,16 +27476,23 @@ function goToCurrentCycle() {
         localStorage.removeItem(TIPS_KEY);
         if (typeof window._resetTabGuides === 'function') window._resetTabGuides();
         localStorage.removeItem('astroCurrents_btnWalkthrough');
+        if (typeof _resetButtonWalkthroughs === 'function') _resetButtonWalkthroughs();
         // Close preferences
         var prefModal = document.getElementById('preferencesModal');
         if (prefModal) prefModal.classList.remove('show');
-        // Start fresh
+        // Start fresh — slides first, then spotlight walkthrough
         setTimeout(function() { showOnboardingWelcome(true); }, 300);
     };
 
     // ── Auto-launch on every app open (unless user checked "don't show again") ──
+    // Clear hideForever if app version changed (so slides show after updates)
+    var _lastOnbVer = localStorage.getItem(ONBOARDING_KEY + '_ver');
+    if (_lastOnbVer !== APP_VERSION) {
+        localStorage.removeItem(ONBOARDING_KEY + '_hideForever');
+        localStorage.setItem(ONBOARDING_KEY + '_ver', APP_VERSION);
+    }
     setTimeout(function() { showOnboardingWelcome(); }, 800);
-    OLD ONBOARDING CODE REMOVED v586 — END */
+    // Onboarding slides restored (v616)
 
     // CSS animation keyframes
     var styleEl = document.createElement('style');
@@ -34292,7 +34319,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v613';
+var APP_VERSION = 'v617';
 var _pendingSW = null;
 
 // What's New removed per user request
