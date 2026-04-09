@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>⚡ AstroField - Calendario Lunar</title>
+    <title>⚡ AstroField - Lunar Calendar</title>
 
     <!-- EMERGENCY: Force SW update on first load of new version -->
     <script>
@@ -1204,7 +1204,7 @@
     <div id="majorAspectModal" class="modal" onclick="if(event.target===this)closeMajorAspectModal()"
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h2 id="majorAspectModalTitle">Configuración Planetaria</h2>
+                <h2 id="majorAspectModalTitle">Planetary Configuration</h2>
                 <span class="close" onclick="closeMajorAspectModal()">&times;</span>
             </div>
             <div id="majorAspectModalBody" style="padding: 20px;">
@@ -1219,7 +1219,7 @@
     <div id="savedReadingsModal" class="modal" onclick="if(event.target===this)closeSavedReadingsModal()">
         <div class="modal-content" style="max-width: 750px; max-height: 90vh; overflow-y: auto;">
             <div class="modal-header">
-                <h2 id="savedReadingsTitle">📚 Interpretaciones y Diarios</h2>
+                <h2 id="savedReadingsTitle">📚 Readings & Journals</h2>
                 <span class="close" onclick="closeSavedReadingsModal()">&times;</span>
             </div>
             <div id="savedReadingsBody" style="padding: 20px;">
@@ -1286,26 +1286,25 @@ const planetSymbols = {
     vesta: '⚶'
 };
 
-const planetNames = {
-    sun: 'Sol',
-    mercury: 'Mercurio',
-    venus: 'Venus',
-    mars: 'Marte',
-    jupiter: 'Júpiter',
-    saturn: 'Saturno',
-    uranus: 'Urano',
-    neptune: 'Neptuno',
-    pluto: 'Plutón',
-    chiron: 'Quirón',
-    lilith: 'Lilith',
-    northnode: 'Nodo Norte',
-    partOfFortune: 'Parte de la Fortuna',
-    vertex: 'Vértice',
-    ceres: 'Ceres',
-    pallas: 'Pallas',
-    juno: 'Juno',
-    vesta: 'Vesta'
+const _planetNamesES = {
+    sun: 'Sol', mercury: 'Mercurio', venus: 'Venus', mars: 'Marte',
+    jupiter: 'Júpiter', saturn: 'Saturno', uranus: 'Urano', neptune: 'Neptuno',
+    pluto: 'Plutón', chiron: 'Quirón', lilith: 'Lilith', northnode: 'Nodo Norte',
+    partOfFortune: 'Parte de la Fortuna', vertex: 'Vértice',
+    ceres: 'Ceres', pallas: 'Pallas', juno: 'Juno', vesta: 'Vesta'
 };
+const _planetNamesEN = {
+    sun: 'Sun', mercury: 'Mercury', venus: 'Venus', mars: 'Mars',
+    jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune',
+    pluto: 'Pluto', chiron: 'Chiron', lilith: 'Lilith', northnode: 'North Node',
+    partOfFortune: 'Part of Fortune', vertex: 'Vertex',
+    ceres: 'Ceres', pallas: 'Pallas', juno: 'Juno', vesta: 'Vesta'
+};
+const planetNames = new Proxy({}, {
+    get: function(t, k) {
+        return (typeof currentLang !== 'undefined' && currentLang === 'en' ? _planetNamesEN[k] : _planetNamesES[k]) || k;
+    }
+});
 
 const aspectDescriptions = {
     es: {
@@ -4554,8 +4553,37 @@ function updateUILanguage() {
     }
 }
 
+function _translateStaticElements() {
+    var L = currentLang === 'es';
+    // Page title
+    document.title = L ? '⚡ AstroField - Calendario Lunar' : '⚡ AstroField - Lunar Calendar';
+    // Location modal
+    var locBtn = document.getElementById('locMapConfirm');
+    if (locBtn) locBtn.textContent = L ? 'Seleccionar este punto' : 'Select this point';
+    var citySearch = document.getElementById('citySearch');
+    if (citySearch) citySearch.placeholder = L ? 'Buscar cualquier lugar del mundo...' : 'Search any place in the world...';
+    // Hoy Interp modal
+    var hoyVoice = document.getElementById('hoyVoiceBtn');
+    if (hoyVoice) hoyVoice.title = L ? 'Voz' : 'Voice';
+    var hoyInput = document.getElementById('hoyInterpInput');
+    if (hoyInput) hoyInput.placeholder = L ? 'Pregunta sobre tu día...' : 'Ask about your day...';
+    // AI Chat modal
+    var aiInput = document.getElementById('aiChatInput');
+    if (aiInput) aiInput.placeholder = L ? 'Escribe aquí...' : 'Type here...';
+    // Read aloud buttons
+    document.querySelectorAll('[data-i18n-title="readAloud"]').forEach(function(el) { el.title = L ? 'Leer en voz alta' : 'Read aloud'; });
+    // Modal initial headers
+    var majTitle = document.getElementById('majorAspectModalTitle');
+    if (majTitle && (majTitle.textContent === 'Configuración Planetaria' || majTitle.textContent === 'Planetary Configuration'))
+        majTitle.textContent = L ? 'Configuración Planetaria' : 'Planetary Configuration';
+    var savedTitle = document.getElementById('savedReadingsTitle');
+    if (savedTitle && (savedTitle.textContent === '📚 Interpretaciones y Diarios' || savedTitle.textContent === '📚 Readings & Journals'))
+        savedTitle.textContent = L ? '📚 Interpretaciones y Diarios' : '📚 Readings & Journals';
+}
+
 function updateModalTranslations() {
     var L = currentLang === 'es';
+    _translateStaticElements();
     // Update Day Options Modal (dropdown list format)
     var dayTitle = document.getElementById('dayOptionsTitle');
     if (dayTitle) dayTitle.textContent = L ? 'Opciones del Día' : 'Day Options';
@@ -11980,10 +12008,10 @@ function showMajorAspectModal(type, planetsStr, meaning, impact, dateTime) {
     const planets = planetsStr.split('|');
     
     const symbols = {
-        'T-Square': { symbol: '⊤', color: '#ff6b6b', name: 'T-Cuadrada' },
-        'Kite': { symbol: '🪁', color: '#9b59b6', name: 'Cometa' },
-        'Mystic Rectangle': { symbol: '▭', color: '#4ecdc4', name: 'Rectángulo Místico' },
-        'Grand Cross': { symbol: '✚', color: '#e74c3c', name: 'Gran Cruz' }
+        'T-Square': { symbol: '⊤', color: '#ff6b6b', name: currentLang==='es'?'T-Cuadrada':'T-Square' },
+        'Kite': { symbol: '🪁', color: '#9b59b6', name: currentLang==='es'?'Cometa':'Kite' },
+        'Mystic Rectangle': { symbol: '▭', color: '#4ecdc4', name: currentLang==='es'?'Rectángulo Místico':'Mystic Rectangle' },
+        'Grand Cross': { symbol: '✚', color: '#e74c3c', name: currentLang==='es'?'Gran Cruz':'Grand Cross' }
     };
     
     const info = symbols[type] || { symbol: '◆', color: '#f39c12', name: type };
@@ -12135,7 +12163,7 @@ function showMajorAspectsModal() {
     if (majorAspects.tSquares && majorAspects.tSquares.length > 0) {
         html += '<div style="margin-bottom: 20px;"><h3 style="color: #ff6b6b; border-bottom: 2px solid #ff6b6b; padding-bottom: 8px;">⊥ T-Squares</h3>';
         majorAspects.tSquares.forEach(t => {
-            var clickTxt = ('T-Cuadrada: ' + t.apex + (currentLang==='es'?' opuesto a ':' opposed to ') + t.base.join(', ') + ' (' + t.dates + ')').replace(/'/g, "\\'");
+            var clickTxt = ((currentLang==='es'?'T-Cuadrada: ':'T-Square: ') + t.apex + (currentLang==='es'?' opuesto a ':' opposed to ') + t.base.join(', ') + ' (' + t.dates + ')').replace(/'/g, "\\'");
             var tPast = false; try { var tParts = t.dates.split('-'); tPast = isPastDate(tParts[tParts.length-1].trim()); } catch(e){}
             html += `<div onclick="showBannerAspectDetail('${clickTxt}')" style="background: rgba(255,107,107,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #ff6b6b; cursor:pointer;${tPast?'opacity:0.45;':''}">`;
             html += `<strong style="color: #ff6b6b;">${t.apex}</strong> ${currentLang==='es'?'opuesto a':'opposed to'} ${t.base.join(', ')}<br>`;
@@ -12231,7 +12259,11 @@ function getPlanetSymbol(planetOrSign) {
         'Sagitario': '♐',
         'Capricornio': '♑',
         'Acuario': '♒',
-        'Piscis': '♓'
+        'Piscis': '♓',
+        'Sun': '☉', 'Mercury': '☿', 'Mars': '♂', 'Jupiter': '♃', 'Saturn': '♄',
+        'Uranus': '♅', 'Neptune': '♆', 'Pluto': '♇',
+        'Taurus': '♉', 'Gemini': '♊', 'Cancer': '♋', 'Scorpio': '♏',
+        'Sagittarius': '♐', 'Capricorn': '♑', 'Aquarius': '♒'
     };
     return symbols[planetOrSign] || planetOrSign;
 }
@@ -12271,7 +12303,7 @@ function showMajorAspectsModal() {
     if (majorAspects.tSquares && majorAspects.tSquares.length > 0) {
         html += '<div style="margin-bottom: 20px;"><h3 style="color: #ff6b6b; border-bottom: 2px solid #ff6b6b; padding-bottom: 8px;">⊥ T-Squares</h3>';
         majorAspects.tSquares.forEach(t => {
-            var clickTxt = ('T-Cuadrada: ' + t.apex + (currentLang==='es'?' opuesto a ':' opposed to ') + t.base.join(', ') + ' (' + t.dates + ')').replace(/'/g, "\\'");
+            var clickTxt = ((currentLang==='es'?'T-Cuadrada: ':'T-Square: ') + t.apex + (currentLang==='es'?' opuesto a ':' opposed to ') + t.base.join(', ') + ' (' + t.dates + ')').replace(/'/g, "\\'");
             var tPast = false; try { var tParts = t.dates.split('-'); tPast = isPastDate(tParts[tParts.length-1].trim()); } catch(e){}
             html += `<div onclick="showBannerAspectDetail('${clickTxt}')" style="background: rgba(255,107,107,0.15); padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #ff6b6b; cursor:pointer;${tPast?'opacity:0.45;':''}">`;
             html += `<strong style="color: #ff6b6b;">${t.apex}</strong> ${currentLang==='es'?'opuesto a':'opposed to'} ${t.base.join(', ')}<br>`;
@@ -12521,7 +12553,11 @@ function getPlanetSymbol(planetOrSign) {
         'Sagitario': '♐',
         'Capricornio': '♑',
         'Acuario': '♒',
-        'Piscis': '♓'
+        'Piscis': '♓',
+        'Sun': '☉', 'Mercury': '☿', 'Mars': '♂', 'Jupiter': '♃', 'Saturn': '♄',
+        'Uranus': '♅', 'Neptune': '♆', 'Pluto': '♇',
+        'Taurus': '♉', 'Gemini': '♊', 'Cancer': '♋', 'Scorpio': '♏',
+        'Sagittarius': '♐', 'Capricorn': '♑', 'Aquarius': '♒'
     };
     return symbols[planetOrSign] || planetOrSign;
 }
@@ -12551,47 +12587,49 @@ function getPlanetSymbol(planetOrSign) {
         'Sagitario': '♐',
         'Capricornio': '♑',
         'Acuario': '♒',
-        'Piscis': '♓'
+        'Piscis': '♓',
+        'Sun': '☉', 'Mercury': '☿', 'Mars': '♂', 'Jupiter': '♃', 'Saturn': '♄',
+        'Uranus': '♅', 'Neptune': '♆', 'Pluto': '♇',
+        'Taurus': '♉', 'Gemini': '♊', 'Cancer': '♋', 'Scorpio': '♏',
+        'Sagittarius': '♐', 'Capricorn': '♑', 'Aquarius': '♒'
     };
     return symbols[planetOrSign] || planetOrSign;
 }
 
 function getAspectSymbol(type) {
     const symbols = {
-        'Conjunción': '☌',
-        'Sextil': '⚹',
-        'Cuadratura': '□',
-        'Trígono': '△',
-        'Oposición': '☍',
-        'Retrógrado INICIA': 'R',
-        'Directo': 'D',
-        'Entra en Leo': '→',
-        'Entra en Aries': '→',
-        'Entra en Géminis': '→',
-        'Equinoccio Primavera': '⚖',
-        'Solsticio Verano': '☀',
-        'Equinoccio Otoño': '⚖',
-        'Solsticio Invierno': '❄'
+        'Conjunción': '☌', 'Conjunction': '☌',
+        'Sextil': '⚹', 'Sextile': '⚹',
+        'Cuadratura': '□', 'Square': '□',
+        'Trígono': '△', 'Trine': '△',
+        'Oposición': '☍', 'Opposition': '☍',
+        'Retrógrado INICIA': 'R', 'Retrograde STARTS': 'R',
+        'Directo': 'D', 'Direct': 'D',
+        'Equinoccio Primavera': '⚖', 'Spring Equinox': '⚖',
+        'Solsticio Verano': '☀', 'Summer Solstice': '☀',
+        'Equinoccio Otoño': '⚖', 'Autumn Equinox': '⚖',
+        'Solsticio Invierno': '❄', 'Winter Solstice': '❄'
     };
+    // Also handle "Entra en X" / "Enters X" patterns
+    if (type && (type.startsWith('Entra en') || type.startsWith('Enters'))) return '→';
     return symbols[type] || type;
 }
 
 function getAspectColor(type) {
+    // Handle "Entra en X" / "Enters X" patterns
+    if (type && (type.startsWith('Entra en') || type.startsWith('Enters'))) return '#9b59b6';
     const colors = {
-        'Conjunción': '#ff6b6b',
-        'Sextil': '#4ecdc4',
+        'Conjunción': '#ff6b6b', 'Conjunction': '#ff6b6b',
+        'Sextil': '#4ecdc4', 'Sextile': '#4ecdc4',
         'Cuadratura': '#ff9f43',
         'Trígono': '#5f27cd',
-        'Oposición': '#ee5a6f',
-        'Retrógrado INICIA': '#ff6b6b',
-        'Directo': '#4ecdc4',
-        'Entra en Leo': '#9b59b6',
-        'Entra en Aries': '#ff6b6b',
-        'Entra en Géminis': '#1abc9c',
-        'Equinoccio Primavera': '#FFD700',
-        'Solsticio Verano': '#FFD700',
-        'Equinoccio Otoño': '#FFD700',
-        'Solsticio Invierno': '#FFD700'
+        'Oposición': '#ee5a6f', 'Opposition': '#ee5a6f',
+        'Retrógrado INICIA': '#ff6b6b', 'Retrograde STARTS': '#ff6b6b',
+        'Directo': '#4ecdc4', 'Direct': '#4ecdc4',
+        'Equinoccio Primavera': '#FFD700', 'Spring Equinox': '#FFD700',
+        'Solsticio Verano': '#FFD700', 'Summer Solstice': '#FFD700',
+        'Equinoccio Otoño': '#FFD700', 'Autumn Equinox': '#FFD700',
+        'Solsticio Invierno': '#FFD700', 'Winter Solstice': '#FFD700'
     };
     return colors[type] || '#a8b2d1';
 }
@@ -14609,7 +14647,7 @@ function _renderMajor2026View(es) {
                 dateLabel = item.startDate + ' - ' + item.endDate;
                 itemPast = isPastDate(item.endDate);
             } else if (cat.key === 'tSquares') {
-                clickTxt = ('T-Cuadrada: ' + item.apex + ' vs ' + item.base.join(', ') + ' (' + item.dates + ')').replace(/'/g, "\\'");
+                clickTxt = ((es?'T-Cuadrada: ':'T-Square: ') + item.apex + ' vs ' + item.base.join(', ') + ' (' + item.dates + ')').replace(/'/g, "\\'");
                 label = item.apex;
                 sublabel = (es ? 'vs ' : 'vs ') + item.base.join(', ');
                 dateLabel = item.dates;
@@ -24028,7 +24066,7 @@ function generateSolarWeeks(sign) {
                                 return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${scTxt}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.7em;text-align:right;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
                             }).join('')}
                             ${majorAspect ? (() => { const maTxt = (majorAspect.type + ' — ' + majorAspect.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${maTxt}')" style="color: ${majorAspect.type === 'T-Square' ? '#ff6b6b' : majorAspect.type === 'Kite' ? '#9b59b6' : '#4ecdc4'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.5em;" title="${majorAspect.type}">${majorAspect.type === 'T-Square' ? '⊥' : majorAspect.type === 'Kite' ? '🪁' : '▭'}</div>`; })() : ''}
-                            ${stellium ? (() => { const stTxt = ('Stellium en ' + stellium.sign + ' — ' + stellium.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${stTxt}')" style="font-size:1.2em;color:#FFD700;font-weight:bold;cursor:pointer;line-height:1;text-align:right;" title="Stellium ${stellium.sign}">★</div>`; })() : ''}
+                            ${stellium ? (() => { const stTxt = ((currentLang==='es'?'Stellium en ':'Stellium in ') + stellium.sign + ' — ' + stellium.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${stTxt}')" style="font-size:1.2em;color:#FFD700;font-weight:bold;cursor:pointer;line-height:1;text-align:right;" title="Stellium ${stellium.sign}">★</div>`; })() : ''}
                             ${dayPatterns.filter(p => p.type !== 'stellium' || !stellium).map(p => { const pTxt = (p.name + ' — ' + p.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${pTxt}')" style="color:${p.color};font-weight:bold;cursor:pointer;line-height:1;font-size:0.8em;text-align:right;" title="${p.name}">${p.icon}</div>`; }).join('')}
                         </div>
                         ` : ''}
@@ -25766,12 +25804,12 @@ function renderCalendar() {
                                 return `<div onclick="showBannerAspectDetail('${stText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(201,168,64,0.15);border-radius:4px;border-left:2px solid #c9a840;text-align:center;width:100%;cursor:pointer;">✨ Stellium ${st.sign||''}</div>`;
                             } else if (event.type === 'signChange') {
                                 const ch = event.data;
-                                const chText = (tp(ch.planet) + ' entra en ' + ts(ch.toSign)).replace(/'/g, "\\'");
+                                const chText = (tp(ch.planet) + (currentLang==='es'?' entra en ':' enters ') + ts(ch.toSign)).replace(/'/g, "\\'");
                                 return `<div onclick="showBannerAspectDetail('${chText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid ${ch.color};"><span style="color:#e8eaf6">${tp(ch.planet)} → ${ts(ch.toSign)}${ch.time?' <span style="font-weight:bold;color:#c9a840">'+ch.time+'</span>':''}</span></div>`;
                             } else if (event.type === 'retrograde') {
                                 const ret = event.data;
-                                const retSignStr = ret.sign ? ' en ' + ret.sign : '';
-                                const retText = (tp(ret.planet) + (ret.isStart ? ' entra en retrogradación' : ' se pone directo') + retSignStr).replace(/'/g, "\\'");
+                                const retSignStr = ret.sign ? (currentLang==='es'?' en ':' in ') + ts(ret.sign) : '';
+                                const retText = (tp(ret.planet) + (ret.isStart ? (currentLang==='es'?' entra en retrogradación':' goes retrograde') : (currentLang==='es'?' se pone directo':' turns direct')) + retSignStr).replace(/'/g, "\\'");
                                 return `<div onclick="showBannerAspectDetail('${retText}')" style="font-size:0.65em;padding:2px 4px;background:rgba(0,0,0,0.25);border-radius:4px;cursor:pointer;text-align:center;width:100%;border-left:2px solid #ff6b6b;"><span style="color:#e8eaf6">${tp(ret.planet)} ${ret.isStart?'℞':'D'} ${ret.sign||''}</span></div>`;
                             } else if (event.type === 'interPlanetaryAspect') {
                                 const asp = event.data;
@@ -25912,7 +25950,7 @@ function renderCalendar() {
                                 return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${scTxt}')" style="color:#7ec8ff;font-weight:bold;cursor:pointer;line-height:1.1;font-size:0.85em;white-space:nowrap;text-align:right;" title="${sc.planet} → ${sc.toSign}">${planetInit}→${signInit}</div>`;
                             }).join('')}
                             ${majorAspect ? (() => { const maTxt = (majorAspect.type + ' — ' + majorAspect.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${maTxt}')" style="color: ${majorAspect.type === 'T-Square' ? '#ff6b6b' : majorAspect.type === 'Kite' ? '#9b59b6' : '#4ecdc4'}; font-weight: bold; cursor: pointer; line-height: 1; font-size: 1.5em;" title="${majorAspect.type}">${majorAspect.type === 'T-Square' ? '⊥' : majorAspect.type === 'Kite' ? '🪁' : '▭'}</div>`; })() : ''}
-                            ${stellium ? (() => { const stTxt = ('Stellium en ' + stellium.sign + ' — ' + stellium.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${stTxt}')" style="font-size:1.2em;color:#FFD700;font-weight:bold;cursor:pointer;line-height:1;text-align:right;" title="Stellium ${stellium.sign}">★</div>`; })() : ''}
+                            ${stellium ? (() => { const stTxt = ((currentLang==='es'?'Stellium en ':'Stellium in ') + stellium.sign + ' — ' + stellium.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${stTxt}')" style="font-size:1.2em;color:#FFD700;font-weight:bold;cursor:pointer;line-height:1;text-align:right;" title="Stellium ${stellium.sign}">★</div>`; })() : ''}
                             ${dayPatterns.filter(p => p.type !== 'stellium' || !stellium).map(p => { const pTxt = (p.name + ' — ' + p.planets.join(', ')).replace(/'/g, "\\'"); return `<div onclick="event.stopPropagation(); showBannerAspectDetail('${pTxt}')" style="color:${p.color};font-weight:bold;cursor:pointer;line-height:1;font-size:0.8em;text-align:right;" title="${p.name}">${p.icon}</div>`; }).join('')}
                         </div>
                         ` : ''}
@@ -34254,7 +34292,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v611';
+var APP_VERSION = 'v612';
 var _pendingSW = null;
 
 // What's New removed per user request
@@ -34910,11 +34948,11 @@ window.submitMapaQuiz = function() {
                 <div id="locMapContainer" style="width:100%;height:200px;border-radius:8px;overflow:hidden;margin-bottom:10px;border:1px solid rgba(74,158,255,0.25);position:relative;">
                     <div id="locMap" style="width:100%;height:100%;"></div>
                     <div id="locMapPin" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);z-index:999;font-size:24px;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">📍</div>
-                    <button id="locMapConfirm" onclick="confirmMapLocation()" style="display:none;position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:999;padding:6px 16px;background:rgba(78,205,196,0.9);border:none;border-radius:6px;color:#fff;font-size:0.82em;font-weight:600;cursor:pointer;">Seleccionar este punto</button>
+                    <button id="locMapConfirm" onclick="confirmMapLocation()" style="display:none;position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:999;padding:6px 16px;background:rgba(78,205,196,0.9);border:none;border-radius:6px;color:#fff;font-size:0.82em;font-weight:600;cursor:pointer;" data-i18n="selectPoint">Seleccionar este punto</button>
                 </div>
                 <!-- Search -->
                 <div style="margin-bottom:8px;position:relative;">
-                    <input id="citySearch" type="text" placeholder="Buscar cualquier lugar del mundo..." oninput="filterCities(this.value)"
+                    <input id="citySearch" type="text" placeholder="Buscar cualquier lugar del mundo..." data-i18n-ph="searchPlace" oninput="filterCities(this.value)"
                         style="width:100%;padding:10px 12px;background:rgba(5,8,40,0.9);border:1px solid rgba(74,158,255,0.35);border-radius:8px;color:#e8eaf6;font-size:0.88em;box-sizing:border-box;"/>
                     <div id="googlePlacesResults" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:10006;background:rgba(5,8,40,0.98);border:1px solid rgba(74,158,255,0.4);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;"></div>
                 </div>
@@ -35030,9 +35068,9 @@ DOMTokenList.prototype.add = function() {
     </div>
     <div class="hoy-interp-messages" id="hoyInterpMessages"></div>
     <div style="padding:10px 16px;border-top:1px solid rgba(201,168,64,0.15);background:rgba(5,5,25,0.95);display:flex;gap:6px;align-items:flex-end;">
-        <button id="hoyVoiceBtn" onclick="startGenericVoice('hoyInterpInput','sendHoyInterpMessage()','hoyVoiceBtn')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;flex-shrink:0;" title="Voz">🎙️</button>
-        <button onclick="readAloudLastMsg('hoyInterpMessages')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1.1em;cursor:pointer;flex-shrink:0;line-height:1;" title="Leer en voz alta">🔊</button>
-        <textarea id="hoyInterpInput" rows="1" placeholder="Pregunta sobre tu día..." style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.2);border-radius:10px;color:white;padding:10px 12px;font-size:0.85em;resize:none;outline:none;font-family:inherit;" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHoyInterpMessage();}"></textarea>
+        <button id="hoyVoiceBtn" onclick="startGenericVoice('hoyInterpInput','sendHoyInterpMessage()','hoyVoiceBtn')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;flex-shrink:0;" title="Voz" data-i18n-title="voice">🎙️</button>
+        <button onclick="readAloudLastMsg('hoyInterpMessages')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1.1em;cursor:pointer;flex-shrink:0;line-height:1;" title="Leer en voz alta" data-i18n-title="readAloud">🔊</button>
+        <textarea id="hoyInterpInput" rows="1" placeholder="Pregunta sobre tu día..." data-i18n-ph="askAboutDay" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,64,0.2);border-radius:10px;color:white;padding:10px 12px;font-size:0.85em;resize:none;outline:none;font-family:inherit;" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHoyInterpMessage();}"></textarea>
         <button onclick="sendHoyInterpMessage()" style="background:linear-gradient(135deg,rgba(201,168,64,0.3),rgba(255,149,0,0.2));border:1px solid rgba(201,168,64,0.4);border-radius:10px;color:#ffd54f;padding:8px 14px;font-size:1em;cursor:pointer;flex-shrink:0;">➤</button>
     </div>
 </div>
@@ -35056,8 +35094,8 @@ DOMTokenList.prototype.add = function() {
     <div id="aiQuickActions" style="display:none;padding:8px 16px;background:rgba(5,7,30,0.98);border-top:1px solid rgba(102,126,234,0.15);flex-shrink:0;"></div>
     <div class="ai-chat-input-bar">
         <button id="aiVoiceBtn" onclick="toggleAIChatVoice()" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.2em;cursor:pointer;flex-shrink:0;" title="Voice input">🎙️</button>
-        <button onclick="readAloudLastMsg('aiChatMessages')" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1.2em;cursor:pointer;flex-shrink:0;line-height:1;" title="Leer en voz alta">🔊</button>
-        <textarea id="aiChatInput" rows="1" placeholder="Escribe aquí..." style="text-align:center;" oninput="this.style.textAlign=this.value?'left':'center';this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';" onfocus="if(!this.value)this.style.textAlign='left';" onblur="if(!this.value)this.style.textAlign='center';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}"></textarea>
+        <button onclick="readAloudLastMsg('aiChatMessages')" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(102,126,234,0.3);color:#667eea;font-size:1.2em;cursor:pointer;flex-shrink:0;line-height:1;" title="Leer en voz alta" data-i18n-title="readAloud">🔊</button>
+        <textarea id="aiChatInput" rows="1" placeholder="Escribe aquí..." data-i18n-ph="typeHere" style="text-align:center;" oninput="this.style.textAlign=this.value?'left':'center';this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';" onfocus="if(!this.value)this.style.textAlign='left';" onblur="if(!this.value)this.style.textAlign='center';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}"></textarea>
         <button id="aiTTSToggle" onclick="toggleTTS()" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;flex-shrink:0;" title="Voice responses">🔇</button>
         <button onclick="sendAIMessage()">➤</button>
     </div>
