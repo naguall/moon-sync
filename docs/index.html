@@ -27466,12 +27466,19 @@ function goToCurrentCycle() {
             backdrop.id = 'wkBackdrop';
             backdrop.style.cssText = 'position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,0.6);transition:opacity 0.3s;';
 
-            // Tooltip
+            // v625: Transparent click-blocker on TOP of highlighted elements
+            // This prevents accidental clicks on calendar, tabs, buttons etc.
+            var clickBlocker = document.createElement('div');
+            clickBlocker.id = 'wkClickBlocker';
+            clickBlocker.style.cssText = 'position:fixed;inset:0;z-index:9996;background:transparent;';
+
+            // Tooltip (z-index 9998 — above the click blocker)
             var tooltip = document.createElement('div');
             tooltip.id = 'wkTooltip';
             tooltip.style.cssText = 'position:fixed;z-index:9998;max-width:320px;width:calc(100% - 24px);background:linear-gradient(170deg,rgba(15,17,55,0.98),rgba(8,10,35,0.98));border:1.5px solid rgba(102,126,234,0.5);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.7);padding:0;overflow:hidden;animation:tooltipAppear 0.35s cubic-bezier(0.34,1.56,0.64,1);';
 
             document.body.appendChild(backdrop);
+            document.body.appendChild(clickBlocker);
             document.body.appendChild(tooltip);
 
             // Track ancestors whose z-index we elevated
@@ -27775,12 +27782,14 @@ function goToCurrentCycle() {
                 tooltip.style.transition = 'opacity 0.3s';
                 setTimeout(function() {
                     if (backdrop.parentNode) backdrop.remove();
+                    if (clickBlocker.parentNode) clickBlocker.remove();
                     if (tooltip.parentNode) tooltip.remove();
                 }, 350);
             }
 
-            // Close on backdrop click too
-            backdrop.onclick = function() { _finishWalkthrough(); };
+            // Click blocker prevents all interaction — no accidental taps
+            // Only the tooltip buttons (Next/Prev/Skip) work (z-index 9998)
+            clickBlocker.onclick = function(e) { e.stopPropagation(); e.preventDefault(); };
 
             // Start
             setTimeout(function() { _showStep(0); }, 600);
@@ -27795,8 +27804,10 @@ function goToCurrentCycle() {
                 }
             });
             var bd = document.getElementById('wkBackdrop');
+            var cb = document.getElementById('wkClickBlocker');
             var tt = document.getElementById('wkTooltip');
             if (bd) bd.remove();
+            if (cb) cb.remove();
             if (tt) tt.remove();
         };
 
@@ -34175,7 +34186,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v624';
+var APP_VERSION = 'v625';
 var _pendingSW = null;
 
 // What's New removed per user request
