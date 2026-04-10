@@ -27700,6 +27700,10 @@ function goToCurrentCycle() {
                 var _socMatch = _ocAttr.match(/_switchSocialTab\(['"]([^'"]+)['"]/);
                 if (_socMatch && typeof window._switchSocialTab === 'function') {
                     try { window._switchSocialTab(_socMatch[1]); } catch(e){}
+                    // v627: _switchSocialTab re-renders social container — re-query fresh element
+                    var _freshEl = document.querySelector(step.sel);
+                    if (_freshEl) el = _freshEl;
+                    else { _showStep(idx + 1); return; }
                 }
 
                 // v626: Natal subtab activation — switch group and tab for Astrológico
@@ -27722,6 +27726,9 @@ function goToCurrentCycle() {
                     if (_ntMatch && typeof window.switchNatalTab === 'function') {
                         try { window.switchNatalTab(_ntMatch[1], el); } catch(e){}
                     }
+                    // v627: re-query in case switchNatalTab re-rendered the subtabs
+                    var _freshNatal = document.querySelector(step.sel);
+                    if (_freshNatal) el = _freshNatal;
                 }
 
                 // Scroll element into view
@@ -34232,7 +34239,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v626';
+var APP_VERSION = 'v627';
 var _pendingSW = null;
 
 // What's New removed per user request
