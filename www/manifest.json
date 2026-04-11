@@ -1,7 +1,7 @@
 {
-  "name": "Astro Currents - Calendario Lunar",
-  "short_name": "Astro Currents",
-  "description": "Astro Currents - Calendario Lunar con fases, aspectos planetarios y mareas",
+  "name": "FieldWeaver - Lunar Calendar",
+  "short_name": "FieldWeaver",
+  "description": "FieldWeaver - Lunar Calendar with phases, planetary aspects and tides",
   "start_url": "/astro-currents/",
   "scope": "/astro-currents/",
   "display": "standalone",

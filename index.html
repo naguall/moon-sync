@@ -32075,6 +32075,23 @@ function _signFromLong(lng) {
     return signs[Math.floor((lng % 360) / 30)];
 }
 
+// v629: Bilingual sign normalizer — profiles may have been saved with Spanish sign names
+// (Tauro, Géminis, Cáncer, Escorpio, Sagitario, Capricornio, Acuario, Piscis) from
+// getZodiacSignWithDegree(), but search dropdown uses English. Normalize both to English.
+var _SIGN_ES_TO_EN = {
+    'Aries':'Aries','Tauro':'Taurus','Géminis':'Gemini','Geminis':'Gemini',
+    'Cáncer':'Cancer','Cancer':'Cancer','Leo':'Leo','Virgo':'Virgo',
+    'Libra':'Libra','Escorpio':'Scorpio','Sagitario':'Sagittarius',
+    'Capricornio':'Capricorn','Acuario':'Aquarius','Piscis':'Pisces',
+    // passthrough English
+    'Taurus':'Taurus','Gemini':'Gemini','Scorpio':'Scorpio',
+    'Sagittarius':'Sagittarius','Capricorn':'Capricorn','Aquarius':'Aquarius','Pisces':'Pisces'
+};
+function _normSign(s) {
+    if (!s) return '';
+    return _SIGN_ES_TO_EN[s] || s;
+}
+
 // ── Matching Algorithm ──
 function _calcSimilarity(myChart, theirChart) {
     if (!myChart || !theirChart || !myChart.planets || !theirChart.planets) return 0;
@@ -32191,21 +32208,24 @@ function _searchUsers(filters, callback) {
     else if (filters.planet && filters.sign) { filterField = filters.planet + 'Sign'; filterValue = filters.sign; filterPlanetKey = filters.planet; }
 
     // Helper: check if a user matches the planet/sign filter (checks top-level field AND chartData)
+    // v629: normalize signs bilingually — profiles saved sunSign in Spanish (Tauro, Géminis...)
+    // but search dropdown uses English (Taurus, Gemini...). Compare canonical form.
     function _userMatchesFilter(data) {
         if (!filterField || !filterValue) return true;
+        var wantEn = _normSign(filterValue);
         // Check top-level field first
-        if (data[filterField] === filterValue) return true;
+        if (_normSign(data[filterField]) === wantEn) return true;
         // Fallback: check chartData.planets
         if (data.chartData && data.chartData.planets && filterPlanetKey) {
             if (filterPlanetKey === 'asc') {
                 // Ascendant is in houses
                 if (data.chartData.houses && data.chartData.houses.ascendant) {
                     var ascSign = _signFromLong(data.chartData.houses.ascendant);
-                    if (ascSign === filterValue) return true;
+                    if (_normSign(ascSign) === wantEn) return true;
                 }
             } else {
                 var pData = data.chartData.planets[filterPlanetKey];
-                if (pData && pData.sign === filterValue) return true;
+                if (pData && _normSign(pData.sign) === wantEn) return true;
             }
         }
         return false;
@@ -34261,7 +34281,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v628';
+var APP_VERSION = 'v629';
 var _pendingSW = null;
 
 // What's New removed per user request

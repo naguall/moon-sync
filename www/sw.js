@@ -1,4 +1,4 @@
-const CACHE_NAME = 'astro-currents-v557';
+const CACHE_NAME = 'fieldweaver-v628';
 const ASSETS = [
   '/astro-currents/',
   '/astro-currents/index.html',
@@ -32,7 +32,7 @@ function clearEverything() {
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
-  // Don't skipWaiting here — let the page control when to activate
+  self.skipWaiting(); // Activate immediately — don't wait for old tabs to close
 });
 
 self.addEventListener('activate', e => {
@@ -40,11 +40,11 @@ self.addEventListener('activate', e => {
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     ).then(() => {
-      // On activate (new SW takes control), clear all old notifications
       return clearEverything();
+    }).then(() => {
+      return self.clients.claim();
     })
   );
-  self.clients.claim();
 });
 
 // When user clicks a notification, open app and clear everything
