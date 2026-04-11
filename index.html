@@ -28285,8 +28285,13 @@ function showNotifDiagnostic() {
         html += 'Permission: <b style="color:' + (Notification.permission==='granted'?'#4ecdc4':'#ff6b6b') + ';">' + Notification.permission + '</b><br>';
         var enabled = localStorage.getItem('notificationsEnabled') !== 'false';
         html += 'notificationsEnabled: <b style="color:' + (enabled?'#4ecdc4':'#ff6b6b') + ';">' + enabled + '</b><br>';
-        var notifPrefs = JSON.parse(localStorage.getItem('notifPrefs') || '{"lunarPhases":true}');
-        html += 'notifPrefs.lunarPhases: <b style="color:' + (notifPrefs.lunarPhases?'#4ecdc4':'#ff6b6b') + ';">' + notifPrefs.lunarPhases + '</b><br>';
+        // v633: show ALL notifPrefs, not just lunarPhases
+        var notifPrefs = JSON.parse(localStorage.getItem('notifPrefs') || '{"lunarPhases":true,"eclipses":true,"retrogrades":true,"signChanges":true,"interPlanetaryAspects":true,"astronomicalEvents":true,"userEvents":true}');
+        var _prefKeys = ['lunarPhases','eclipses','retrogrades','signChanges','interPlanetaryAspects','astronomicalEvents','userEvents'];
+        _prefKeys.forEach(function(pk) {
+            var v = !!notifPrefs[pk];
+            html += '&nbsp;&nbsp;' + pk + ': <b style="color:' + (v?'#4ecdc4':'#ff6b6b') + ';">' + v + '</b><br>';
+        });
         html += 'SW registrado: ' + (('serviceWorker' in navigator) && navigator.serviceWorker.controller ? '✅' : '❌') + '<br>';
         html += 'App visible: ' + (document.hidden ? '❌ hidden' : '✅ visible') + '<br>';
 
@@ -28318,25 +28323,37 @@ function showNotifDiagnostic() {
             });
         }
 
-        // Section 3: localStorage notification keys
+        // Section 3: localStorage notification keys — ALL types
         html += '<div style="color:#7ec8ff;font-weight:bold;margin-top:12px;">3. Keys guardadas (ya notificadas)</div>';
-        var keys = [];
+        // v633: collect ALL notif-* keys grouped by type
+        var keysByType = {};
         for (var i = 0; i < localStorage.length; i++) {
             var k = localStorage.key(i);
-            if (k && k.indexOf('notif-lunarPhases-') === 0) keys.push(k);
+            if (!k || k.indexOf('notif-') !== 0) continue;
+            // Extract type between "notif-" and next "-"
+            var rest = k.substring(6); // after "notif-"
+            var dashIdx = rest.indexOf('-');
+            var type = dashIdx > -1 ? rest.substring(0, dashIdx) : rest;
+            if (!keysByType[type]) keysByType[type] = [];
+            keysByType[type].push(k);
         }
-        if (keys.length === 0) {
+        var typeNames = Object.keys(keysByType).sort();
+        if (typeNames.length === 0) {
             html += '<span style="color:#aaa;">ninguna</span>';
         } else {
-            keys.sort().forEach(function(k) {
-                html += '<div style="color:#4ecdc4;margin-left:8px;font-size:0.72em;">' + k + '</div>';
+            typeNames.forEach(function(tn) {
+                html += '<div style="color:#ffd700;margin-top:4px;font-size:0.78em;">▸ ' + tn + ' (' + keysByType[tn].length + ')</div>';
+                keysByType[tn].sort().forEach(function(k) {
+                    html += '<div style="color:#4ecdc4;margin-left:14px;font-size:0.68em;">' + k + '</div>';
+                });
             });
         }
 
         // Section 4: Botones de test
         html += '<div style="color:#7ec8ff;font-weight:bold;margin-top:12px;">4. Tests</div>';
         html += '<button onclick="sendNotif(\'🧪 Test\',{body:\'Si ves esto, las notificaciones funcionan\'});" style="margin:4px 2px;padding:6px 10px;background:rgba(78,205,196,0.15);border:1px solid rgba(78,205,196,0.4);border-radius:5px;color:#4ecdc4;font-size:0.85em;cursor:pointer;">Enviar test</button> ';
-        html += '<button onclick="(function(){var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(\'notif-lunarPhases-\')===0)ks.push(k);}ks.forEach(function(k){localStorage.removeItem(k);});window._phaseTimesCache=null;showNotifDiagnostic();})()" style="margin:4px 2px;padding:6px 10px;background:rgba(255,152,0,0.15);border:1px solid rgba(255,152,0,0.4);border-radius:5px;color:#ff9800;font-size:0.85em;cursor:pointer;">Reset keys</button> ';
+        // v633: Reset ALL notif-* keys (all types)
+        html += '<button onclick="(function(){var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(\'notif-\')===0)ks.push(k);}ks.forEach(function(k){localStorage.removeItem(k);});window._phaseTimesCache=null;showNotifDiagnostic();})()" style="margin:4px 2px;padding:6px 10px;background:rgba(255,152,0,0.15);border:1px solid rgba(255,152,0,0.4);border-radius:5px;color:#ff9800;font-size:0.85em;cursor:pointer;">Reset TODAS las keys</button> ';
         html += '<button onclick="checkNotifications();setTimeout(showNotifDiagnostic,200);" style="margin:4px 2px;padding:6px 10px;background:rgba(126,200,255,0.15);border:1px solid rgba(126,200,255,0.4);border-radius:5px;color:#7ec8ff;font-size:0.85em;cursor:pointer;">Forzar check</button>';
 
         html += '</div>';
@@ -28840,11 +28857,15 @@ function checkNotifications() {
     }
     
     // 2. Check eclipse notifications (date-based)
+    // v633: removed hour gates (>=20 / <6) — before, if user didn't open app at
+    // those specific hours the notification was lost forever. Now the localStorage
+    // key acts as a once-per-day guard, so notification fires whenever the app
+    // first opens on that date.
     if (notifPrefs.eclipses) {
         var eclipse = getEclipseInfo(now);
         var eclipseTomorrow = getEclipseInfo(new Date(now.getTime() + 24*3600000));
-        
-        if (eclipseTomorrow && now.getHours() >= 20) {
+
+        if (eclipseTomorrow) {
             var keyEcl12h = 'notif-eclipses-' + todayKey + '-12h';
             if (!localStorage.getItem(keyEcl12h)) {
                 sendNotif(L ? 'Eclipse Mañana' : 'Eclipse Tomorrow', {
@@ -28856,8 +28877,8 @@ function checkNotifications() {
                 console.log('☀️ 12h before eclipse:', eclipseTomorrow.name);
             }
         }
-        
-        if (eclipse && now.getHours() < 6) {
+
+        if (eclipse) {
             var keyEclDay = 'notif-eclipses-' + todayKey + '-day';
             if (!localStorage.getItem(keyEclDay)) {
                 sendNotif(L ? 'Eclipse Hoy' : 'Eclipse Today', {
@@ -28880,7 +28901,7 @@ function checkNotifications() {
                 return !retrogrades.find(function(x) { return x.planet === r.planet; });
             });
             
-            if (newRetros.length > 0 && now.getHours() >= 20) {
+            if (newRetros.length > 0) {
                 newRetros.forEach(function(r) {
                     var keyRet12h = 'notif-retrogrades-' + r.planet + '-12h';
                     if (!localStorage.getItem(keyRet12h)) {
@@ -28894,10 +28915,10 @@ function checkNotifications() {
                     }
                 });
             }
-            
+
             newRetros.forEach(function(r) {
                 var keyRetDay = 'notif-retrogrades-' + r.planet + '-day';
-                if (!localStorage.getItem(keyRetDay) && now.getHours() < 6) {
+                if (!localStorage.getItem(keyRetDay)) {
                     sendNotif(L ? r.planet + ' Retrógrado' : r.planet + ' Retrograde', {
                         body: (L ? 'Hoy comienza' : 'Starts today'),
                         tag: 'retrograde-day-' + r.planet,
@@ -28919,7 +28940,7 @@ function checkNotifications() {
                 return !signChanges.find(function(x) { return x.planet === c.planet; });
             });
             
-            if (newChanges.length > 0 && now.getHours() >= 20) {
+            if (newChanges.length > 0) {
                 newChanges.forEach(function(c) {
                     var keySch12h = 'notif-signChanges-' + c.planet + '-12h';
                     if (!localStorage.getItem(keySch12h)) {
@@ -28933,10 +28954,10 @@ function checkNotifications() {
                     }
                 });
             }
-            
+
             newChanges.forEach(function(c) {
                 var keySchDay = 'notif-signChanges-' + c.planet + '-day';
-                if (!localStorage.getItem(keySchDay) && now.getHours() < 6) {
+                if (!localStorage.getItem(keySchDay)) {
                     sendNotif(L ? c.planet + ' entra en ' + c.toSign : c.planet + ' enters ' + c.toSign, {
                         body: (L ? 'Hoy' : 'Today'),
                         tag: 'signchange-day-' + c.planet,
@@ -28960,7 +28981,7 @@ function checkNotifications() {
                 return !aspectsTomorrow.find(function(x) { return x.planet1 === a.planet1 && x.planet2 === a.planet2 && x.aspect === a.aspect; });
             });
             
-            if (newAspects.length > 0 && now.getHours() >= 20) {
+            if (newAspects.length > 0) {
                 var keyAsp12h = 'notif-interPlanetaryAspects-12h-' + todayKey;
                 if (!localStorage.getItem(keyAsp12h)) {
                     var aspMsg = newAspects.slice(0, 2).map(function(a) { return a.planet1 + ' ' + a.symbol + ' ' + a.planet2; }).join(', ');
@@ -28973,8 +28994,8 @@ function checkNotifications() {
                     console.log('⚛️ Major aspects tomorrow');
                 }
             }
-            
-            if (newAspects.length > 0 && now.getHours() < 6) {
+
+            if (newAspects.length > 0) {
                 var keyAspDay = 'notif-interPlanetaryAspects-day-' + todayKey;
                 if (!localStorage.getItem(keyAspDay)) {
                     var aspMsg2 = newAspects.slice(0, 2).map(function(a) { return a.planet1 + ' ' + a.symbol + ' ' + a.planet2; }).join(', ');
@@ -28993,7 +29014,7 @@ function checkNotifications() {
     // 6. Check astronomical events (equinoxes, solstices)
     if (notifPrefs.astronomicalEvents) {
         var astroEvent = isAstronomicalEvent(now);
-        if (astroEvent && now.getHours() < 6) {
+        if (astroEvent) {
             var keyAstro = 'notif-astronomicalEvents-' + todayKey;
             if (!localStorage.getItem(keyAstro)) {
                 var astroText = L ? astroEvent.es : astroEvent.en;
@@ -29053,10 +29074,12 @@ function checkNotifications() {
                             }
                             // Catch-up: if we missed the notification window (app was closed),
                             // send it now if the event hasn't passed yet
+                            // v633: widened catchup from 10 min to 60 min so if the
+                            // app was closed when the reminder should have fired,
+                            // it still arrives when user opens the app later.
                             else if (now > max && eventTime > now && !localStorage.getItem(reminderKey)) {
-                                // Only catch up for the most relevant reminder (closest to now)
                                 var msSinceTarget = now.getTime() - notifyTime.getTime();
-                                if (msSinceTarget > 0 && msSinceTarget < 10 * 60000) { // within 10 min of missed target
+                                if (msSinceTarget > 0 && msSinceTarget < 60 * 60000) { // within 60 min of missed target
                                     var catchLabel = reminder.minutes === 0
                                         ? (L ? '¡Ahora!' : 'Now!')
                                         : (L ? 'Próximamente' : 'Coming up');
@@ -34426,7 +34449,7 @@ if (localStorage.getItem('calendarMode') === 'social') {
 })();
 
 // Register Service Worker with update notification
-var APP_VERSION = 'v632';
+var APP_VERSION = 'v633';
 
 // v631: Custom time picker (replaces native <input type="time"> which gets cut off on Android)
 // Builds two <select> dropdowns for hour/minute and keeps a hidden input in sync
