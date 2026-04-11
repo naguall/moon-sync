@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fieldweaver-v634';
+const CACHE_NAME = 'astroatlas-v635';
 const ASSETS = [
   '/astro-currents/',
   '/astro-currents/index.html',

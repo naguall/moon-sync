@@ -103,13 +103,16 @@ copied++;
 // === Create sw.js from source sw.js, adjusting paths for GitHub Pages ===
 // Read APP_VERSION from index.html to keep sw.js version in sync
 let srcIndex = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-let versionMatch = srcIndex.match(/var APP_VERSION\s*=\s*'([^']+)'/);
+// v635: APP_VERSION is now declared as `window.APP_VERSION = 'vXXX'` at the
+// top of the file. Match that first, then fall back to the legacy `var` form.
+let versionMatch = srcIndex.match(/window\.APP_VERSION\s*=\s*'([^']+)'/);
+if (!versionMatch) versionMatch = srcIndex.match(/var APP_VERSION\s*=\s*'([^']+)'/);
 let appVersion = versionMatch ? versionMatch[1] : 'v559';
 
 // Read source sw.js and adjust paths
 let swSource = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
-// Update CACHE_NAME to match APP_VERSION
-swSource = swSource.replace(/const CACHE_NAME = '[^']+';/, `const CACHE_NAME = 'fieldweaver-${appVersion}';`);
+// Update CACHE_NAME to match APP_VERSION (rebranded from fieldweaver- → astroatlas-)
+swSource = swSource.replace(/const CACHE_NAME = '[^']+';/, `const CACHE_NAME = 'astroatlas-${appVersion}';`);
 // Fix asset paths: add BASE_PATH prefix to relative paths
 swSource = swSource.replace(
   /const ASSETS = \[[\s\S]*?\];/,
